@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "会员群发",
+  "usingComponents": {
+    "u-parse": "/components/u-parse/u-parse"
+  }
+}

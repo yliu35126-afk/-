@@ -1,0 +1,1 @@
+<view class="video"><view class="close"><text data-event-opts="{{[['tap',[['e0',['$event']]]]]}}" class="iconfont iconclose" bindtap="__e"></text></view><view class="video_view"><video src="{{$root.g0}}" objectFit="scale-down" poster="{{$root.g1}}" autoplay="true"></video></view></view>

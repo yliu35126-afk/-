@@ -1,0 +1,9 @@
+{
+  "component": true,
+  "usingComponents": {
+    "uni-popup": "/components/uni-popup/uni-popup",
+    "ns-chat-goods": "/otherpages/components/ns-chat/ns-chat-goods",
+    "ns-chat-order": "/otherpages/components/ns-chat/ns-chat-order",
+    "ns-chat-receive-goods": "/otherpages/components/ns-chat/ns-chat-receiveGoods"
+  }
+}

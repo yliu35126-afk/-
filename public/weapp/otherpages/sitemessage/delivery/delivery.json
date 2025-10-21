@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "物流通知",
+  "usingComponents": {
+    "left-slide-operation": "/components/left-slide-operation/left-slide-operation",
+    "loading-cover": "/components/loading-cover/loading-cover"
+  }
+}

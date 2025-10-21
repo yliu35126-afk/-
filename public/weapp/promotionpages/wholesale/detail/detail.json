@@ -1,0 +1,15 @@
+{
+  "usingComponents": {
+    "uni-popup": "/components/uni-popup/uni-popup",
+    "u-parse": "/components/u-parse/u-parse",
+    "ns-goods-sku": "/components/ns-goods-sku/ns-goods-sku",
+    "loading-cover": "/components/loading-cover/loading-cover",
+    "ns-login": "/components/ns-login/ns-login",
+    "ns-goods-action": "/components/ns-goods-action/ns-goods-action",
+    "ns-goods-action-icon": "/components/ns-goods-action-icon/ns-goods-action-icon",
+    "ns-goods-action-button": "/components/ns-goods-action-button/ns-goods-action-button",
+    "ns-goods-recommend": "/components/ns-goods-recommend/ns-goods-recommend",
+    "uni-count-down": "/components/uni-count-down/uni-count-down",
+    "to-top": "/components/toTop/toTop"
+  }
+}

@@ -1,0 +1,10 @@
+(global["webpackJsonp"]=global["webpackJsonp"]||[]).push([["components/ns-adv/ns-adv"],{"09c2":function(t,n,a){},"0ce2":function(t,n,a){"use strict";a.r(n);var e=a("e887"),i=a.n(e);for(var u in e)["default"].indexOf(u)<0&&function(t){a.d(n,t,(function(){return e[t]}))}(u);n["default"]=i.a},"10d5":function(t,n,a){"use strict";a.d(n,"b",(function(){return e})),a.d(n,"c",(function(){return i})),a.d(n,"a",(function(){}));var e=function(){var t=this,n=t.$createElement,a=(t._self._c,t.advList.length),e=a?t.advList.length:null,i=a?t.__map(t.advList,(function(n,a){var e=t.__get_orig(n),i=t.$util.img(n.adv_image);return{$orig:e,g2:i}})):null;t.$mp.data=Object.assign({},{$root:{g0:a,g1:e,l0:i}})},i=[]},2029:function(t,n,a){"use strict";a.r(n);var e=a("10d5"),i=a("0ce2");for(var u in i)["default"].indexOf(u)<0&&function(t){a.d(n,t,(function(){return i[t]}))}(u);a("99ab");var d=a("f0c5"),r=Object(d["a"])(i["default"],e["b"],e["c"],!1,null,null,null,!1,e["a"],void 0);n["default"]=r.exports},"99ab":function(t,n,a){"use strict";var e=a("09c2"),i=a.n(e);i.a},e887:function(t,n,a){"use strict";Object.defineProperty(n,"__esModule",{value:!0}),n.default=void 0;var e={name:"ns-adv",props:{keyword:{type:String}},data:function(){return{advList:[]}},created:function(){this.getAdvList()},methods:{getAdvList:function(){var t=this;this.keyword&&this.$api.sendRequest({url:"/api/adv/detail",data:{keyword:this.keyword},success:function(n){0==n.code&&n.data&&(n.data.adv_list.forEach((function(t){t.adv_url&&(t.adv_url=JSON.parse(t.adv_url))})),t.advList=n.data.adv_list)}})},jumppage:function(t){this.$util.diyRedirectTo(t)}}};n.default=e}}]);
+;(global["webpackJsonp"] = global["webpackJsonp"] || []).push([
+    'components/ns-adv/ns-adv-create-component',
+    {
+        'components/ns-adv/ns-adv-create-component':(function(module, exports, __webpack_require__){
+            __webpack_require__('543d')['createComponent'](__webpack_require__("2029"))
+        })
+    },
+    [['components/ns-adv/ns-adv-create-component']]
+]);

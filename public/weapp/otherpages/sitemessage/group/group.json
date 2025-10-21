@@ -1,0 +1,7 @@
+{
+  "navigationBarTitleText": "会员群发",
+  "usingComponents": {
+    "left-slide-operation": "/components/left-slide-operation/left-slide-operation",
+    "loading-cover": "/components/loading-cover/loading-cover"
+  }
+}

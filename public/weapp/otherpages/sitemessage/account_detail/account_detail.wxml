@@ -1,0 +1,1 @@
+<view class="account-detail"><view class="title">{{account_info.title}}</view><view class="con font-size-tag color-tip">{{account_info.content}}</view></view>

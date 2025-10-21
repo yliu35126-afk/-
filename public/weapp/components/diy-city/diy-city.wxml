@@ -1,0 +1,1 @@
+<view data-event-opts="{{[['tap',[['e0',['$event']]]]]}}" class="city-wrap" bindtap="__e"><view class="city-left">{{'当前城市是：'+city+cityTile+''}}</view><view class="city-right"><text>切换</text><text class="iconfont iconright"></text></view></view>

@@ -1,0 +1,1 @@
+.empty{width:100%;display:flex;flex-direction:column;align-items:center;padding:20rpx;box-sizing:border-box;justify-content:center;position:fixed;top:25%;left:0}.empty .empty_img{width:63%;height:450rpx}.empty .empty_img image{width:100%;height:100%;padding-bottom:20rpx}.diy-group{width:100%}

@@ -1,0 +1,1 @@
+.uni-grid-item{width:calc(100% / 3)}.brand-head{width:100%;line-height:0}.brand-head image{width:100%}.brand-content{padding:20rpx 0;box-sizing:border-box;background:#fff;margin:20rpx 30rpx 0}.brand-content .brand-pic{width:60%;height:50%}.brand-content .brand_name{width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:center}

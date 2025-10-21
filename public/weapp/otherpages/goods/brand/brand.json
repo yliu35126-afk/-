@@ -1,0 +1,9 @@
+{
+  "usingComponents": {
+    "ns-adv": "/components/ns-adv/ns-adv",
+    "uni-grid": "/components/uni-grid/uni-grid",
+    "uni-grid-item": "/components/uni-grid-item/uni-grid-item",
+    "ns-empty": "/components/ns-empty/ns-empty",
+    "loading-cover": "/components/loading-cover/loading-cover"
+  }
+}

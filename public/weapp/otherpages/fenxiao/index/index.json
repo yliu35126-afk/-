@@ -1,0 +1,7 @@
+{
+  "usingComponents": {
+    "ns-copyright": "/components/ns-copyright/ns-copyright",
+    "loading-cover": "/components/loading-cover/loading-cover",
+    "ns-copy-right": "/components/ns-copyright/ns-copyright"
+  }
+}

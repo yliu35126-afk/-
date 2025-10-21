@@ -1,0 +1,8 @@
+{
+  "usingComponents": {
+    "diy-shop-info": "/components/diy-shop-info/diy-shop-info",
+    "ns-progress": "/components/ns-progress/ns-progress",
+    "loading-cover": "/components/loading-cover/loading-cover",
+    "uni-popup": "/components/uni-popup/uni-popup"
+  }
+}

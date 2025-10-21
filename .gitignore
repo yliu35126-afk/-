@@ -21,11 +21,8 @@ web.config
 /web/index.html
 
 # Added for 3.0 clients integration
-/public/weapp/*
 /public/h5/indep/*
 /runtime/
 /clients/*/dist/
 /clients/*/build/
 /clients/*/node_modules/
-/clients/miniapp/**
-/clients/app/**

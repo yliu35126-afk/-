@@ -1,0 +1,9 @@
+{
+  "usingComponents": {
+    "ns-empty": "/components/ns-empty/ns-empty",
+    "uni-drawer": "/components/uni-drawer/uni-drawer",
+    "uni-tag": "/components/uni-tag/uni-tag",
+    "diy-bottom-nav": "/components/diy-bottom-nav/diy-bottom-nav",
+    "loading-cover": "/components/loading-cover/loading-cover"
+  }
+}

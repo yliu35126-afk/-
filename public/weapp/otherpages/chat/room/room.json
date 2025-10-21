@@ -1,0 +1,6 @@
+{
+  "softinputMode": "adjustResize",
+  "usingComponents": {
+    "chat-message": "/otherpages/components/chat-message/chat-message"
+  }
+}

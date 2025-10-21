@@ -1,0 +1,10 @@
+(global["webpackJsonp"]=global["webpackJsonp"]||[]).push([["otherpages/components/ns-chat/ns-chat-goods"],{"0c46":function(n,o,t){"use strict";t.d(o,"b",(function(){return s})),t.d(o,"c",(function(){return e})),t.d(o,"a",(function(){}));var s=function(){var n=this.$createElement,o=(this._self._c,this.goodsInfo.goods_name?this.$util.img(this.goodsInfo.sku_image):null);this.$mp.data=Object.assign({},{$root:{g0:o}})},e=[]},"61e2":function(n,o,t){},"86fe":function(n,o,t){"use strict";var s=t("61e2"),e=t.n(s);e.a},"88bd":function(n,o,t){"use strict";t.r(o);var s=t("e69b"),e=t.n(s);for(var i in s)["default"].indexOf(i)<0&&function(n){t.d(o,n,(function(){return s[n]}))}(i);o["default"]=e.a},bc00:function(n,o,t){"use strict";t.r(o);var s=t("0c46"),e=t("88bd");for(var i in e)["default"].indexOf(i)<0&&function(n){t.d(o,n,(function(){return e[n]}))}(i);t("86fe");var u=t("f0c5"),a=Object(u["a"])(e["default"],s["b"],s["c"],!1,null,null,null,!1,s["a"],void 0);o["default"]=a.exports},e69b:function(n,o,t){"use strict";Object.defineProperty(o,"__esModule",{value:!0}),o.default=void 0;var s={name:"ns-chat-goods",props:{skuId:{type:[Number,String]},isCanSend:Boolean},data:function(){return{goodsInfo:{}}},mounted:function(){this.getGoodsInfo()},methods:{getGoodsInfo:function(){var n=this;this.$api.sendRequest({url:"/api/goodssku/detail",data:{sku_id:this.skuId},success:function(o){o.code>=0&&(n.goodsInfo=o.data.goods_sku_detail,n.goodsInfo.goods_image=n.goodsInfo.goods_image.split(",")[0])}})},sendMsg:function(){this.$emit("sendMsg","goods")}}};o.default=s}}]);
+;(global["webpackJsonp"] = global["webpackJsonp"] || []).push([
+    'otherpages/components/ns-chat/ns-chat-goods-create-component',
+    {
+        'otherpages/components/ns-chat/ns-chat-goods-create-component':(function(module, exports, __webpack_require__){
+            __webpack_require__('543d')['createComponent'](__webpack_require__("bc00"))
+        })
+    },
+    [['otherpages/components/ns-chat/ns-chat-goods-create-component']]
+]);

@@ -1,0 +1,8 @@
+{
+  "usingComponents": {
+    "ns-empty": "/components/ns-empty/ns-empty",
+    "loading-cover": "/components/loading-cover/loading-cover",
+    "diy-bottom-nav": "/components/diy-bottom-nav/diy-bottom-nav",
+    "sx-rate": "/otherpages/components/sx-rate/index"
+  }
+}

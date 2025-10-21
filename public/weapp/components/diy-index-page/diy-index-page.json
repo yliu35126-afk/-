@@ -1,0 +1,8 @@
+{
+  "component": true,
+  "usingComponents": {
+    "uni-popup": "/components/uni-popup/uni-popup",
+    "ns-empty": "/components/ns-empty/ns-empty",
+    "ns-loading": "/components/ns-loading/ns-loading"
+  }
+}

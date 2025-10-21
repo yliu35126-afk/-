@@ -1,0 +1,1 @@
+<view class="group-detail"><u-parse class="richText" vue-id="206062da-1" content="{{info.text}}" bind:__l="__l"></u-parse></view>

@@ -1,0 +1,8 @@
+{
+  "usingComponents": {
+    "ns-adv": "/components/ns-adv/ns-adv",
+    "uni-count-down": "/components/uni-count-down/uni-count-down",
+    "ns-empty": "/components/ns-empty/ns-empty",
+    "loading-cover": "/components/loading-cover/loading-cover"
+  }
+}

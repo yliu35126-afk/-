@@ -1,0 +1,8 @@
+{
+  "usingComponents": {
+    "uni-count-down": "/components/uni-count-down/uni-count-down",
+    "uni-popup": "/components/uni-popup/uni-popup",
+    "loading-cover": "/components/loading-cover/loading-cover",
+    "l-time": "/components/l-time/l-time"
+  }
+}

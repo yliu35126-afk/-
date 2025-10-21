@@ -1,0 +1,6 @@
+{
+  "navigationBarTitleText": "站内信",
+  "usingComponents": {
+    "u-parse": "/components/u-parse/u-parse"
+  }
+}

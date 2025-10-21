@@ -1,0 +1,10 @@
+(global["webpackJsonp"]=global["webpackJsonp"]||[]).push([["otherpages/components/ns-chat/ns-chat-order"],{"0a35":function(n,o,t){"use strict";t.r(o);var e=t("6453"),r=t("ead5");for(var d in r)["default"].indexOf(d)<0&&function(n){t.d(o,n,(function(){return r[n]}))}(d);t("7d23");var s=t("f0c5"),i=Object(s["a"])(r["default"],e["b"],e["c"],!1,null,null,null,!1,e["a"],void 0);o["default"]=i.exports},"61cc":function(n,o,t){"use strict";Object.defineProperty(o,"__esModule",{value:!0}),o.default=void 0;var e={name:"ns-chat-order",props:{orderId:{type:[Number,String]},isCanSend:Boolean},data:function(){return{orderInfo:{}}},mounted:function(){this.getGoodsInfo()},methods:{getGoodsInfo:function(){var n=this;this.$api.sendRequest({url:"/api/order/detail",data:{order_id:this.orderId},success:function(o){o.code>=0&&(n.orderInfo=o.data)}})},sendMsg:function(){this.$emit("sendMsg","order")}}};o.default=e},6453:function(n,o,t){"use strict";t.d(o,"b",(function(){return e})),t.d(o,"c",(function(){return r})),t.d(o,"a",(function(){}));var e=function(){var n=this.$createElement,o=(this._self._c,this.orderInfo.order_goods?this.$util.img(this.orderInfo.order_goods?this.orderInfo.order_goods[0].sku_image:""):null),t=this.orderInfo.order_goods?this.orderInfo.order_goods.length:null;this.$mp.data=Object.assign({},{$root:{g0:o,g1:t}})},r=[]},"6b27":function(n,o,t){},"7d23":function(n,o,t){"use strict";var e=t("6b27"),r=t.n(e);r.a},ead5:function(n,o,t){"use strict";t.r(o);var e=t("61cc"),r=t.n(e);for(var d in e)["default"].indexOf(d)<0&&function(n){t.d(o,n,(function(){return e[n]}))}(d);o["default"]=r.a}}]);
+;(global["webpackJsonp"] = global["webpackJsonp"] || []).push([
+    'otherpages/components/ns-chat/ns-chat-order-create-component',
+    {
+        'otherpages/components/ns-chat/ns-chat-order-create-component':(function(module, exports, __webpack_require__){
+            __webpack_require__('543d')['createComponent'](__webpack_require__("0a35"))
+        })
+    },
+    [['otherpages/components/ns-chat/ns-chat-order-create-component']]
+]);

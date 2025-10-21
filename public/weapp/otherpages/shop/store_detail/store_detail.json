@@ -1,0 +1,6 @@
+{
+  "usingComponents": {
+    "loading-cover": "/components/loading-cover/loading-cover",
+    "diy-bottom-nav": "/components/diy-bottom-nav/diy-bottom-nav"
+  }
+}
