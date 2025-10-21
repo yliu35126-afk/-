@@ -1,0 +1,96 @@
+<!--pages/device/device.wxml-->
+<view class="container">
+  <view class="header">
+    <text class="title">🔌 设备控制中心</text>
+  </view>
+
+  <!-- 设备连接状态 -->
+  <view class="status-section">
+    <view class="section-title">连接状态</view>
+    <view class="status-card {{isConnected ? 'connected' : 'disconnected'}}">
+      <view class="status-icon">
+        <text wx:if="{{isConnected}}">✅</text>
+        <text wx:else>❌</text>
+      </view>
+      <view class="status-info">
+        <text class="status-text">{{isConnected ? '已连接' : '未连接'}}</text>
+        <text wx:if="{{deviceCode}}" class="device-code">设备码: {{deviceCode}}</text>
+        <text wx:if="{{deviceStatus}}" class="device-status">状态: {{deviceStatus}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 扫码连接 -->
+  <view class="scan-section">
+    <view class="section-title">扫码连接设备</view>
+    <view class="scan-card">
+      <view class="scan-icon">📱</view>
+      <text class="scan-desc">扫描设备上的二维码自动连接</text>
+      <button class="scan-btn" bindtap="scanDeviceCode">扫描设备码</button>
+    </view>
+  </view>
+
+  <!-- 手动连接 -->
+  <view class="manual-section">
+    <view class="section-title">手动连接</view>
+    <view class="manual-card">
+      <input 
+        class="device-input" 
+        placeholder="请输入设备码 (例如: DEVICE_001)" 
+        value="{{inputDeviceCode}}"
+        bindinput="onDeviceCodeInput"
+      />
+      <button class="connect-btn" bindtap="manualConnect" disabled="{{!inputDeviceCode}}">
+        连接设备
+      </button>
+    </view>
+  </view>
+
+  <!-- 设备数据 -->
+  <view wx:if="{{isConnected}}" class="data-section">
+    <view class="section-title">实时数据</view>
+    <view class="data-card">
+      <view wx:if="{{deviceData.length > 0}}" class="data-list">
+        <view wx:for="{{deviceData}}" wx:key="index" class="data-item">
+          <text class="data-time">{{item.time}}</text>
+          <text class="data-content">{{item.content}}</text>
+        </view>
+      </view>
+      <view wx:else class="no-data">
+        <text>暂无数据</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 控制按钮 -->
+  <view wx:if="{{isConnected}}" class="control-section">
+    <view class="section-title">设备控制</view>
+    <view class="control-buttons">
+      <button class="control-btn primary" bindtap="sendCommand" data-cmd="start">启动</button>
+      <button class="control-btn warning" bindtap="sendCommand" data-cmd="stop">停止</button>
+      <button class="control-btn info" bindtap="sendCommand" data-cmd="status">查询状态</button>
+      <button class="control-btn danger" bindtap="disconnect">断开连接</button>
+    </view>
+  </view>
+
+  <!-- 连接历史 -->
+  <view class="history-section">
+    <view class="section-title">连接历史</view>
+    <view class="history-card">
+      <view wx:if="{{connectionHistory.length > 0}}" class="history-list">
+        <view wx:for="{{connectionHistory}}" wx:key="index" class="history-item">
+          <view class="history-info">
+            <text class="history-device">{{item.deviceCode}}</text>
+            <text class="history-time">{{item.time}}</text>
+          </view>
+          <button class="reconnect-btn" bindtap="reconnectDevice" data-device="{{item.deviceCode}}">
+            重连
+          </button>
+        </view>
+      </view>
+      <view wx:else class="no-history">
+        <text>暂无连接历史</text>
+      </view>
+    </view>
+  </view>
+</view>

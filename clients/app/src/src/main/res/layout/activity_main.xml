@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg"
+    tools:context=".MainActivity">
+
+    <!-- 主抽奖布局 - 对应Vue的slot-machine-layout -->
+    <com.example.myapplication.LotteryWheelView
+        android:id="@+id/lotteryWheel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Loading全屏遮罩 -->
+    <FrameLayout
+        android:id="@+id/loadingOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#DD000000"
+        android:clickable="true"
+        android:visibility="gone">
+
+        <!-- Loading内容 -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <!-- 旋转的加载图标 -->
+            <ProgressBar
+                android:id="@+id/loadingSpinner"
+                style="?android:attr/progressBarStyleLarge"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:layout_marginBottom="24dp"
+                android:indeterminateTint="#FFFFFF" />
+
+            <!-- 加载文字 -->
+            <TextView
+                android:id="@+id/loadingText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="正在加载奖品数据..."
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <!-- 加载进度文字 -->
+            <TextView
+                android:id="@+id/loadingProgress"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center"
+                android:text="0/16"
+                android:textColor="#CCFFFFFF"
+                android:textSize="14sp" />
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+    <!-- 中奖结果遮罩 - 对应Vue的winner-overlay -->
+    <FrameLayout
+        android:id="@+id/winnerOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#C8060A00"
+        android:clickable="true"
+        android:visibility="gone">
+
+        <!-- 中奖卡片 - 对应Vue的winner-card -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="320dp"
+            android:layout_height="400dp"
+            android:layout_gravity="center"
+            android:layout_margin="32dp"
+            app:cardCornerRadius="36dp"
+            app:cardElevation="20dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/winner_background"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:padding="32dp">
+
+                <!-- 恭喜标题 - 对应Vue的win-title -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="20dp"
+                    android:text="🎉 恭喜抽中"
+                    android:textColor="#842400"
+                    android:textSize="32sp"
+                    android:textStyle="bold" />
+
+                <!-- 奖品图片 - 对应Vue的win-prize-pic -->
+                <FrameLayout
+                    android:layout_width="180dp"
+                    android:layout_height="180dp"
+                    android:layout_marginBottom="20dp"
+                    android:background="@drawable/prize_frame">
+
+                    <ImageView
+                        android:id="@+id/winPrizeImage"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_margin="20dp"
+                        android:scaleType="centerInside" />
+
+                </FrameLayout>
+
+                <!-- 奖品名称 - 对应Vue的win-prize-name -->
+                <TextView
+                    android:id="@+id/winPrizeName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:gravity="center"
+                    android:text="神秘奖品"
+                    android:textColor="#842400"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+
+                <!-- 恭喜文案 - 对应Vue的win-copy -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="16dp"
+                    android:gravity="center"
+                    android:lineSpacingMultiplier="1.3"
+                    android:maxWidth="280dp"
+                    android:text="好运爆发！本轮大奖已收入囊中，继续扫码还能冲击更多好礼～"
+                    android:textColor="#842400"
+                    android:textSize="16sp" />
+
+                <!-- 倒计时 - 对应Vue的win-countdown -->
+                <TextView
+                    android:id="@+id/winCountdown"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:background="#99FFFFFF"
+                    android:padding="12dp"
+                    android:text="窗口将于 5s 后自动关闭"
+                    android:textColor="#7d2a00"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+    </FrameLayout>
+
+    <!-- 内测提示蒙版 - 右上角 -->
+    <TextView
+        android:id="@+id/betaVersionTip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="top|end"
+        android:layout_margin="16dp"
+        android:text="演示内测程序！"
+        android:textSize="13sp"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"
+        android:background="@drawable/beta_tip_background"
+        android:paddingLeft="14dp"
+        android:paddingRight="14dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:elevation="12dp"
+        android:shadowColor="#80000000"
+        android:shadowDx="2"
+        android:shadowDy="2"
+        android:shadowRadius="4"
+        android:visibility="gone"
+        android:alpha="0.95" />
+
+    <!-- 测试按钮 - 切换配置ID (已隐藏) -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"
+        android:orientation="vertical"
+        android:background="#80000000"
+        android:padding="8dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/configIdDisplay"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="配置ID: 默认"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:layout_marginBottom="8dp" />
+
+        <Button
+            android:id="@+id/btnSwitchConfig"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="切换配置"
+            android:textSize="12sp"
+            android:minWidth="80dp"
+            android:background="#FF4444"
+            android:textColor="#FFFFFF" />
+
+    </LinearLayout>
+
+    <!-- 屏幕边缘黄色发光跑马灯点（覆盖在最上层） -->
+    <com.example.myapplication.ui.MarqueeBorderLightsView
+        android:id="@+id/borderMarqueeLights"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clickable="false"
+        android:focusable="false" />
+
+</FrameLayout>

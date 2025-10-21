@@ -1,0 +1,44 @@
+{
+  "compilerOptions": {
+    "strictNullChecks": true,
+    "noImplicitAny": true,
+    "module": "CommonJS",
+    "target": "ES5",
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "noImplicitThis": true,
+    "noImplicitReturns": true,
+    "alwaysStrict": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "strict": true,
+    "strictPropertyInitialization": true,
+    // 启用 ES2018 及以上标准库以支持 Promise.finally 等特性
+    "lib": ["ES2018", "ES2017", "ES6", "DOM"],
+    "typeRoots": [
+      "./typings"
+    ],
+    // 将编译产物输出到独立目录，避免覆盖现有 .js 输入文件
+    "outDir": "./.tsbuild",
+    "rootDir": ".",
+    // 降低第三方库类型检查噪音
+    "skipLibCheck": true,
+    // 不生成声明文件，保持编译简单
+    "declaration": false,
+    "sourceMap": false
+  },
+  "include": [
+    "./**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/*_backup.ts",
+    "**/*_backup_*.ts",
+    "**/*_old.ts",
+    "**/*_bak.ts",
+    "**/__MACOSX/**"
+  ]
+}

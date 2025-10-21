@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 1:1对应Vue的record-table tbody tr -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@android:color/transparent">
+
+    <!-- 主要内容区域 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+
+        android:padding="12dp">
+
+        <!-- 中奖人 - 对应Vue: <td>{{ row.user }}</td> -->
+        <TextView
+            android:id="@+id/userText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.2"
+            android:text="刘xxx女士"
+            android:textSize="13sp"
+            android:textColor="#F7E8A1"
+            android:gravity="center_vertical|start"
+            android:paddingHorizontal="8dp" />
+
+        <!-- 奖项 - 对应Vue: <td>{{ row.award }}</td> -->
+        <TextView
+            android:id="@+id/awardText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="一等奖"
+            android:textSize="13sp"
+            android:textColor="#F7E8A1"
+            android:gravity="center"
+            android:paddingHorizontal="8dp" />
+
+        <!-- 时间 - 对应Vue: <td>{{ row.time }}</td> -->
+        <TextView
+            android:id="@+id/timeText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.2"
+            android:text="9/25 16:17"
+            android:textSize="13sp"
+            android:textColor="#F7E8A1"
+            android:gravity="center"
+            android:paddingHorizontal="8dp" />
+
+        <!-- 结果 - 对应Vue: <td class="res">{{ row.result }}</td> -->
+        <TextView
+            android:id="@+id/resultText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.2"
+            android:text="文创水杯"
+            android:textSize="13sp"
+            android:textColor="#F7E8A1"
+            android:gravity="center"
+            android:paddingHorizontal="8dp" />
+
+        <!-- 价值 - 对应Vue: <td>{{ row.price }}</td> -->
+        <TextView
+            android:id="@+id/valueText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="240¥"
+            android:textSize="13sp"
+            android:textColor="#F7E8A1"
+            android:gravity="center_vertical|end"
+            android:paddingHorizontal="8dp" />
+
+    </LinearLayout>
+
+    <!-- 分隔线 -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#80FFFFFF"
+        android:layout_marginHorizontal="12dp" />
+
+</LinearLayout>

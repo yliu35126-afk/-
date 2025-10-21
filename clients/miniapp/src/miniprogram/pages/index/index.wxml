@@ -1,0 +1,115 @@
+<!--index.wxml-->
+<navigation-bar title="异企趣玩" back="{{false}}" color="white" background="transparent"></navigation-bar>
+<view class="lottery-container">
+  <!-- 环境设置浮动入口已移除（审核要求） -->
+  <!-- 背景装饰 -->
+  <view class="bg-decoration">
+    <view class="lantern lantern-left"></view>
+    <view class="lantern lantern-right"></view>
+    <view class="cloud cloud-left"></view>
+    <view class="cloud cloud-right"></view>
+    <view class="mountain mountain-left"></view>
+    <view class="mountain mountain-right"></view>
+  </view>
+  
+  <!-- 主要内容卡片 -->
+  <view class="lottery-card">
+    <view class="card-header">
+      <text class="subtitle">异 · 企 · 趣 · 玩</text>
+      <text class="english-title">LOTTERY DRAW</text>
+    </view>
+    
+    <view class="card-body">
+      <text class="main-title">抽奖啦！</text>
+      <text class="description">现场抽奖啦！</text>
+      <text class="description">礼品就在眼前，抽中马上带走</text>
+    </view>
+    
+    <!-- 装饰元素 -->
+    <view class="decorative-elements">
+      <view class="bird bird-left"></view>
+      <view class="bird bird-right"></view>
+      <view class="firework firework-1"></view>
+      <view class="firework firework-2"></view>
+    </view>
+  </view>
+  
+  <!-- 抽奖按钮 -->
+  <button class="lottery-btn" bindtap="startLottery">付款抽奖</button>
+</view>
+
+<!-- 金额选择弹窗 -->
+<view class="amount-selector-mask" wx:if="{{showAmountSelector}}" bindtap="cancelAmountSelection">
+  <view class="amount-selector" catchtap="{{}}">
+    <view class="selector-header">
+      <text class="selector-title">请选择抽奖金额</text>
+      <text class="selector-subtitle">Choose your amount</text>
+      <view class="scroll-tip" wx:if="{{availableAmounts.length > 3}}">
+        <text>↕ 滑动查看更多选项</text>
+      </view>
+    </view>
+    
+    <view class="selector-content">
+      <!-- 左侧：金额选择列表 -->
+      <view class="amount-list">
+        <button class="amount-item {{selectedAmount === item ? 'selected' : ''}}" 
+                wx:for="{{availableAmounts}}" 
+                wx:key="index"
+                data-amount="{{item}}"
+                catchtap="onAmountTap">
+          <view class="amount-main">¥{{item}}</view>
+          <view class="amount-desc">{{item}}元抽奖</view>
+        </button>
+      </view>
+      
+      <!-- 右侧：奖品展示区域 -->
+      <view class="prizes-display">
+        <view class="prizes-header">
+          <text class="prizes-title">奖品预览</text>
+          <text class="prizes-subtitle">奖品专区</text>
+        </view>
+        <scroll-view class="prizes-scroll" scroll-y="{{true}}" wx:if="{{currentPrizes.length > 0}}">
+          <view class="prize-item {{prize.is_depleted == 1 ? 'depleted' : ''}}" wx:for="{{currentPrizes}}" wx:for-item="prize" wx:key="id">
+            <image 
+              class="prize-image {{prize.is_depleted == 1 ? 'depleted' : ''}}" 
+              src="{{prize.image}}" 
+              mode="aspectFill"
+              lazy-load="{{true}}"
+            />
+            <view class="prize-info">
+              <text class="prize-name">{{prize.name}}</text>
+              <view class="prize-price-wrapper">
+                <text class="prize-original-price">¥{{prize.original_price}}</text>
+              </view>
+            </view>
+            <!-- 库存耗尽遮罩 -->
+            <view class="depleted-mask" wx:if="{{prize.is_depleted == 1}}">
+              奖池已送完
+            </view>
+          </view>
+        </scroll-view>
+        <view class="no-prizes" wx:else>
+          <block wx:if="{{selectedAmount && currentPrizes.length === 0}}">
+            <text class="demo-tip">该金额暂无配置奖品</text>
+          </block>
+          <block wx:else>
+            <text>请选择金额查看奖品</text>
+          </block>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 底部操作按钮区域 -->
+        <!-- 顶部操作按钮区域 -->
+    <view class="selector-actions">
+      <button class="cancel-btn" bindtap="cancelAmountSelection">取消</button>
+      <button class="confirm-btn" 
+              wx:if="{{selectedAmount}}"
+              data-amount="{{selectedAmount}}"
+              bindtap="selectAmount">
+        <text class="btn-text-main">确认支付</text>
+      </button>
+      <view class="confirm-placeholder" wx:else>请选择金额</view>
+    </view>
+  </view>
+</view>

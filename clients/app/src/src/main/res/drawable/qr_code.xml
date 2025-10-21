@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="180dp"
+    android:height="180dp"
+    android:viewportWidth="180"
+    android:viewportHeight="180">
+    
+    <!-- 外边框 -->
+    <path
+        android:fillColor="#FF9800"
+        android:pathData="M15,15 L165,15 L165,165 L15,165 Z" />
+    
+    <!-- 内容区 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M22,22 L158,22 L158,158 L22,158 Z" />
+    
+    <!-- 简化的二维码图案 - 按比例放大 -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M30,30 L45,30 L45,45 L30,45 Z
+                         M52,30 L67,30 L67,45 L52,45 Z
+                         M75,30 L90,30 L90,45 L75,45 Z
+                         M112,30 L127,30 L127,45 L112,45 Z
+                         M135,30 L150,30 L150,45 L135,45 Z
+                         
+                         M30,52 L45,52 L45,67 L30,67 Z
+                         M75,52 L90,52 L90,67 L75,67 Z
+                         M135,52 L150,52 L150,67 L135,67 Z
+                         
+                         M30,75 L45,75 L45,90 L30,90 Z
+                         M52,75 L67,75 L67,90 L52,90 Z
+                         M97,75 L112,75 L112,90 L97,90 Z
+                         M135,75 L150,75 L150,90 L135,90 Z
+                         
+                         M30,112 L45,112 L45,127 L30,127 Z
+                         M75,112 L90,112 L90,127 L75,127 Z
+                         M112,112 L127,112 L127,127 L112,127 Z
+                         
+                         M30,135 L45,135 L45,150 L30,150 Z
+                         M52,135 L67,135 L67,150 L52,150 Z
+                         M97,135 L112,135 L112,150 L97,150 Z
+                         M135,135 L150,135 L150,150 L135,150 Z" />
+
+</vector>
