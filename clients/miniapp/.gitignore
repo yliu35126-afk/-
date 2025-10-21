@@ -1,8 +1,0 @@
-# WeChat Mini Program / UniApp
-/node_modules/
-/miniprogram_npm/
-/unpackage/
-/dist/
-/build/
-*.log
-.DS_Store
