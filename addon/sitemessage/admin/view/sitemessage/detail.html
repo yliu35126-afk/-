@@ -1,0 +1,429 @@
+{extend name="app/admin/view/base.html"/}
+{block name="resources"}
+<style>
+    .content {
+        padding: 0 15px;
+        margin: 10px 0;
+        border: 1px solid #e6e6e6;
+    }
+
+    .content .header {
+        display: flex;
+        align-items: center;
+        /*max-height: 438px;*/
+        /*height: 255px;*/
+    }
+
+    .content .header .header-left {
+        background-color: #FFFFFF;
+        height: 100%;
+        width: 100%;
+    }
+
+    .content .header .header-left .head {
+        font-size: 15px;
+        font-weight: 500;
+        color: #333;
+        line-height: 21px;
+        padding: 16px 0 12px 22px;
+        position: relative;
+    }
+
+    .content .header .header-left .head:before {
+        content: '';
+        width: 4px;
+        height: 13px;
+        background-color: #5288f5;
+        position: absolute;
+        top: 20px;
+        left: 13px;
+    }
+
+    .content .header .header-left .item {
+        display: flex;
+        align-items: center;
+        align-items: flex-start;
+        margin-top: 24px;
+        padding-left: 25px;
+    }
+
+    .content .header .header-left .item .title {
+        font-size: 14px;
+        font-weight: 400;
+        line-height: 19px;
+        min-width: 70px;
+        text-align: right;
+    }
+
+    .content .header .header-left .item .content2 {
+        font-size: 14px;
+    }
+
+
+    .statistics-data {
+        padding: 26px;
+        background: #fff;
+    }
+
+    .statistics-data-title {
+        font-size: 17px;
+        font-weight: 500;
+        line-height: 24px;
+        margin-bottom: 16px;
+    }
+
+    .statistics-data-content {
+        display: flex;
+        -webkit-box-align: end;
+        align-items: flex-end;
+    }
+
+    .statistics-data-content-box {
+        height: 118px;
+
+        display: flex;
+        align-items: center;
+        width: 100%;
+    }
+
+    .statistics-data-content-tips {
+        display: inline-block;
+        margin-left: 16px;
+    }
+
+    .statistics-data-content-record {
+        width: calc((100% - 2px) / 3);
+        text-align: center;
+        padding: 20px 3px;
+        margin: 0 5px;
+        background: #fbfbff;
+        border: 1px solid #E6E6E6;
+    }
+
+    .statistics-data-content-lines {
+        width: 1px;
+        height: 38px;
+    }
+
+    .customer-number {
+        margin-top: 14px;
+    }
+
+    .customer-number span {
+        font-size: 32px;
+        font-weight: 500;
+    }
+
+    .statistics-trends {
+        margin-top: 20px;
+        background: #fff;
+        padding: 26px;
+    }
+
+
+    .message-html img {
+        max-width: 100%;
+
+    }
+
+    .message-html {
+        max-height: 420px;
+        overflow-y: auto;
+    }
+</style>
+
+{/block}
+{block name='main'}
+<div class="content">
+    <div class="header">
+        <div class="header-left">
+            <p class="head border-color-gray">群发详细</p>
+            <div class="item text">
+                <span class="title">消息标题：</span>
+                <div class="content2">
+                    <span>{$info.title}</span>
+                </div>
+            </div>
+            <div class="item text">
+                <span class="title">消息简介：</span>
+                <div class="content2">{$info.content}</div>
+            </div>
+            {if condition="!empty($info.link)"}
+            <div class="item text">
+                <span class="title">消息链接：</span>
+                <div class="content2"><a class="layui-btn layui-btn-normal" href="{$info.link}" target="_blank">{$info.link}</a>
+                </div>
+            </div>
+            {/if}
+            {if condition="!empty($info.text)"}
+            <div class="item text">
+                <span class="title">消息内容：</span>
+                <div class="content2">
+                    <a class="ns-text-color" href="javascript:openText();">
+                        查看
+                    </a>
+                </div>
+            </div>
+            {/if}
+            <div class="item text">
+                <span class="title">发送状态：</span>
+                <div class="content2">{$info.status_name}</div>
+            </div>
+            <div class="item">
+                <span class="title">群发类型：</span>
+                <div class="content2 people-box">
+                    <span class="people">
+                        <span class="icon-wrap"></span>
+                        <span>{$info.is_timing==1?'定时发送':'立即发送'}</span>
+                    </span>
+                </div>
+            </div>
+            {if condition="$info.is_timing==1"}
+            <div class="item">
+                <span class="title">定时时间：</span>
+                <div class="content2 people-box">
+                    <span class="people">
+                        <span class="icon-wrap"></span>
+                        <span>{$info.timing|date='Y-m-d H:i:s'}</span>
+                    </span>
+                </div>
+            </div>
+            {/if}
+            <div class="item">
+                <span class="title">创建时间：</span>
+                <div class="content2 people-box">
+                    <span class="people">
+                        <span class="icon-wrap"></span>
+                        <span>{$info.create_time|date='Y-m-d H:i:s'}</span>
+                    </span>
+                </div>
+            </div>
+            <div class="item">
+                <span class="title">限制场景：</span>
+                <div class="content2 people-box">
+                    <span class="people">
+                        <span class="icon-wrap"></span>
+                        <span>{$info.scene}</span>
+                    </span>
+                </div>
+            </div>
+            <div class="item">
+                <span class="title">群发对象：</span>
+                <div class="content2 people-box">
+                    <div class="layui-textarea ns-len-long">
+                        {if $info.is_search==1 && $info.member_count > 0}
+                        满足以下条件的有{$info.member_count}个客户
+                        {/if}
+                        {if $info.is_search==0 && $info.member_count > 1}
+                        全部客户
+                        {/if}
+
+                        {if condition="isset($info.json.sex) && !empty($info.json.sex)"}
+                        <p><label>性别：</label>
+                            {switch name="$info.json.sex"}
+                            {case value="all"}全部{/case}
+                            {case value="0"}未知{/case}
+                            {case value="1"}男{/case}
+                            {case value="2"}女{/case}
+                            {/switch}
+                        </p>
+                        {/if}
+                        {if condition="isset($info.json.member_level) && !empty($info.json.member_level)"}
+                        <p><label>会员等级：</label>
+                            {foreach($info.json.member_level as $v)}
+                            {$v}
+                            {/foreach}
+                        </p>
+                        {/if}
+                        {if condition="isset($info.json.member_label) && !empty($info.json.member_label)"}
+                        <p><label>会员标签：</label>
+                            {foreach($info.json.member_label as $v)}
+                            {$v}
+                            {/foreach}
+                        </p>
+                        {/if}
+                        {if condition="isset($info.json.remove_member_label) &&
+                        !empty($info.json.remove_member_label)"}
+                        <p><label>排除会员标签：</label>
+                            {foreach($info.json.remove_member_label as $v)}
+                            {$v}
+                            {/foreach}
+                        </p>
+                        {/if}
+
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="header">
+            <div class="header-left">
+                <p class="head border-color-gray">数据统计</p>
+                <div class="statistics-data">
+                    <div class="statistics-data-content">
+                        <div class="statistics-data-content-box border-color bg-color-clarity">
+                            <div class="statistics-data-content-record">
+
+                                <div class="customer-number">
+                                    <span>{if !empty($count.zcount)}{$count.zcount}{else/}0{/if}</span>
+                                    人
+                                </div>
+                                <p class="text-color-tip">总发送</p>
+                            </div>
+                            <div class="statistics-data-content-lines bg-color-gray"></div>
+                            <div class="statistics-data-content-record">
+                                <div class="customer-number">
+                                    <span>{if !empty($count.ycount)}{$count.ycount}{else/}0{/if}</span>
+                                    人
+                                </div>
+                                <p class="text-color-tip">已发送</p>
+                            </div>
+                            <div class="statistics-data-content-lines bg-color-gray"></div>
+                            <div class="statistics-data-content-record">
+
+                                <div class="customer-number">
+						<span>{if
+							!empty($count.rcount)}{$count.rcount}{else/}0{/if}</span>
+                                    人
+                                </div>
+                                <p class="text-color-tip">已阅读</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div class="content">
+        <div class="header">
+            <div class="header-left">
+                <p class="head border-color-gray">群发详细</p>
+                <table id="account_list" lay-filter="account_list"></table>
+            </div>
+        </div>
+    </div>
+    {/block}
+    {block name="script"}
+    <script type="text/html" id="member_info">
+        <div class="ns-table-btn">
+            <p>
+                {{# if (d.headimg != ""){ }}
+                <img src="{{ns.img(d.headimg)}}" width="30" height="30" style="border-radius: 50%;"> <span
+                    style="margin-left: 10px;">{{d.nickname}}</span>
+                {{# } else { }}
+                <img src="{:img($default_img.default_headimg)}" width="30" height="30" style="border-radius: 50%;">
+                {{d.nickname}}
+                {{# } }}
+            </p>
+        </div>
+    </script>
+    <script type="text/html" id="now_send">
+        <div class="ns-table-btn">
+            <a class="layui-btn" lay-event="edit">立即发送</a>
+        </div>
+    </script>
+    <!--消息内容-->
+    <script type="text/html" id="message_html">
+        <div class="message-html">{:htmlspecialchars_decode($info.text)}</div>
+    </script>
+    <script type="text/html" id="action">
+        <div class="ns-table-btn">
+            <a class="layui-btn" lay-event="detail">查看详情</a>
+        </div>
+    </script>
+    <script>
+        var laytpl;
+
+
+        var start_time, end_time;
+        layui.use(['laydate', 'form', 'laytpl'], function () {
+                var form = layui.form,
+                    repeat_flag = false;
+                laytpl = layui.laytpl;
+                form.render();
+                var id = {$info.id};
+                var table = new Table({
+                    elem: '#account_list',
+                    url: ns.url("sitemessage://admin/sitemessage/detail?id=" + id),
+                    cols: [
+                        [{
+                            field: 'nickname',
+                            title: '会员名称',
+                            unresize: 'false',
+                            width: '20%',
+                            toolbar: '#member_info',
+
+                        }, {
+                            field: 'sended_time',
+                            title: '发送时间',
+                            unresize: 'false',
+                            width: '20%',
+                            templet: function (data) {
+                                return ns.time_to_date(data.sended_time);
+                            }
+                        }, {
+                            field: 'sended_status',
+                            title: '接收状态',
+                            unresize: 'false',
+                            width: '20%',
+                            align: 'left',
+                            templet: function (data) {
+                                var str = '';
+                                if (data.sended_status == 0) {
+                                    str = '未送达';
+                                } else if (data.sended_status == 1) {
+                                    str = '已送达';
+                                } else if (data.sended_status == 2) {
+                                    str = '已接收';
+                                }
+                                return str;
+                            }
+                        }, {
+                            field: 'seed_time',
+                            title: '接收时间',
+                            unresize: 'false',
+                            width: '20%',
+                            align: 'left',
+                            templet: function (data) {
+                                return ns.time_to_date(data.seed_time);
+                            }
+                        },{
+                            title: '操作',
+                            toolbar: '#action',
+                            unresize: 'false',
+                            width: '10%'
+                        }]
+                    ]
+                });
+                /**
+                 * 监听工具栏操作
+                 */
+                table.tool(function (obj) {
+                    var data = obj.data;
+                    switch (obj.event) {
+                        case 'detail': //详情
+                            location.href = ns.url("admin/member/editMember", {"member_id": data.member_id});
+                            break;
+                    }
+                });
+            }
+        )
+
+        function openText() {
+            laytpl($("#message_html").html()).render([], function (html) {
+				layer.open({
+					title: '消息内容',
+					type: 1,
+					area: ['600px', '500px'], //宽高
+					content: html
+				});
+			});
+        };
+
+
+    </script>
+    {/block}

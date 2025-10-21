@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta name="renderer" content="webkit" />
+		<meta http-equiv="X-UA-COMPATIBLE" content="IE=edge,chrome=1" />
+		<title>{$menu_info['title']|default=""} - {$shop_info['site_name']|default="多商户客服"}</title>
+		<meta name="keywords" content="$shop_info['seo_keywords']}">
+		<meta name="description" content="$shop_info['seo_description']}">
+		<link rel="icon" type="image/x-icon" href="__STATIC__/img/shop_bitbug_favicon.ico" />
+		<link rel="stylesheet" type="text/css" href="SERVICER_CSS/iconfont.css" />
+		<link rel="stylesheet" type="text/css" href="__STATIC__/ext/layui/css/layui.css" />
+		<link rel="stylesheet" type="text/css" href="SERVICER_CSS/common.css" />
+		<script src="__STATIC__/js/jquery-3.1.1.js"></script>
+		<script src="__STATIC__/ext/layui/layui.js"></script>
+		<script src="SERVICER_JS/emjoy.js"></script>
+		<script>
+			layui.use(['layer', 'upload', 'element'], function() {});
+
+			window.ns_url = {
+				baseUrl: "ROOT_URL/",
+				route: ['{:request()->module()}', '{:request()->controller()}', '{:request()->action()}'],
+			};
+		</script>
+		<script src="__STATIC__/js/common.js"></script>
+		<script src="SHOP_JS/common.js"></script>
+		<script src="STATIC_JS/vue.js"></script>
+		<style>
+			html, body{ background-color: #ccc; }
+		.login-body { background-color: #fff !important; }
+		.ns-calendar{background:url(__STATIC__/img/ns_calendar.png) no-repeat center/16px 16px}
+		.servicer-chat-base{width:100%;height:100%;padding-top:100px;display:flex;flex-direction:column;align-items:center}
+		.servicer-chat-base img{width:100px;height:100px;border-radius:50%}
+		.servicer-chat-base-name{width:100%;text-align:center;margin-top:30px}
+		.servicer-chat-base-code{width:100%;text-align:center;margin-top:30px}
+		.layui-nav{background:#fff;padding-left: 30px;}
+		.layui-nav-item a:hover{color:#000}
+		.ns-user{ display: flex; height: 100%;align-items: center;justify-content: space-between;width: calc(100% - 600px); min-width: 600px;padding: 0 20px;box-sizing: border-box;}
+		.ns-user span{background-color: #fff;padding: 10px 20px;border-radius: 25px;}
+		.ns-user .logoout{padding: 5px 17px;color: #333;cursor: pointer;}
+		.ns-user .member-name{display: flex;align-items: center;}
+		.ns-user .member-name p{color: #fff;font-size: 16px;font-weight: 400;}
+		.ns-user .member-name .line-box{display: flex;align-items: center; background-color: #fff;height: 20px;width: 56px;justify-content: center;border-radius: 10px;margin-left: 10px;}
+		.ns-user .member-name .line-box span{display: inline-block;width: 6px;height: 6px;background-color: #70ED3A;padding: 0;cursor: pointer}
+		.ns-user .member-name .line-box p{color: #333;font-size: 12px;font-weight: 400;padding-left: 5px;cursor: pointer}
+		.ns-nav-more{width: 280px;min-width: 280px; height: 68px;line-height:68px;display: flex; justify-content: space-around;}
+		.ns-nav-more span{display: inline-block; color: #fff;box-sizing: border-box; cursor: pointer;}
+		.ns-nav-more span.active{border-bottom: 4px solid #fff;}
+	</style>
+		{block name="resources"}{/block}
+	</head>
+
+	<body>
+		{block name="body"}
+		<div class="layui-layout layui-layout-admin">
+			{block name='side_menu'}
+			<!-- <div class="layui-side ns-second-nav">
+			<div class="layui-side-scroll">
+				<div class="servicer-chat-base">
+					<img layer-src src="{:img($shop_info['logo'])}" onerror=src="SHOP_IMG/default_shop.png">
+					<div class="servicer-chat-base-name">售后客服：{$user_info['username']}</div>
+				</div>
+			</div>
+		</div> -->
+			{/block}
+			<!-- 面包屑 -->
+			{block name='crumbs'}
+			<div class="ns-crumbs">
+				<span class="layui-breadcrumb" lay-separator="-">
+				</span>
+				<div class="ns-input-box">
+					<input class="ns-input" placeholder="请输入要搜索的用户名称"></input>
+					<span class="ns-input-close iconfont iconclose" onclick="spanBlur()"></span>
+				</div>
+				<div class="ns-user">
+					<div class="member-name">
+						<p href="javascript:;">{$user_info['username']}</p>
+					</div>
+					<div>
+						<span class="logoout" onclick="logoout()">退出登录</span>
+					</div>
+				</div>
+				<div class="ns-nav-more">
+					<span class="ns-nav-more-span" data-id="001">用户信息</span>
+					<span class="ns-nav-more-span" data-id="002">订单信息</span>
+					<span class="ns-nav-more-span" data-id="003">商品信息</span>
+				</div>
+			</div>
+			<script type="text/javascript">
+				window.onload = function() {
+					var aInput = document.getElementsByClassName('ns-nav-more-span');
+					for (var i = 0; i < aInput.length; i++) {
+						aInput[i].index = i;
+						aInput[i].onclick = function() {
+							if(window.vue.activeMemberId){
+								for (var j = 0; j < aInput.length; j++) {
+									aInput[j].className = 'ns-nav-more-span';
+								}
+								var activeValue = aInput[this.index].dataset.id;
+								window.vue.moveActive = activeValue;
+								aInput[this.index].className = 'ns-nav-more-span active';
+								window.vue.orderInfoDetailsActive = false
+								window.vue.shopInfoDetailsActive = false
+								window.vue.historyActive = false
+							} else {
+								layer.msg('未选择在线用户！')
+								return false
+							}
+							
+							
+						}
+					}
+					$('.ns-input').bind('keypress', function(event) {
+						if (event.keyCode == 13) {
+							window.vue.userPageData(0, $('.ns-input').val())
+						}
+					});
+					$('.ns-input').bind('input', function(event) {
+						if ($('.ns-input').val().length>=1) {
+								$(".ns-input-close").css("display", "block");
+						} else {
+							$(".ns-input-close").css("display", "none");
+						}
+					});
+					// $('ns-input-close').click(function() {
+					// 	console.log('1233123')
+					// 	$(".ns-input-close").css("display", "none");
+					// 	$('.ns-input').val('')
+					// 	window.vue.userPageData()
+					// });
+				}
+
+				function logoout() {
+					location.href = ns.url('servicer://servicer/login/logout');
+				}
+
+				// function inputFours() {
+				// 	$(".ns-input-close").css("display", "block");
+				// }
+
+				// function inputBlur() {
+				// 	$(".ns-input-close").css("display", "none");
+				// }
+
+				function spanBlur() {
+					$(".ns-input-close").css("display", "none");
+					$('.ns-input').val('')
+					window.vue.userPageData()
+				}
+			</script>
+			{/block}
+
+			<div class="ns-body layui-body">
+				<!-- 四级菜单 -->
+				{block name='head'}{/block}
+
+				<!-- 内容 -->
+				<div class="ns-body-content">
+					{block name="main"}{/block}
+				</div>
+			</div>
+		</div>
+
+
+		{/block}
+		{block name="script"}
+		{/block}
+	</body>
+</html>

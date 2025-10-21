@@ -1,0 +1,145 @@
+{extend name="app/admin/view/base.html"/}
+{block name="resources"}
+<style>
+	.layui-table[lay-skin=line] {margin-top: 15px; border-width: 0;}
+	.ns-align-right {text-align: right!important;}
+	.ns-title-pic {
+		flex-shrink: 0;
+		display: inline-block;
+		width: 50px;
+		height: 50px;
+		text-align: center;
+		line-height: 50px;
+		margin-left: 5px;
+	}
+</style>
+{/block}
+{block name="main"}
+
+<div class="layui-form ns-tips">
+	<div class="layui-form-item">
+		<label class="layui-form-label">发起人信息：</label>
+		<div class="ns-table-title layui-input-inline">
+			<div class="ns-title-pic">
+				<img layer-src src="{:img($info['headimg'])}"/>
+			</div>
+			<div class="ns-title-content">
+				<a href="javascript:;" class="ns-multi-line-hiding ns-text-color" title="{$info['nickname']}">{$info['nickname']}</a>
+			</div>
+		</div>
+	</div>
+	<div class="layui-form-item">
+		<label class="layui-form-label">商品信息：</label>
+		<div class="ns-table-title layui-input-inline">
+			<div class="ns-title-pic">
+				<img layer-src src="{:img($info['sku_image'])}"/>
+			</div>
+			<div class="ns-title-content">
+				<a href="javascript:;" class="ns-multi-line-hiding ns-text-color" title="{$info['sku_name']}">{$info['sku_name']}</a>
+			</div>
+		</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">发起砍价时间：</label>
+		<div class="layui-input-inline">{:time_to_date($info.start_time)}</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">最少砍价数/已砍人数：</label>
+		<div class="layui-input-inline">{$info.need_num} / {$info.curr_num}</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">底价：</label>
+		<div class="layui-input-inline">￥{$info.floor_price}</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">结束时间：</label>
+		<div class="layui-input-inline">{:time_to_date($info.end_time)}</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">砍价状态：</label>
+		<div class="layui-input-inline">
+			{if $info.status == 2}
+			砍价失败
+			{elseif $info.status == 0}
+			砍价中
+			{else/}
+			砍价成功
+			{/if}
+		</div>
+	</div>
+
+</div>
+
+<table id="order_list" lay-filter="order_list"></table>
+
+<!-- 参与人 -->
+<script type="text/html" id="member_info">
+	<div class="ns-table-title">
+		<div class="ns-title-pic">
+			{{#  if(d.headimg){  }}
+			<img layer-src src="{{ns.img(d.headimg)}}"/>
+			{{#  }  }}
+		</div>
+		<div class="ns-title-content">
+			<a href="javascript:;" class="ns-multi-line-hiding ns-text-color" title="{{d.nickname}}">{{d.nickname}}</a>
+		</div>
+	</div>
+</script>
+
+{/block}
+{block name="script"}
+<script>
+	var launch_id = "{$launch_id}";
+	layui.use(['form', 'element'], function() {
+		var table,
+				form = layui.form,
+				element = layui.element;
+		form.render();
+		table = new Table({
+			elem: '#order_list',
+			url: ns.url("bargain://admin/bargain/launchdetail"),
+			where: {
+				"launch_id": launch_id
+			},
+			cols: [
+				[{
+					title: '帮砍人信息',
+					unresize: 'false',
+					templet:'#member_info'
+				}, {
+					title: '帮砍金额',
+					unresize: 'false',
+					templet:function(data){
+						return '￥' + data.money;
+					}
+				}, {
+					title: '帮砍时间',
+					unresize: 'false',
+					templet: function(data) {
+						return ns.time_to_date(data.bargain_time);
+					}
+				}]
+			],
+
+		});
+
+		/**
+		 * 监听工具栏操作
+		 */
+		table.tool(function(obj) {
+			var data = obj.data;
+			switch (obj.event) {
+				case 'check': //查看
+					var newWin = window.open('about:blank');
+					newWin.location.href = ns.url("admin/order/detail", {"order_id": data.order_id});
+					break;
+			}
+		});
+	});
+</script>
+{/block}

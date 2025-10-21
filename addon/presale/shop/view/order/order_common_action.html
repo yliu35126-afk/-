@@ -1,0 +1,116 @@
+<script type="text/javascript">
+var laytpl;
+var form;
+//渲染模板引擎
+layui.use(['laytpl','form'], function(){
+    laytpl = layui.laytpl;
+    form = layui.form;
+	form.render();
+});
+/**
+ * 订单操作
+ * @param fun
+ * @param order_data
+ */
+function orderAction(fun, order_id){
+    eval(fun+"("+order_id+")");
+}
+
+/**
+ * 关闭订单
+ * @param order_id
+ */
+function orderClose(order_id){
+	layer.confirm('确定要关闭该订单吗?', function() {
+		$.ajax({
+			url: ns.url("presale://shop/order/close"),
+			data: {order_id : order_id},
+			dataType: 'JSON',
+			type: 'POST',
+			success: function(res) {
+				layer.msg(res.message);
+				
+				if (res.code == 0) {
+					location.reload();
+				}
+			}
+		});
+	}, function () {
+		layer.close();
+	});
+}
+
+/**
+* 线下支付定金
+* @param order_id
+*/
+function offlinePayDeposit(order_id){
+    layer.confirm('确定要线下支付定金吗?', function() {
+        $.ajax({
+            url: ns.url("presale://shop/order/offlinePayDeposit"),
+            data: {order_id : order_id},
+            dataType: 'JSON',
+            type: 'POST',
+            success: function(res) {
+                layer.msg(res.message);
+
+                if (res.code == 0) {
+                    location.reload();
+                }
+            }
+        });
+    }, function () {
+        layer.close();
+    });
+}
+
+/**
+ * 线下支付尾款
+ * @param order_id
+ */
+function offlinePayFinal(order_id){
+    layer.confirm('确定要线下支付尾款吗?', function() {
+        $.ajax({
+            url: ns.url("presale://shop/order/offlinePayFinal"),
+            data: {order_id : order_id},
+            dataType: 'JSON',
+            type: 'POST',
+            success: function(res) {
+                layer.msg(res.message);
+
+                if (res.code == 0) {
+                    location.reload();
+                }
+            }
+        });
+    }, function () {
+        layer.close();
+    });
+
+}
+
+/**
+ * 删除订单
+ * @param order_id
+ */
+function deleteOrder(order_id){
+    layer.confirm('确定要删除该订单吗?', function() {
+        $.ajax({
+            url: ns.url("presale://shop/order/deleteOrder"),
+            data: {order_id : order_id},
+            dataType: 'JSON',
+            type: 'POST',
+            success: function(res) {
+                layer.msg(res.message);
+
+                if (res.code == 0) {
+                    location.href = ns.url("presale://shop/order/lists");
+                }
+            }
+        });
+    }, function () {
+        layer.close();
+    });
+}
+
+</script>

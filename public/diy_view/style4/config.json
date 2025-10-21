@@ -1,0 +1,308 @@
+{
+  "templateInfo": {
+    "name": "母婴生活馆",
+    "desc": "牛之云网络科技专注模板设计与开发，智能装修，操作简单，助您提升店铺装修视觉体验，提高店铺转化！售后有保障，牛之云网络科技愿竭诚为您服务！",
+    "mark": "motherandbaby_template"
+  },
+  "templateValue": {
+    "DIY_VIEW_INDEX": {
+      "image": "public/diy_view/style4/img/cover.png",
+      "data":
+      {
+        "global": {
+          "title": "母婴生活馆",
+          "bgColor": "#ffffff",
+          "topNavColor": "#ffffff",
+          "topNavbg": false,
+          "textNavColor": "#333333",
+          "topNavImg": "",
+          "moreLink": {
+            "name": ""
+          },
+          "openBottomNav": true,
+          "navStyle": 1,
+          "textImgStyleLink": "1",
+          "textImgPosLink": "center",
+          "popWindow": {
+            "imageUrl": "public/diy_view/style4/img/adv_supernatant.png",
+            "count": 1,
+            "link": {
+              "name": ""
+            },
+            "imgWidth": "362",
+            "imgHeight": "502"
+          },
+          "bgUrl": "public/diy_view/style4/img/bg_img.png",
+          "mpCollect": false
+        },
+        "value": [
+          {
+            "title": "搜索",
+            "textColor": "#999999",
+            "textAlign": "left",
+            "backgroundColor": "",
+            "bgColor": "#ffffff",
+            "defaultTextColor": "#999999",
+            "borderType": 2,
+            "searchType": 1,
+            "searchImg": "",
+            "searchStyle": 1,
+            "addon_name": "",
+            "type": "SEARCH",
+            "name": "商品搜索",
+            "isPosition": 1,
+            "controller": "Search",
+            "is_delete": "0"
+          },
+          {
+            "selectedTemplate": "carousel-posters",
+            "imageClearance": 0,
+            "imageRadius": "fillet",
+            "carouselChangeStyle": "circle",
+            "marginTop": 0,
+            "padding": 0,
+            "height": 0,
+            "list": [
+              {
+                "imageUrl": "public/diy_view/style4/img/banner1.png",
+                "title": "",
+                "link": {
+                  "name": ""
+                },
+                "imgWidth": "702",
+                "imgHeight": "348"
+              },
+              {
+                "imageUrl": "public/diy_view/style4/img/banner2.png",
+                "title": "",
+                "link": {
+                  "name": ""
+                },
+                "imgWidth": "702",
+                "imgHeight": "349"
+              }
+            ],
+            "addon_name": "",
+            "type": "IMAGE_ADS",
+            "name": "图片广告",
+            "controller": "ImageAds",
+            "is_delete": "0"
+          },
+          {
+            "textColor": "#666666",
+            "defaultTextColor": "#666666",
+            "backgroundColor": "",
+            "selectedTemplate": "imageNavigation",
+            "showType": 5,
+            "scrollSetting": "fixed",
+            "padding": 20,
+            "marginTop": 5,
+            "list": [
+              {
+                "imageUrl": "public/diy_view/style4/img/icon1.png",
+                "title": "爆款特卖",
+                "link": {
+                  "name": "GROUPBUY_PREFECTURE",
+                  "menuOne": "MALL_PAGE",
+                  "menuTwo": "MARKETING_LINK",
+                  "type": 1,
+                  "wap_url": "/promotionpages/groupbuy/list/list",
+                  "title": "团购专区"
+                },
+                "imgWidth": "127",
+                "imgHeight": "127"
+              },
+              {
+                "imageUrl": "public/diy_view/style4/img/icon2.png",
+                "title": "积分商城",
+                "link": {
+                  "name": "BARGAIN_PREFECTURE",
+                  "menuOne": "MALL_PAGE",
+                  "menuTwo": "MARKETING_LINK",
+                  "type": 1,
+                  "wap_url": "/promotionpages/bargain/list/list",
+                  "title": "砍价专区"
+                },
+                "imgWidth": "127",
+                "imgHeight": "127"
+              },
+              {
+                "imageUrl": "public/diy_view/style4/img/icon3.png",
+                "title": "儿童玩具",
+                "link": {
+                  "name": "MY_GIFT",
+                  "menuOne": "MALL_PAGE",
+                  "menuTwo": "MARKETING_LINK",
+                  "type": 1,
+                  "wap_url": "/otherpages/member/gift/gift",
+                  "title": "我的礼品"
+                },
+                "imgWidth": "127",
+                "imgHeight": "127"
+              },
+              {
+                "imageUrl": "public/diy_view/style4/img/icon4.png",
+                "title": "签到积分",
+                "link": {
+                  "name": "MEMBER_INTEGRAL",
+                  "menuOne": "MALL_PAGE",
+                  "menuTwo": "MALL_LINK",
+                  "type": 1,
+                  "wap_url": "/otherpages/member/point/point",
+                  "title": "我的积分"
+                },
+                "imgWidth": "127",
+                "imgHeight": "127"
+              },
+              {
+                "imageUrl": "public/diy_view/style4/img/icon5.png",
+                "title": "商品分类",
+                "link": {
+                  "name": "GOODS_CATEGORY",
+                  "menuOne": "MALL_PAGE",
+                  "menuTwo": "MALL_LINK",
+                  "type": 1,
+                  "wap_url": "/pages/goods/category/category",
+                  "title": "商品分类"
+                },
+                "imgWidth": "127",
+                "imgHeight": "127"
+              }
+            ],
+            "addon_name": "",
+            "type": "GRAPHIC_NAV",
+            "name": "图文导航",
+            "navRadius": "fillet",
+            "controller": "GraphicNav",
+            "is_delete": "0"
+          },
+          {
+            "selectedTemplate": "single-graph",
+            "imageClearance": 0,
+            "imageRadius": "right-angle",
+            "carouselChangeStyle": "circle",
+            "marginTop": 5,
+            "padding": 0,
+            "height": 0,
+            "list": [
+              {
+                "imageUrl": "public/diy_view/style4/img/adv.png",
+                "title": "",
+                "link": {
+                  "name": ""
+                },
+                "imgWidth": "732",
+                "imgHeight": "166"
+              }
+            ],
+            "addon_name": "",
+            "type": "IMAGE_ADS",
+            "name": "图片广告",
+            "controller": "ImageAds",
+            "is_delete": "0"
+          },
+          {
+            "height": 10,
+            "backgroundColor": "",
+            "marginLeftRight": 0,
+            "addon_name": "",
+            "type": "HORZ_BLANK",
+            "name": "辅助空白",
+            "controller": "HorzBlank",
+            "is_delete": "0"
+          },
+          {
+            "selectedTemplate": "row1-lt-of2-rt",
+            "backgroundColor": "",
+            "list": [
+              {
+                "imageUrl": "public/diy_view/style4/img/adv1.png",
+                "link": {
+                  "name": ""
+                }
+              },
+              {
+                "imageUrl": "public/diy_view/style4/img/adv2.png",
+                "link": {
+                  "name": ""
+                }
+              },
+              {
+                "imageUrl": "public/diy_view/style4/img/adv3.png",
+                "link": {
+                  "name": ""
+                }
+              }
+            ],
+            "selectedRubikCubeArray": [],
+            "diyHtml": "",
+            "customRubikCube": 4,
+            "heightArray": [
+              "74.25px",
+              "59px",
+              "48.83px",
+              "41.56px"
+            ],
+            "imageGap": 10,
+            "addon_name": "",
+            "type": "RUBIK_CUBE",
+            "name": "魔方",
+            "controller": "RubikCube",
+            "is_delete": "0"
+          },
+          {
+            "selectedTemplate": "single-graph",
+            "imageClearance": 0,
+            "imageRadius": "right-angle",
+            "carouselChangeStyle": "circle",
+            "marginTop": 30,
+            "padding": 0,
+            "height": 0,
+            "list": [
+              {
+                "imageUrl": "public/diy_view/style4/img/title.png",
+                "title": "",
+                "link": {
+                  "name": ""
+                },
+                "imgWidth": "750",
+                "imgHeight": "82"
+              }
+            ],
+            "addon_name": "",
+            "type": "IMAGE_ADS",
+            "name": "图片广告",
+            "controller": "ImageAds",
+            "is_delete": "0"
+          },
+          {
+            "sources": "default",
+            "categoryId": 0,
+            "categoryName": "请选择",
+            "goodsCount": "6",
+            "goodsId": [],
+            "style": "2",
+            "backgroundColor": "",
+            "marginTop": 0,
+            "paddingLeftRight": 0,
+            "isShowCart": 0,
+            "cartStyle": 1,
+            "isShowGoodName": 1,
+            "isShowMarketPrice": 1,
+            "isShowGoodSaleNum": 1,
+            "isShowGoodSubTitle": 0,
+            "goodsTag": "default",
+            "tagImg": {
+              "imageUrl": ""
+            },
+            "addon_name": "",
+            "type": "GOODS_LIST",
+            "name": "商品列表",
+            "controller": "GoodsList",
+            "is_delete": "0"
+          }
+        ]
+      }
+    }
+  }
+}

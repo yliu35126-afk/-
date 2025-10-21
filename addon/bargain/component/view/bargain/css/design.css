@@ -1,0 +1,118 @@
+@CHARSET "UTF-8";
+/* 展示 */
+.component-bargain .marketing-wrap {
+	box-sizing: border-box;
+	background-color: #FFFFFF;
+	border-radius: 8px;
+	position: relative;
+	height: 230px;
+}
+
+.component-bargain .marketing-wrap img {
+	width: 100%;
+}
+
+.component-bargain .marketing-wrap .marketing-box {
+	width: 100%;
+	padding: 0 15px;
+	box-sizing: border-box;
+	position: absolute;
+	top: 15px;
+}
+
+/* 顶部标题 */
+.component-bargain .goods-head {width: 100%; display: -webkit-box;display: -webkit-flex;display: flex;-webkit-box-pack: justify;-webkit-justify-content: space-between;justify-content: space-between;-webkit-box-align: center;-webkit-align-items: center;align-items: center;height: 15px;line-height: 15px;}
+.component-bargain .goods-head .title-wrap {display: -webkit-box;display: -webkit-flex;display: flex;-webkit-box-align: center;-webkit-align-items: center;align-items: center;width: calc(100% - 80px);}
+.component-bargain .goods-head .left-icon {display: inline-block; width: 63px; height: 15px; flex-shrink: 0; margin-right: 10px;}
+.component-bargain .goods-head .left-icon img {width: 100%; height: 100%; vertical-align: top;}
+.component-bargain .goods-head .title-wrap .name {color: #222; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;font-size: 16px;font-weight: bold;margin-right: 10px;max-width: 135px;}
+.component-bargain .goods-head .desc{
+	font-size: 12px;
+	color: #444;
+}
+
+.component-bargain .goods-head .more.violet span, .component-bargain .goods-head .more.violet .iconfont {
+	font-size: 12px;
+	background: linear-gradient(-55deg, #627BFD 0%, #8662FD 100%);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
+.component-bargain .goods-head .more.yellow span, .component-bargain .goods-head .more.yellow .iconfont {
+	font-size: 12px;
+	background: linear-gradient(-55deg, #FEB632 0%, #FE6232 100%);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
+.component-bargain .goods-head .more.blue span, .component-bargain .goods-head .more.blue .iconfont {
+	font-size: 12px;
+	background: linear-gradient(-55deg, #0ECFD3 0%, #12D0AE 100%);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
+.component-bargain .goods-head .more.red span, .component-bargain .goods-head .more.red .iconfont {
+	font-size: 12px;
+	background: linear-gradient(-55deg, #FF5151 0%, #FF7B91 100%);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+}
+
+/* 内容 */
+.component-bargain .list-wrap {display: flex; justify-content: space-between; margin-top: 15px;}
+.component-bargain .list-wrap .item {display: inline-block; width: 100px;}
+.component-bargain .list-wrap .item .img-wrap{width: 100px;height: 100px;border-radius: 5px; overflow: hidden;}
+.component-bargain .list-wrap .item .img-wrap img{max-width: 100%;max-height: 100%;}
+.component-bargain .list-wrap .item .content{width: 100%;}
+.component-bargain .list-wrap .item .content .content-desc {width: 100%; font-size: 14px; line-height: 14px; margin-top: 10px;}
+.component-bargain .list-wrap .item .content .content-price {font-size: 12px; color: #FF4544; margin-top: 10px; height: 16px; font-weight: 600;}
+.component-bargain .list-wrap .item .content .content-price span {font-size: 16px; line-height: 16px;margin-left: -1px;}
+.component-bargain .list-wrap .item .content .content-price .unit{font-size: 12px;margin-left: 0;}
+.component-bargain .list-wrap .item .content .content-num {font-weight: normal;font-size: 12px; line-height: 12px; margin-top: 6px; color: #909399;transform: scale(0.9);margin-left: -5px;}
+.component-bargain .list-wrap .item .content .content-num .min-price{
+    font-size: 13px;
+	line-height: 1;
+	color: #FF1542;
+}
+/* 编辑 */
+.component-bargain .choose-style div{cursor: pointer;}
+
+/* 弹框 */
+/* 商品列表风格 */
+.component-bargain .bargain-list-style {
+	display: none;
+}
+
+.style-list-con-bargain {
+	display: flex;
+	flex-wrap: wrap;
+}
+.style-list-con-bargain .style-li-bargain {
+	width: 32%;
+	height: 300px;
+	line-height: 300px;
+	margin-right: 2%;
+	margin-bottom: 15px;
+	cursor: pointer;
+	border: 1px solid #ededed;
+	background: #f7f8fa;
+	box-sizing: border-box;
+}
+
+.style-list-con-bargain .style-li-bargain:nth-child(3n) {
+	margin-right: 0;
+}
+
+.style-list-con-bargain .style-li-bargain img {
+	width: 100%;
+}
+
+.layui-layer-page .layui-layer-content {
+	overflow: auto !important;
+}
+
+.btn-box {
+	margin-top: 30px;
+	text-align: center;
+}

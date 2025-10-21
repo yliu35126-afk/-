@@ -1,0 +1,188 @@
+.operate_tip {
+	margin: $margin-both;
+	padding: $padding 30rpx;
+	background-color: #fff;
+	.operate_content {
+		word-wrap: break-word;
+		word-break: break-all;
+		> view {
+			display: flex;
+		}
+	}
+}
+.search {
+	display: flex;
+	margin: $margin-both;
+	justify-content: center;
+	text-align: center;
+	.search_input {
+		padding: 0 20rpx;
+		background-color: #fff;
+		flex: 1;
+		height: 70rpx;
+		line-height: 70rpx;
+		border-radius: 70rpx;
+		display: flex;
+		align-items: center;
+		input {
+			height: 70rpx;
+			line-height: 70rpx;
+			border-radius: 70rpx;
+			padding: 0 $padding;
+		}
+		.date {
+			display: flex;
+			align-items: center;
+			flex: 1;
+			color: $color-tip;
+			picker {
+				flex: 1;
+				&.start{
+					margin-right: 20rpx !important;
+				}
+				&.end{
+					margin-left: 20rpx !important;
+				}
+			}
+			.clear{
+				min-width: 60rpx;
+			}
+		}
+		
+		.search_btn {
+			min-width: 60rpx;
+		}
+		.placeholder {
+			font-size: $font-size-base;
+			color: $color-tip;
+		}
+	}
+	.search_select {
+		background-color: #fff;
+		height: 70rpx;
+		line-height: 70rpx;
+		border-radius: 70rpx;
+		width: 160rpx;
+		color: $color-tip;
+		font-size: $font-size-tag;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		> text {
+			margin-left: 10rpx;
+		}
+	}
+}
+.withdrawal {
+	padding: $margin-both 0;
+	.withdrawal_item {
+		margin: 0 $margin-both;
+		.withdrawal_title {
+			font-size: $font-size-toolbar;
+			font-weight: bold;
+			margin-bottom: $margin-updown;
+			.line {
+				display: inline-block;
+				height: 28rpx;
+				width: 4rpx;
+				border-radius: 4rpx;
+			}
+		}
+		.withdrawal_content {
+			background-color: #fff;
+			border-radius: $border-radius;
+			// padding:$padding 30rpx;
+			&.margin-top {
+				margin-top: $margin-both !important;
+			}
+			.flex_two {
+				display: flex;
+				flex-wrap: wrap;
+				.flex_one-item {
+					padding: 40rpx 30rpx;
+					border-bottom: 0;
+					&.border_none {
+						border-bottom: 0;
+					}
+					.tip {
+						color:$color-tip;
+						font-size: $font-size-tag;
+					}
+					.num {
+						font-size: 30rpx;
+						overflow: hidden;
+						text-overflow: ellipsis;
+					}
+					.green {
+						color: green;
+					}
+					.red {
+						color: red;
+					}
+				}
+				.flex_two-item {
+					padding: 28rpx 30rpx;
+					width: calc(50% - 60rpx - 1px);
+					border-bottom: 1px solid $color-line;
+					&:nth-child(2n + 1) {
+						border-right: 1px solid $color-line;
+					}
+					&.border_none {
+						border-bottom: 0;
+					}
+					.tip {
+						color:$color-tip;
+						font-size: $font-size-tag;
+					}
+					.num {
+						font-size: 30rpx;
+						font-weight: 500;
+						overflow: hidden;
+						text-overflow: ellipsis;
+					}
+				}
+			}
+			.withdrawal_list {
+				.withdrawal_list_title {
+					padding: $padding 30rpx;
+					border-bottom: 1px solid $color-line;
+					display: flex;
+					justify-content: space-between;
+					align-items: center;
+				}
+				.withdrawal_list_info {
+					padding: $padding 30rpx;
+					.withdrawal_list_base {
+						display: flex;
+						// justify-content: space-between;
+						.tip {
+							width: 260rpx;
+							color:$color-tip;
+						}
+						.green {
+							color: green;
+						}
+						.red {
+							color: red;
+						}
+					}
+					.mark {
+						word-wrap: break-word;
+						word-break: break-all;
+						font-size: $font-size-tag;
+					}
+				}
+			}
+		}
+		.operate {
+			display: flex;
+			justify-content: flex-end;
+			padding: $padding 30rpx;
+			border-top: 1px solid;
+			button{
+				margin-left: 20rpx !important;
+			}
+		}
+	}
+
+}

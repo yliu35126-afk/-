@@ -1,0 +1,2 @@
+(window["webpackJsonp"]=window["webpackJsonp"]||[]).push([["chunk-2d0e9768"],{"8e49":function(t,e,o){"use strict";o.r(e);var i=function(){var t=this,e=t._self._c;return e("div",[t._v("商品详情："+t._s(t.id))])},n=[],s={name:"topic_detail",components:{},data:()=>({id:0}),created(){this.id=this.$route.path.replace("/promotion/topic-goods-","")},methods:{}},a=s,c=o("2877"),d=Object(c["a"])(a,i,n,!1,null,"7965f4b0",null);e["default"]=d.exports}}]);
+//# sourceMappingURL=chunk-2d0e9768.874d656c.js.map

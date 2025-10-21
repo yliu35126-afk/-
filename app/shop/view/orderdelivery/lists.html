@@ -1,0 +1,206 @@
+{extend name="base"/}
+{block name="resources"}
+<style>
+	.ns-single-filter-box {
+		background-color: transparent;
+	}
+</style>
+{/block}
+{block name="main"}
+<!-- 搜索框 -->
+<div class="ns-single-filter-box">
+	<div>
+		<button class="layui-btn ns-bg-color" id="order_file">批量发货</button>
+		<button class="layui-btn layui-btn-primary" onclick="downloadOrder()">下载待发货订单</button>
+		<button class="layui-btn layui-btn-primary" onclick="downloadExpressTemplate()">{if $addon_is_exit == 1}下载物流公司/电子面单对照表 {else/} 下载物流公司对照表 {/if}</button>
+	</div>
+</div>
+
+<div class="layui-tab ns-table-tab" lay-filter="solution_tab">
+<!--	<ul class="layui-tab-title">-->
+<!--		<li class="layui-this" data-status="">全部</li>-->
+<!--		<li data-status="1">正常</li>-->
+<!--		<li data-status="0">禁用</li>-->
+<!--	</ul>-->
+	<div class="layui-tab-content">
+		<table id="solution_list" lay-filter="solution_list"></table>
+	</div>
+</div>
+
+<!-- 操作 -->
+<script type="text/html" id="operation">
+	<div class="ns-table-btn">
+		<a class="layui-btn" lay-event="detail">失败记录</a>
+		<a class="layui-btn" lay-event="delete">删除</a>
+	</div>
+</script>
+
+{/block}
+
+{block name="script"}
+<script>
+	var table, form,upload, element, repeat_flag = false;// 防重复标识
+	layui.use(['form', 'element','upload'], function () {
+		form = layui.form;
+        upload = layui.upload;
+		element = layui.element;
+		form.render();
+
+		//监听Tab切换，以改变地址hash值
+		element.on('tab(solution_tab)', function () {
+			table.reload({
+				page: {
+					curr: 1
+				},
+				where: {
+					'status': this.getAttribute('data-status')
+				}
+			});
+		});
+
+
+		//订单导入
+		var uploadInst = upload.render({
+			elem: '#order_file',
+			url: ns.url("shop/orderdelivery/batchdelivery"),
+			field:'csv',
+			exts:'csv',
+			before: function(obj){ //obj参数包含的信息，跟 choose回调完全一致，可参见上文。
+				var index = layer.load(1, {
+					shade: [0.1,'#fff'], //0.1透明度的白色背景
+					time:1000
+				});
+			},
+			done: function(res) {
+				layer.closeAll();
+				if (res.code >= 0) {
+					table.reload({
+						page: {
+							curr: 1
+						}
+					});
+				}else{
+					layer.msg(res.message);
+				}
+
+			}
+		});
+
+		table = new Table({
+			elem: '#solution_list',
+			url: ns.url("shop/orderdelivery/lists"),
+			cols: [
+				[{
+					field: 'batch_no',
+					title: '批量操作编号',
+					unresize: 'false'
+				}, {
+                    field: 'order_num',
+					title: '导入订单数',
+                    unresize: 'false'
+				}, {
+                    field: 'success_num',
+                    title: '成功数',
+                    unresize: 'false'
+                }, {
+                    field: 'error_num',
+                    title: '失败数',
+                    unresize: 'false'
+                }, {
+                    title: '导入时间',
+                    unresize: 'false',
+                    templet: function (data) {
+                        return ns.time_to_date(data.create_time);
+                    }
+                }, {
+					title: '操作',
+					toolbar:'#operation',
+					unresize:'false'
+				}]
+			]
+
+		});
+
+		/**
+		 * 监听工具栏操作
+		 */
+		table.tool(function (obj) {
+			var data = obj.data;
+			switch (obj.event) {
+				case 'detail':
+					orderImportFileLog(data.batch_id);
+					break;
+				case 'delete': //删除
+                    deleteOrderImportFile(data.batch_id);
+					break;
+			}
+		});
+
+		/**
+		 * 搜索功能
+		 */
+		form.on('submit(search)', function (data) {
+			table.reload({
+				page: {
+					curr: 1
+				},
+				where: data.field
+			});
+		});
+
+		/**
+		 * 删除
+		 */
+		function deleteOrderImportFile(batch_id) {
+			if (repeat_flag) return false;
+			repeat_flag = true;
+
+			layer.confirm('确定要删除吗?', function () {
+				$.ajax({
+					url: ns.url("shop/orderdelivery/delete"),
+					data: {
+						batch_id: batch_id
+					},
+					dataType: 'JSON',
+					type: 'POST',
+					success: function (res) {
+						layer.msg(res.message);
+						repeat_flag = false;
+						if (res.code == 0) table.reload();
+					}
+				});
+			}, function () {
+				layer.close();
+				repeat_flag = false;
+			});
+		}
+
+        /**
+         * 绑定会员
+         */
+        function orderImportFileLog(batch_id)
+        {
+            var url = ns.url("shop/orderdelivery/orderdeliverylog",{'batch_id' : batch_id});
+            //iframe层-父子操作
+            var layerIndex = layer.open({
+                title: "失败明细",
+                type: 2,
+                area: ['1200px', '720px'],
+                // btn: '保存',
+                content: url
+            });
+        }
+
+	});
+
+	//下载待发货订单
+	function downloadOrder() {
+		location.href = ns.url("shop/orderdelivery/exportdeliveryorder");
+	}
+
+    //下载对照表
+    function downloadExpressTemplate() {
+		location.href = ns.url("shop/orderdelivery/exportexpresstemplate");
+	}
+</script>
+{/block}

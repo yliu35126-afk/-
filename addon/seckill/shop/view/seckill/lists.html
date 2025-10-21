@@ -1,0 +1,408 @@
+{extend name="app/shop/view/base.html"/}
+{block name="resources"}
+<style>
+    .contraction span {
+        cursor: pointer;
+        display: inline-block;
+        width: 17px;
+        height: 17px;
+        text-align: center;
+        line-height: 14px;
+        user-select: none;
+    }
+    .sku-list {
+        overflow: hidden;
+        padding: 0 45px;
+        max-width: 100%;
+    }
+    .sku-list li .img-wrap {
+        vertical-align: middle;
+        margin-right: 8px;
+        width: 120px;
+        height: 120px;
+        text-align: center;
+        line-height: 120px;
+    }
+    .sku-list li .img-wrap img {
+        max-width: 100%;
+        max-height: 100%;
+    }
+    .sku-list li .info-wrap span.sku-name {
+        -webkit-line-clamp: 2;
+        margin-bottom: 5px;
+    }
+    .sku-list li .info-wrap span {
+        display: -webkit-box;
+        margin-bottom: 5px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: normal;
+        word-break: break-all;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 1;
+    }
+    .sku-list li {
+        float: left;
+        display: flex;
+        padding: 10px;
+        margin-right: 10px;
+        margin-bottom: 10px;
+        border: 1px solid #EFEFEF;
+        width: 294px;
+        height: 180px;
+        align-items: center;
+    }
+    #time_label_dl span {
+        margin: 3px 5px 3px 0;
+        background-color: #ff8143;
+        color: white;
+        padding: 0 5px;
+        border-radius: 5px;
+        line-height: 25px;
+    }
+
+    #time_label_dl {
+        display: flex;
+        flex-wrap: wrap;
+    }
+
+</style>
+{/block}
+{block name="main"}
+<div class="layui-collapse ns-tips">
+    <div class="layui-colla-item">
+        <h2 class="layui-colla-title">操作提示</h2>
+        <ul class="layui-colla-content layui-show">
+            <li>参与该时段秒杀的商品列表</li>
+        </ul>
+    </div>
+</div>
+<!-- 搜索框 -->
+<div class="ns-single-filter-box">
+    <div class="ns-single-filter-box">
+        <button class="layui-btn ns-bg-color" onclick="clickAdd()">添加秒杀商品</button>
+    </div>
+    <div class="layui-form">
+        <div class="layui-input-inline">
+            <input type="text" name="goods_name" placeholder="请输入商品名称" class="layui-input" autocomplete="off">
+            <button type="button" class="layui-btn layui-btn-primary" lay-filter="search" lay-submit>
+                <i class="layui-icon">&#xe615;</i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="layui-tab ns-table-tab" lay-filter="bargain_tab">
+    <ul class="layui-tab-title">
+        <li class="layui-this" data-status="">全部</li>
+        <li data-status="0">未开始</li>
+        <li data-status="1">进行中</li>
+        <li data-status="2">已结束</li>
+        <li data-status="-1">已关闭</li>
+    </ul>
+    <div class="layui-tab-content">
+        <table id="good_list" lay-filter="good_list"></table>
+    </div>
+</div>
+
+<!-- 商品 -->
+
+<!--价格-->
+<script type="text/html" id="price">
+    <div class="layui-elip">{{d.seckill_price}}</div>
+</script>
+
+<!--时间-->
+<script type="text/html" id="time">
+    <div class="layui-elip">开始时间：{{ns.time_to_date(d.start_time)}}</div>
+    <div class="layui-elip">结束时间：{{ns.time_to_date(d.end_time)}}</div>
+</script>
+
+<!--操作-->
+<script type="text/html" id="operation">
+    <div class="ns-table-btn">
+        <a class="layui-btn" lay-event="edit">编辑</a>
+        <a class="layui-btn" lay-event="delete">删除</a>
+
+        {{# if(d.status == 1){ }}
+        <a class="layui-btn" lay-event="close">关闭</a>
+        {{# } }}
+
+
+    </div>
+</script>
+
+
+<script type="text/html" id="goods_name">
+    <div class="ns-table-title">
+
+        <div class="contraction" data-id="{{d.id}}" data-open="0">
+            <span>+</span>
+        </div>
+
+        <div class="ns-title-pic">
+            {{#  if(d.goods_image){  }}
+            <img layer-src src="{{ns.img(d.goods_image.split(',')[0],'small')}}"/>
+            {{#  }  }}
+        </div>
+        <div class="ns-title-content">
+            <a href="javascript:;" class="ns-multi-line-hiding ns-gn-color" title="{{d.goods_name}}">{{d.goods_name}}</a>
+        </div>
+    </div>
+</script>
+
+<script type="text/html" id="skuList">
+    <tr class="js-list-{{d.index}}" id="sku_img_{{d.index}}">
+        <td colspan="10">
+            <ul class="sku-list">
+                {{# for(var i=0; i<d.list.length; i++){ }}
+                <li>
+                    <div class="img-wrap">
+                        <img layer-src src="{{ns.img(d.list[i].sku_image)}}">
+                    </div>
+                    <div class="info-wrap">
+                        <span class="sku-name" title="{{d.list[i].sku_name}}">{{d.list[i].sku_name}}</span>
+                        <span class="price">商品价格：￥{{d.list[i].price}}</span>
+                        <span class="sale_num">秒杀价：{{d.list[i].seckill_price}}</span>
+                        <span class="price">库存：{{d.list[i].stock}}</span>
+                    </div>
+                </li>
+                {{# } }}
+            </ul>
+        </td>
+    </tr>
+</script>
+
+
+<!-- 场次 -->
+<script id="time_label" type="text/html">
+    {{# if (d.time_list != []) { }}
+    <div id="time_label_dl">
+        {{# for (var index in d.time_list) { }}
+        {{'<span>' + d.time_list[index]['name'] + '</span>'}}
+        {{# } }}
+    </div>
+    {{# } }}
+</script>
+
+{/block}
+{block name="script"}
+<script>
+    var form, table, laytpl,
+        repeat_flag = false, //防重复标识
+        arr_id_good = [];
+    $("body").on("click", ".contraction", function () {
+
+        var seckill_id = $(this).attr("data-id");
+        var open = $(this).attr("data-open");
+        var tr = $(this).parent().parent().parent().parent();
+        var index = tr.attr("data-index");
+        if (open == 1) {
+            $(this).children("span").text("+");
+            $(".js-list-" + index).remove();
+        } else {
+            $(this).children("span").text("-");
+            $.ajax({
+                url: ns.url("seckill://shop/seckill/getSkuList"),
+                data: {seckill_id: seckill_id},
+                dataType: 'JSON',
+                type: 'POST',
+                async: false,
+                success: function (res) {
+
+                    var sku_list = $("#skuList").html();
+                    var data = {
+                        list: res.data,
+                        index: index
+                    };
+                    laytpl(sku_list).render(data, function (html) {
+                        tr.after(html);
+                    });
+                    layer.photos({
+                        photos: '.img-wrap',
+                        anim: 5
+                    });
+                }
+            });
+        }
+        $(this).attr("data-open", (open == 0 ? 1 : 0));
+    });
+
+    layui.use(['form', 'laytpl','element'], function() {
+        form = layui.form;
+        element = layui.element;
+        laytpl = layui.laytpl;
+        form.render();
+        element.on('tab(bargain_tab)', function (data) {
+            table.reload({
+                page: {
+                    curr: 1
+                },
+                where: {
+                    'status': this.getAttribute('data-status')
+                }
+            });
+        });
+
+        table = new Table({
+            elem: '#good_list',
+            url: '{:addon_url("seckill://shop/seckill/lists")}',
+            async : false,
+            parseData: function(res) {
+                arr_id_good = [];
+                for (var i in res.data.list) {
+                    arr_id_good.push(res.data.list[i].sku_id);
+                }
+                return {
+                    "code": res.code,
+                    "msg": res.message,
+                    "count": res.data.count,
+                    "data": res.data.list,
+                };
+            },
+            cols: [
+                [{
+                    title: '商品',
+                    unresize: 'false',
+                    width: '25%',
+                    templet: '#goods_name'
+                }, {
+                    title: '秒杀时间',
+                    unresize: 'false',
+                    width: '20%',
+                    templet: '#time'
+
+                }, {
+                    title: '参与场次',
+                    unresize: 'false',
+                    align:"left",
+                    width: '25%',
+                    templet: '#time_label'
+
+                }, {
+                    title: '秒杀价',
+                    unresize: 'false',
+                    width: '10%',
+                    templet: '#price'
+                }, {
+                    title: '状态',
+                    unresize: 'false',
+                    width: '10%',
+                    templet: function (data) {
+                        if(data.status == 1){
+                            return '进行中'
+                        }else if(data.status == 0){
+                            return '未开始'
+                        }else if(data.status == 2){
+                            return '已过期'
+                        }else if(data.status == -1){
+                            return '已关闭（手动）'
+                        }
+                    }
+                }, {
+                    title: '操作',
+                    width: '10%',
+                    toolbar: '#operation',
+                    unresize: 'false'
+                }]
+            ]
+        });
+
+        /**
+         * 搜索功能
+         */
+        form.on('submit(search)', function(data) {
+            table.reload({
+                page: {
+                    curr: 1
+                },
+                where: data.field
+            });
+        });
+
+        /**
+         * 监听工具栏操作
+         */
+        table.tool(function(obj) {
+            var data = obj.data;
+            switch (obj.event) {
+                case 'delete': //查看
+                    delSeckill(data.id);
+                    break;
+                case 'edit': //查看
+                    location.href = ns.url("seckill://shop/seckill/edit?id="+data.id);
+                    break;
+                case 'close': //关闭
+                    closeSeckill(data.id);
+                    break;
+            }
+
+        });
+
+        /**
+         * 删除
+         */
+        function delSeckill(seckill_id) {
+
+            if (repeat_flag) return false;
+            repeat_flag = true;
+
+            layer.confirm('确定要删除该商品吗?', function() {
+                $.ajax({
+                    url: '{:addon_url("seckill://shop/seckill/delete")}',
+                    data: {
+                        "id": seckill_id
+                    },
+                    dataType: 'JSON',
+                    type: 'POST',
+                    success: function(res) {
+                        layer.msg(res.message);
+                        repeat_flag = false;
+
+                        if (res.code == 0) {
+                            table.reload();
+                        }
+                    }
+                });
+            }, function() {
+                layer.close();
+                repeat_flag = false;
+            });
+        }
+
+        /**
+         * 关闭
+         */
+        function closeSeckill(seckill_id) {
+
+            if (repeat_flag) return false;
+            repeat_flag = true;
+
+            layer.confirm('确定要关闭该商品吗?', function() {
+                $.ajax({
+                    url: '{:addon_url("seckill://shop/seckill/close")}',
+                    data: {
+                        "seckill_id": seckill_id
+                    },
+                    dataType: 'JSON',
+                    type: 'POST',
+                    success: function(res) {
+                        layer.msg(res.message);
+                        repeat_flag = false;
+
+                        if (res.code == 0) {
+                            table.reload();
+                        }
+                    }
+                });
+            }, function() {
+                layer.close();
+                repeat_flag = false;
+            });
+        }
+    });
+    function clickAdd() {
+        location.href = ns.url("seckill://shop/seckill/add");
+    }
+</script>
+{/block}

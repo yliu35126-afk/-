@@ -1,0 +1,71 @@
+{extend name="base"/}
+{block name="resources"}
+<style>
+	.ns-input-text span{margin-right: 15px;}
+	.ns-form {margin-top: 0;}
+</style>
+{/block}
+{block name="main"}
+<div class="layui-form ns-form" lay-filter="form">
+	<div class="layui-form-item">
+		<label class="layui-form-label">客服开关：</label>
+		<div class="layui-input-block">
+			<input type="checkbox" name="state" lay-skin="switch" {if isset($config.value.type) && $config.value.type eq 'system'}checked{/if} />
+		</div>
+		<div class="ns-word-aux">开启前请先安装客服插件, 并正常启用服务 <a class="ns-text-color" href="https://www.kancloud.cn/niucloud/niushop_b2b2c_v4/2002035" target="_blank"> 客服配置文档 </a></div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">websocket链接：</label>
+		<div class="layui-input-block">
+			<input type="text" name="socket_url" value="{$config.value.socket_url ?? ''}" autocomplete="off" class="layui-input ns-len-long" lay-verify="required">
+		</div>
+		<div class="ns-word-aux">请根据需要谨慎填写websocket链接, 若变动后需重新刷新 <a href="{:addon_url('pc://admin/pc/deploy')}" class="ns-text-color" target="_blank">web端部署</a> 和 <a href="{:url('admin/h5/refreshh5')}" class="ns-text-color" target="_blank">H5端部署</a> 才能应用</div>
+	</div>
+
+	<div class="ns-form-row">
+		<button class="layui-btn ns-bg-color" lay-submit lay-filter="save">保存</button>
+	</div>
+</div>
+
+{/block}
+{block name="script"}
+<script>
+	var form;
+	layui.use('form', function(form) {
+		form = layui.form;
+		form.render();
+
+		var is_submit = false;
+
+		form.on('submit(save)', function(data) {
+
+			data.field.type = $('input[name="state"]').prop('checked') ? 'system' : 'disable'
+
+			if (is_submit) return false;
+			is_submit = true;
+
+			$.ajax({
+				url: ns.url('admin/config/servicer'),
+				data: data.field,
+				dataType: 'JSON',
+				type: 'POST',
+				success: function(res) {
+					layer.msg(res.message);
+					if (res.code >= 0) {
+						window.location.reload();
+					} else {
+						is_submit = false;
+					}
+				},
+				error: function () {
+					is_submit = false;
+					layer.msg('操作异常');
+				}
+			});
+		});
+	});
+
+
+</script>
+{/block}

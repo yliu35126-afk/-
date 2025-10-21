@@ -1,0 +1,308 @@
+{extend name="app/admin/view/base.html"/}
+{block name="resources"}
+<style>
+    .layui-input {
+        display: inline-block;
+    }
+
+    .display {
+        display: none;
+    }
+</style>
+{/block}
+{block name="main"}
+<div class="layui-form ns-form">
+    <div class="layui-form-item">
+        <label class="layui-form-label"><span class="required">*</span>消息标题：</label>
+        <div class="layui-input-block">
+            <input name="title" type="text" lay-verify="required" placeholder="请输入标题，最多10个字" autocomplete="off"
+                   class="layui-input ns-len-long">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">标题图片：</label>
+        <div class="layui-input-block">
+            <div class="upload-img-block img-upload">
+                <div class="upload-img-box">
+                    <div class="ns-upload-default" id="image">
+                        <div class="upload">
+                            <img src="ADMIN_IMG/upload_img.png"/>
+                            <p>点击上传</p>
+                        </div>
+                    </div>
+                    <div class="operation">
+                        <div>
+                            <i title="图片预览" class="iconfont iconreview js-preview" style="margin-right: 20px;"></i>
+                            <i title="删除图片" class="layui-icon layui-icon-delete js-delete"></i>
+                        </div>
+                        <div class="replace_img js-replace">点击替换</div>
+                    </div>
+                    <input type="hidden" name="image" value="">
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label"><span class="required">*</span>简介：</label>
+        <div class="layui-input-block ns-len-long">
+            <textarea class="layui-textarea" name="content" lay-verify="required" placeholder="请输入消息简介"></textarea>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label"><span class="required">*</span>消息内容：</label>
+        <div class="layui-input-block">
+            <input type="radio" name="event_type" value="text" title="文章" checked lay-filter="event_type">
+            <input type="radio" name="event_type" value="link" title="链接" lay-filter="event_type">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label"></label>
+        <div class="layui-input-block">
+            <script id="container" name="text" type="text/plain" style="height: 300px;width: 900px;"></script>
+            <input name="link" id="link" type="text" style="display: none" placeholder="请输入链接地址" autocomplete="off"
+                   class="layui-input ns-len-long">
+        </div>
+    </div>
+
+    <div class="layui-form-item">
+        <label class="layui-form-label">限制场景：</label>
+        <div class="layui-input-block">
+            <!--            <input type="checkbox" name="scene[]" value="all" class="checkbox1" title="全部" lay-filter="primary" lay-skin="primary">-->
+            {foreach $scene as $scene_k => $scene_v}
+            <input type="checkbox" name="scene[]" value="{$scene_k}" class="checkbox1" title="{$scene_v.name}"
+                   lay-filter="primary" lay-skin="primary">
+            {/foreach}
+        </div>
+        <div class="ns-word-aux">限制能查看当前消息的端口,不选择代表满足全部端口</div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">是否定时：</label>
+        <input type="radio" name="is_timing" value="0" title="否" lay-filter="is_timing" checked>
+        <input type="radio" name="is_timing" value="1" title="是" lay-filter="is_timing">
+    </div>
+    <div style="display: none" class="is_timing">
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">发送时间：</label>
+                <div class="layui-input-inline">
+                    <input type="text" class="layui-input" name="timing" lay-verify="timing" placeholder="发送时间"
+                           id="timing" readonly>
+                    <i class="ns-calendar"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">选择客户：</label>
+        <input type="radio" name="is_search" value="0" title="全部客户" lay-filter="radio" checked>
+        <input type="radio" name="is_search" value="1" title="筛选客户" lay-filter="radio">
+    </div>
+    <div class="layui-form-item display">
+        <label class="layui-form-label">接收筛选：</label>
+    </div>
+    <div style="margin-left: 60px;" class="display">
+        <div class="layui-form-item">
+            <label class="layui-form-label">性别：</label>
+            <div class="layui-input-block">
+                <input type="radio" name="sex" value="all" title="全部性别" checked>
+                <input type="radio" name="sex" value="0" title="未知">
+                <input type="radio" name="sex" value="1" title="男">
+                <input type="radio" name="sex" value="2" title="女">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">会员等级：</label>
+            <div class="layui-input-block">
+                {volist name='member_level_list' key="k" id='member_level_list_v'}
+                <input type="checkbox" name="level_id[]" value="{$member_level_list_v.level_id}"
+                       title="{$member_level_list_v.level_name}" checked lay-skin="primary">
+                {/volist}
+            </div>
+            <div class="ns-word-aux">查询为当前所选等级其中之一等级的会员</div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">会员标签：</label>
+            <div class="layui-input-block">
+                {volist name='member_label_list' key="k" id='member_label_list_v'}
+                <input type="checkbox" name="label_id[]" value="{$member_label_list_v.label_id}"
+                       title="{$member_label_list_v.label_name}" checked lay-skin="primary">
+                {/volist}
+            </div>
+            <div class="ns-word-aux">查询包含当前会员标签之一的会员</div>
+        </div>
+        <!--        <div class="layui-form-item">-->
+        <!--            <label class="layui-form-label">排除会员标签：</label>-->
+        <!--            <div class="layui-input-block">-->
+        <!--                {volist name='member_label_list' key="k" id='member_label_list_v'}-->
+        <!--                <input type="checkbox" name="remove_member_label[]" value="{$member_label_list_v.label_id}" title="{$member_label_list_v.label_name}" lay-skin="primary">-->
+        <!--                {/volist}-->
+        <!--            </div>-->
+        <!--            <div class="ns-word-aux">查询不包含包含当前会员标签的会员,不选择为不排除任何标签</div>-->
+        <!--        </div>-->
+    </div>
+    <div class="ns-form-row">
+        <button class="layui-btn ns-bg-color" lay-submit lay-filter="save">保存</button>
+        <button class="layui-btn layui-btn-primary" onclick="back()">返回</button>
+    </div>
+</div>
+{/block}
+{block name="script"}
+<script type="text/javascript" charset="utf-8" src="STATIC_EXT/ueditor/ueditor.config.js"></script>
+<script type="text/javascript" charset="utf-8" src="STATIC_EXT/ueditor/ueditor.all.js"></script>
+<script type="text/javascript" charset="utf-8" src="STATIC_EXT/ueditor/lang/zh-cn/zh-cn.js"></script>
+<script>
+    ue = UE.getEditor('container');
+    layui.use(['form', 'laydate'], function () {
+        var form = layui.form,
+            laydate = layui.laydate,
+            html,
+            repeat_flag = false;
+        // 分站图标上传
+        var logo_upload = new Upload({
+            elem: '#image',
+            url: ns.url("admin/upload/upload"),
+        });
+        //渲染时间
+        laydate.render({
+            elem: '#timing'
+            , type: 'datetime'
+            , change: function (value, date, endDate) {
+                $(".date-picker-btn").removeClass("selected");
+            }
+        });
+        form.on('radio(radio)', function (data) {
+            if (data.elem.value == '0') {
+                $(".display").css('display', 'none');
+            } else {
+                $(".display").css('display', 'block');
+            }
+        })
+        //是否定时
+        form.on('radio(is_timing)', function (data) {
+            if (data.elem.value == '0') {
+                $(".is_timing").css('display', 'none');
+            } else {
+                $(".is_timing").css('display', 'block');
+            }
+        })
+        form.on('radio(event_type)', function (data) {
+            if (data.elem.value == 'text') {
+                $("#link").css('display', 'none');
+                $("#container").css('display', 'block');
+            } else {
+                $("#link").css('display', 'block');
+                $("#container").css('display', 'none');
+            }
+        })
+        form.on('checkbox(primary)', function (data) {
+            var value = data.elem.value;
+            if (data.elem.value == 'all') {
+                if (data.elem.checked) {
+                    $(".checkbox1").prop("checked", true);
+                } else {
+                    $(".checkbox1").prop("checked", false);
+                }
+            } else {
+                var talg = true;
+                if (data.elem.checked) {
+                    $('.checkbox1').each(function (allData) {
+                        var _value = $(this).val();
+                        if (_value != 'all') {
+                            _checked = $(this).prop("checked");
+                            if (_checked == false && talg == true) {
+                                talg = false;
+                            }
+                        }
+                    });
+                    if (talg) {
+                        $(".checkbox1").prop("checked", true);
+                    }
+                } else {
+                    var obj;
+                    $('.checkbox1').each(function (allData) {
+                        var _value = $(this).val();
+                        if (_value != 'all') {
+                            _checked = $(this).prop("checked");
+                            if (_checked == false && talg == true) {
+                                talg = false;
+                            }
+                        } else {
+                            obj = $(this);
+                        }
+                    });
+                    if (!talg) {
+                        obj.prop("checked", false)
+                    }
+                }
+            }
+            form.render('checkbox');
+        });
+
+        form.on('submit(save)', function (data) {
+            ue.ready(function () {   //对编辑器的操作最好在编辑器ready之后再做
+                html = ue.getContent();   //获取html内容，返回: <p>hello</p>
+            });
+            data.field.text = html;
+            if (data.field.event_type == 'text' && data.field.text == "") {
+                layer.msg('请输入消息内容');
+                return;
+            }
+            if (data.field.event_type == 'link' && data.field.link == "") {
+                layer.msg('请输入消息链接');
+                return;
+            }
+            if (data.field.is_search == 1) {
+                // if ($('input[name^="level_id"]:checked').length<1) {
+                //     layer.msg('请选择会员等级');
+                //     return;
+                // }
+                // if ($('input[name^="label_id"]:checked').length<1) {
+                //     layer.msg('请选择会员标签');
+                //     return;
+                // }
+            }
+            //删除图片
+            if (repeat_flag) return;
+            repeat_flag = true;
+            $.ajax({
+                dataType: 'JSON',
+                type: 'POST',
+                url: ns.url("sitemessage://admin/sitemessage/add"),
+                data: data.field,
+                success: function (res) {
+                    if (res.code >= 0) {
+                        layer.confirm('新建群发已成功', {
+                            title: '操作提示',
+                            btn: ['返回列表', '继续添加'],
+                            yes: function () {
+                                location.href = ns.url("sitemessage://admin/sitemessage/lists")
+                            },
+                            btn2: function () {
+                                location.href = ns.url("sitemessage://admin/sitemessage/add")
+                            }
+                        })
+                    } else {
+                        repeat_flag = false;
+                    }
+                }
+            });
+        });
+        form.verify({
+            timing: function (value, item) { //value：表单的值、item：表单的DOM对象
+                var is_timing = $("input[name=is_timing]").val();
+                if (is_timing == 1) {
+                    if (value == '') {
+                        return '定时发送模式的时候,预定的时间不能为空';
+                    }
+                }
+            }
+        });
+    });
+
+    function back() {
+        location.href = ns.url("sitemessage://admin/sitemessage/lists");
+    }
+
+</script>
+{/block}

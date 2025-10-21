@@ -1,0 +1,168 @@
+{extend name="app/admin/view/base.html"/}
+{block name="resources"}
+<style>
+    .layui-card-body .money{
+        font-size: 20px;
+        color: #000;
+        font-weight: bold;
+        margin-top: 10px;
+        text-align: center;
+        max-width: 250px;
+    }
+    .layui-card-body .subhead{
+        font-size: 12px;
+        margin-left: 3px;
+        cursor: pointer;
+    }
+    .layui-table-overflow {
+        white-space: initial;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+    }
+</style>
+{/block}
+{block name='main'}
+<!-- 筛选面板 -->
+<div class="ns-single-filter-box">
+    <button class="layui-btn ns-bg-color" onclick="clickAdd()">新建群发</button>
+</div>
+<table id="account_list" lay-filter="account_list"></table>
+{/block}
+{block name="script"}
+<script type="text/html" id="action">
+    <div class="ns-table-btn">
+        <a class="layui-btn" lay-event="detail">查看详情</a>
+    </div>
+</script>
+<script type="text/html" id="now_send">
+    <div class="ns-table-btn">
+<!--            <a class="layui-btn" lay-event="edit">立即发送</a>-->
+        {{d.is_timing==1?'定时发送':'立即发送'}}
+    </div>
+</script>
+<script type="text/html" id="contend">
+    <div class="list-detail layui-table-overflow">
+        <p style="text-align: left;">
+            <span style="white-space: initial;">{{d.content}}</span>
+        </p>
+    </div>
+</script>
+<script>
+    function clickAdd()
+    {
+        location.href = ns.url('sitemessage://admin/sitemessage/add');
+    }
+
+    var start_time,end_time;
+    layui.use(['laydate','form', 'laytpl'], function () {
+        var form = layui.form,
+            repeat_flag = false;
+        form.render();
+        var table = new Table({
+            elem: '#account_list',
+            url: ns.url("sitemessage://admin/sitemessage/lists"),
+            where: {'sub_type':'group'},
+            cols: [
+                [{
+                    field: 'title',
+                    title: '群发标题',
+                    unresize: 'false',
+                    width: '12%',
+                    align: 'left',
+                    templet: function (data) {
+                        return '<p style="text-align: left">' + data.title + '</p>';
+                    }
+                }, {
+                    field: 'content',
+                    title: '消息简介',
+                    unresize: 'false',
+                    width: '18%',
+                    align: 'left',
+                    toolbar: '#contend',
+                }, {
+                    field: 'update_time',
+                    title: '群发类型',
+                    unresize: 'false',
+                    width: '8%',
+                    toolbar: '#now_send',
+                },{
+                    field: 'send_time',
+                    title: '发送时间',
+                    unresize: 'false',
+                    width: '10%',
+                    templet: function (data) {
+                        return ns.time_to_date(data.send_time);
+                    }
+                },{
+                    field: 'send_num',
+                    title: '已发送',
+                    align: 'left',
+                    unresize: 'false',
+                    width: '8%',
+                    templet: function (data) {
+                        return '<p style="text-align: left">' + data.send_num + '</p>';
+                    }
+                }, {
+                    field: 'seed_num',
+                    title: '已阅读',
+                    align: 'left',
+                    unresize: 'false',
+                    width: '8%',
+                    templet: function (data) {
+                        return '<p style="text-align: left">' + data.seed_num + '</p>';
+                    }
+                }, {
+                    title: '操作',
+                    toolbar: '#action',
+                    unresize: 'false',
+                    width: '10%'
+                }]
+            ]
+        });
+        /**
+         * 监听工具栏操作
+         */
+        table.tool(function (obj) {
+            var data = obj.data;
+            switch (obj.event) {
+                case 'detail': //详情
+                    location.href = ns.url("sitemessage://admin/sitemessage/detail", {"id": data.id});
+                    break;
+                case 'edit': //编辑
+                    location.href = ns.url("city://admin/website/edit", {"website_id": data.site_id});
+                    break;
+                case 'apply_pay': //转账
+                    applyPay(data);
+                    break;
+                case 'delete'://删除
+                    layer.confirm('确定要删除该分站吗?', function () {
+                        if (repeat_flag) return;
+                        repeat_flag = true;
+                        $.ajax({
+                            url: ns.url("city://admin/website/delete"),
+                            data: {website_id: data.site_id},
+                            dataType: 'JSON',
+                            type: 'POST',
+                            success: function (res) {
+                                layer.msg(res.message);
+                                repeat_flag = false;
+                                if (res.code == 0) {
+                                    table.reload();
+                                }
+                            }
+                        });
+                    });
+                    break;
+            }
+        });
+    })
+</script>
+<script>
+    function closePass() {
+        layer.close(layer_pass);
+    }
+</script>
+{/block}

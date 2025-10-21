@@ -1,0 +1,79 @@
+{extend name="app/shop/view/base.html"/}
+{block name="resources"}
+<style>
+    #detail_list {
+        margin-top: 15px;
+    }
+    .copy_link{font-size:12px;cursor: pointer;}
+    .copy_input{position: relative;top:34px;}
+</style>
+{/block}
+{block name='main'}
+<div class="layui-collapse ns-tips">
+    <div class="layui-colla-item">
+        <ul class="layui-colla-content layui-show">
+            <li>采集商品类型：{$info.is_virtual==0 ? "实物商品" : "虚拟商品"}</li>
+            <li>采集商品分类：{$info.category_name}</li>
+            <li>采集数：{$info.total_num}</li>
+            <li>成功数：{$info.success_num}</li>
+            <li>失败数：{$info.error_num}</li>
+            <li>采集时间：{:time_to_date($info.create_time)}</li>
+        </ul>
+    </div>
+</div>
+<script type="text/html" id="url">
+    <div class="ns-title-content">
+        <a href="javascript:;" class="ns-gn-color" title="{{d.url}}">{{d.url}}</a>
+    </div>
+    <a class="copy_link ns-text-color" href="javascript:ns.copy('copy_link_{{d.id}}');">复制链接</a>
+    <input type="type" class="copy_input" id="copy_link_{{d.id}}" value="{{d.url}}" readonly />
+</script>
+<table id="detail_list" lay-filter="detail_list"></table>
+
+{/block}
+{block name="script"}
+<script>
+    layui.use(['laydate','form'], function () {
+        var form = layui.form;
+        form.render();
+
+        var table = new Table({
+            elem: '#detail_list',
+            url: ns.url("goodsgrab://shop/goodsgrab/detail", {'grab_id': {$info.grab_id}}),
+            where:{grab_id:"{$info.grab_id}"},
+            cols: [
+                [{
+                    title: '采集商品地址',
+                    unresize: 'false',
+                    width: '70%',
+                    templet: '#url'
+                }, {
+                    field: 'type_name',
+                    title: '采集平台名称',
+                    unresize: 'false',
+                    width: '10%'
+                }, {
+                    field:'reason',
+                    title: '失败原因',
+                    unresize: 'false',
+                    width: '10%'
+                }, {
+                    title: '状态',
+                    unresize: 'false',
+                    templet: function (data){
+                        var str = '';
+                        if (data.status == 1) {
+                            str = '成功';
+                        } else if (data.status == 2) {
+                            str = '失败';
+                        }
+                        return str;
+                    },
+                    width: '10%'
+                }]
+            ]
+        });
+
+    });
+</script>
+{/block}

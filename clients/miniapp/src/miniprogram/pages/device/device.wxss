@@ -1,0 +1,297 @@
+/* pages/device/device.wxss */
+.container {
+  padding: 20rpx;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 40rpx;
+}
+
+.title {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 20rpx;
+  padding-left: 20rpx;
+  border-left: 6rpx solid #07c160;
+}
+
+/* 状态部分 */
+.status-section {
+  margin-bottom: 30rpx;
+}
+
+.status-card {
+  background-color: white;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.1);
+  border-left: 8rpx solid #ddd;
+}
+
+.status-card.connected {
+  border-left-color: #07c160;
+}
+
+.status-card.disconnected {
+  border-left-color: #ff4757;
+}
+
+.status-icon {
+  font-size: 48rpx;
+  margin-right: 30rpx;
+}
+
+.status-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.status-text {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.device-code, .device-status {
+  font-size: 26rpx;
+  color: #666;
+}
+
+/* 扫码部分 */
+.scan-section {
+  margin-bottom: 30rpx;
+}
+
+.scan-card {
+  background-color: white;
+  border-radius: 16rpx;
+  padding: 40rpx;
+  text-align: center;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.1);
+}
+
+.scan-icon {
+  font-size: 80rpx;
+  margin-bottom: 20rpx;
+}
+
+.scan-desc {
+  display: block;
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 30rpx;
+}
+
+.scan-btn {
+  background-color: #07c160;
+  color: white;
+  border-radius: 12rpx;
+  padding: 25rpx 50rpx;
+  font-size: 30rpx;
+  font-weight: bold;
+}
+
+.scan-btn:hover {
+  background-color: #06a84e;
+}
+
+/* 手动连接部分 */
+.manual-section {
+  margin-bottom: 30rpx;
+}
+
+.manual-card {
+  background-color: white;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.1);
+}
+
+.device-input {
+  width: 100%;
+  padding: 25rpx;
+  border: 2rpx solid #e0e0e0;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  margin-bottom: 20rpx;
+  box-sizing: border-box;
+}
+
+.device-input:focus {
+  border-color: #07c160;
+}
+
+.connect-btn {
+  width: 100%;
+  background-color: #07c160;
+  color: white;
+  border-radius: 12rpx;
+  padding: 25rpx;
+  font-size: 30rpx;
+  font-weight: bold;
+}
+
+.connect-btn:disabled {
+  background-color: #ddd;
+  color: #999;
+}
+
+.connect-btn:hover:not(:disabled) {
+  background-color: #06a84e;
+}
+
+/* 数据部分 */
+.data-section {
+  margin-bottom: 30rpx;
+}
+
+.data-card {
+  background-color: white;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.1);
+  max-height: 400rpx;
+  overflow-y: auto;
+}
+
+.data-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15rpx;
+}
+
+.data-item {
+  padding: 20rpx;
+  background-color: #f8f9fa;
+  border-radius: 12rpx;
+  border-left: 4rpx solid #07c160;
+}
+
+.data-time {
+  display: block;
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 8rpx;
+}
+
+.data-content {
+  font-size: 28rpx;
+  color: #333;
+}
+
+.no-data {
+  text-align: center;
+  padding: 40rpx 0;
+  color: #999;
+}
+
+/* 控制部分 */
+.control-section {
+  margin-bottom: 30rpx;
+}
+
+.control-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20rpx;
+}
+
+.control-btn {
+  padding: 25rpx;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  font-weight: bold;
+  text-align: center;
+}
+
+.control-btn.primary {
+  background-color: #07c160;
+  color: white;
+}
+
+.control-btn.warning {
+  background-color: #ffa726;
+  color: white;
+}
+
+.control-btn.info {
+  background-color: #42a5f5;
+  color: white;
+}
+
+.control-btn.danger {
+  background-color: #ff4757;
+  color: white;
+}
+
+/* 历史部分 */
+.history-section {
+  margin-bottom: 30rpx;
+}
+
+.history-card {
+  background-color: white;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.1);
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15rpx;
+}
+
+.history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx;
+  background-color: #f8f9fa;
+  border-radius: 12rpx;
+}
+
+.history-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.history-device {
+  font-size: 28rpx;
+  font-weight: bold;
+  color: #333;
+}
+
+.history-time {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.reconnect-btn {
+  background-color: #07c160;
+  color: white;
+  border-radius: 8rpx;
+  padding: 15rpx 25rpx;
+  font-size: 24rpx;
+}
+
+.no-history {
+  text-align: center;
+  padding: 40rpx 0;
+  color: #999;
+}

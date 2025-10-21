@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:background="?android:attr/selectableItemBackground"
+    android:padding="6dp">
+
+    <!-- 中奖人 -->
+    <TextView
+        android:id="@+id/userText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="用户***1"
+        android:textSize="10sp"
+        android:textColor="#333333"
+        android:gravity="center"
+        android:padding="4dp" />
+
+    <!-- 奖项 -->
+    <TextView
+        android:id="@+id/awardText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="一等奖"
+        android:textSize="10sp"
+        android:textColor="#333333"
+        android:gravity="center"
+        android:padding="4dp" />
+
+    <!-- 时间 -->
+    <TextView
+        android:id="@+id/timeText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="12:34:56"
+        android:textSize="10sp"
+        android:textColor="#333333"
+        android:gravity="center"
+        android:padding="4dp" />
+
+    <!-- 结果 -->
+    <TextView
+        android:id="@+id/resultText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="神秘奖品"
+        android:textSize="10sp"
+        android:textColor="#d84315"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:padding="4dp" />
+
+    <!-- 价值 -->
+    <TextView
+        android:id="@+id/valueText"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="¥100"
+        android:textSize="10sp"
+        android:textColor="#333333"
+        android:gravity="center"
+        android:padding="4dp" />
+
+</LinearLayout>

@@ -1,0 +1,41 @@
+<nc-component v-bind:data="data[index]" v-bind:class="['auxiliary-line',nc.padding]">
+
+	<!-- 预览 -->
+	<template slot="preview">
+		<div v-bind:style="{paddingLeft: nc.padding+ 'px', paddingRight: nc.padding+'px'}">
+
+			<div v-bind:style="{ borderTop: '1px ' + nc.borderStyle + ' ' + nc.color, margin : (nc.margin + 'px 0') }"></div>
+		</div>
+	</template>
+	
+	<!-- 编辑 -->
+	<template slot="edit">
+		<color v-bind:data="{ field : 'color', label : '颜色' }"></color>
+		<div class="layui-form-item ns-icon-radio">
+			<label class="layui-form-label sm">线条样式</label>
+			<div class="layui-input-block">
+				<span :class="{'layui-hide': nc.borderStyle!='solid'}">实线</span>
+				<span :class="{'layui-hide': nc.borderStyle!='dashed'}">虚线</span>
+
+				<ul class="ns-icon">
+					<li :class="{'ns-text-color ns-border-color ns-bg-color-diaphaneity': nc.borderStyle=='solid'}" @click="nc.borderStyle='solid'">
+						<i class="iconfont iconshixian"></i>
+					</li>
+					<li :class="{'ns-text-color ns-border-color ns-bg-color-diaphaneity': nc.borderStyle=='dashed'}" @click="nc.borderStyle='dashed'">
+						<i class="iconfont iconxuxian"></i>
+					</li>
+				</ul>
+			</div>
+		</div>
+
+		<slide v-bind:data="{ field : 'padding', label : '左右边距' }"></slide>
+		<slide v-bind:data="{ field : 'margin', label : '页面间距' }"></slide>
+	</template>
+	
+	<!-- 资源 -->
+	<template slot="resource">
+		
+		<css src="{$resource_path}/horz_line/css/design.css"></css>
+	</template>
+	
+</nc-component>

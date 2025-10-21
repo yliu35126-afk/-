@@ -1,0 +1,70 @@
+{
+    "name": "topthink/think",
+    "description": "the new thinkphp framework",
+    "type": "project",
+    "keywords": [
+        "framework",
+        "thinkphp",
+        "ORM"
+    ],
+    "homepage": "http://thinkphp.cn/",
+    "license": "Apache-2.0",
+    "authors": [
+        {
+            "name": "liu21st",
+            "email": "liu21st@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.3",
+        "topthink/framework": "6.0.14",
+        "topthink/think-orm": "v2.0.58",
+        "topthink/think-multi-app": "v1.0.15",
+        "topthink/think-view": "v1.0.14",
+        "liliuwei/thinkphp-jump": "1.5",
+        "topthink/think-captcha": "3.0.2",
+        "phpoffice/phpexcel": "1.8.2",
+        "overtrue/wechat": "4.6.0",
+        "overtrue/easy-sms": "1.3",
+        "php-curl-class/php-curl-class": "^8.6",
+        "phpmailer/phpmailer": "6.7.1",
+        "intervention/image": "2.7.2",
+        "nesbot/carbon": "2.66.0",
+        "thans/thinkphp-filesystem-cloud": "v1.0.2",
+        "ext-json": "*",
+        "workerman/gatewayclient": "3.0.13",
+        "wechatpay/wechatpay": "1.4.8"
+    },
+    "require-dev": {
+        "symfony/var-dumper": "4.4.47",
+        "topthink/think-trace": "v1.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "app\\": "app",
+            "addon\\": "addon",
+            "extend\\": "extend"
+        },
+        "psr-0": {
+            "": "extend/"
+        },
+        "classmap": [
+            "vendor/wechatpay"
+        ]
+    },
+    "config": {
+        "preferred-install": "dist",
+        "allow-plugins": {
+            "easywechat-composer/easywechat-composer": true
+        },
+        "platform": {
+            "php": "7.3.4"
+        }
+    },
+    "scripts": {
+        "post-autoload-dump": [
+            "@php think service:discover",
+            "@php think vendor:publish"
+        ]
+    }
+}

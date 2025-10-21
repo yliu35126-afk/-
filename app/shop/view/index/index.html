@@ -1,0 +1,564 @@
+{extend name="base"/}
+{block name="resources"}
+<link rel="stylesheet" href="SHOP_CSS/index.css">
+<style>
+	.btn_label{padding: 2px;border: 1px solid;border-radius: 2px;font-size: 12px;line-height: 12px;float:left;text-overflow: ellipsis;max-width:100px;overflow: hidden;white-space: nowrap;margin:5px 5px 0 0;}
+	.btn_label:nth-child(2){margin:5px 5px 0 10px;}
+	.white_box{clear:both;}
+</style>
+{/block}
+{block name="main"}
+
+{if condition="isset($shop['is_reopen']) && $shop['is_reopen']  == 3"}
+<div class="expire-hint">
+	<div class="expire-logo">
+		<img src="SHOP_IMG/warning.png" >
+	</div>
+	<div class="expire-center">
+		<h3>
+			{if $shop_info['shop_status'] == 0}
+				店铺已暂停服务，无法正常营业
+			{else/}
+				店铺已经过期，请尽快续费
+			{/if}
+			{if $shop['cert_id'] == 0}
+			<a class="ns-text-color shop_auth_apply layui-btn-radius">立即认证</a>
+			{else /}
+				{if $is_reopen == 1}
+				<a class="ns-text-color reopen_apply layui-btn-radius">立即续费</a>
+				{else/}
+				<a class="ns-text-color reopen_apply_detail layui-btn-radius">立即续费</a>
+				{/if}
+			{/if}
+		</h3>
+		<p><span class="ns-red-color">剩余0天</span>（已到期）<span> 咨询电话：{$website_info.web_phone}</span></p>
+	</div>
+</div>
+{elseif condition="isset($shop['is_reopen']) && $shop['is_reopen'] == 2"}
+<div class="expire-hint">
+	<div class="expire-logo">
+		<img src="SHOP_IMG/warning.png" >
+	</div>
+	<div class="expire-center">
+		<h3>店铺即将到期，请尽快续费
+			{if $shop['cert_id'] == 0}
+			<a class="ns-text-color shop_auth_apply layui-btn-radius">立即认证</a>
+			{else /}
+				{if $is_reopen == 1}
+				<a class="ns-text-color reopen_apply layui-btn-radius">立即续费</a>
+				{else/}
+				<a class="ns-text-color reopen_apply_detail layui-btn-radius">立即续费</a>
+				{/if}
+			{/if}
+		</h3>
+		<p><span class="ns-red-color">剩余{$shop.expires_date}天</span> <span> 咨询电话：{$website_info.web_phone}</span></p>
+	</div>
+</div>
+{/if}
+<div class="ns-survey">
+	<div class="ns-survey-left">
+		<div class="ns-survey-item">
+			<!-- 商家信息 -->
+			<div class="ns-survey-shop">
+				<div class="ns-item-pic">
+					{if condition="!empty($shop['avatar'])"}
+					<img layer-src src="{:img($shop['avatar'])}" class="img_size"/>
+					{else/}
+					<img layer-src src="{:img($default_img.default_shop_img)}" class="img_size"/>
+					{/if}
+				</div>
+
+				<div class="ns-surver-shop-detail">
+					<div>
+						<div class="ns-survey-shop-name">{$shop.site_name}</div>
+						<div class="btn_label ns-text-color ns-border-color">{$shop.group_name}</div>
+						{if $shop['cert_id'] == 0}
+						<a href="{:url('shop/cert/index')}" class="ns-text-color-dark-gray ns-red-color btn_label">未认证</a>
+						{else/}
+						<div class="btn_label  ns-text-color ns-border-color">已认证</div>
+						{/if}
+						<div class="white_box"></div>
+					</div>
+
+					<p>主营行业：<span class="ns-text-color-dark-gray">{$shop.category_name}</span></p>
+					<p>店铺状态：
+						<span class="ns-text-color-dark-gray">
+						{if $shop.shop_status == 1}
+							<span class="ns-text-color-dark-gray">正常</span>
+						{else /}
+							<span class="ns-text-color-dark-gray ns-red-color">关闭</span>
+						{/if}
+						</span>
+					</p>
+					<p>到期时间：<span class="ns-text-color-dark-gray">
+						{if condition="$shop['expire_time'] eq 0"}
+						永久
+						{else/}
+						{php} echo date("Y-m-d", $shop['expire_time']);{/php}
+						{/if}
+						</span>
+					</p>
+				</div>
+			</div>
+			<div class="num_block">
+				<div class="num_box" onclick="location.href='{:addon_url('shop/order/lists')}#!order_status=0'">
+					<div class="num_box_text">待付款订单</div>
+					<div class="num_box_num ns-text-color">{$num_data.waitpay}</div>
+				</div>
+				<div class="num_box" onclick="location.href='{:addon_url('shop/delivery/lists')}'">
+					<div class="num_box_text">待发货订单</div>
+					<div class="num_box_num ns-text-color">{$num_data.waitsend}</div>
+				</div>
+				<div class="num_box" onclick="location.href='{:addon_url('shop/orderrefund/lists')}'">
+					<div class="num_box_text">退款中订单</div>
+					<div class="num_box_num ns-text-color">{$num_data.refund}</div>
+				</div>
+				<div class="num_box" onclick="location.href='{:addon_url('shop/goods/lists')}'">
+					<div class="num_box_text">库存预警</div>
+					<div class="num_box_num ns-text-color">{$num_data.goods_stock_alarm}</div>
+				</div>
+				<div class="num_box" onclick="location.href='{:addon_url('shop/goods/lists')}'">
+					<div class="num_box_text">商品待审核</div>
+					<div class="num_box_num ns-text-color">{$num_data.wait_audit_count}</div>
+				</div>
+				<div class="num_box" onclick="location.href='{:addon_url('shop/goods/lists')}'">
+					<div class="num_box_text">商品违规下架</div>
+					<div class="num_box_num ns-text-color">{$num_data.audit_refuse_count}</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="common-wrap">
+			<div class="head">
+				<div class="title">实时概况</div>
+				<div class="sub-title">更新时间：{:date('Y-m-d H:i:s')}</div>
+			</div>
+			<div class="body summary-wrap">
+				<div class="summary-item">
+					<div class="title">今日订单数 <span class="iconfont iconwenhao js-prompt-top" data-tips="统计时间内，店铺订单总数"></span></div>
+					<div class="value">{$stat_day.order_pay_count}</div>
+					<div class="bottom-title">昨日：<span id="stat_yesterday_order_pay_count">{$stat_yesterday.order_pay_count}</span></div>
+				</div>
+				<div class="summary-item">
+					<div class="title">今日销售额<span class="iconfont iconwenhao js-prompt-top" data-tips="统计时间内，订单销售金额"></span></div>
+					<div class="value" id="stat_day_earnings_total_money">{if isset($stat_day.order_total)}{$stat_day.order_total}{else /} 0.00 {/if}</div>
+					<div class="bottom-title">昨日：<span id="stat_yesterday_earnings_total_money">{$stat_yesterday.order_total}</span></div>
+				</div>
+				<div class="summary-item">
+					<div class="title">今日新增店铺收藏数<span class="iconfont iconwenhao js-prompt-top" data-tips="统计时间内，新增加的店铺收藏数据"></span></div>
+					<div class="value" id="stat_day_member_count">{$stat_day.collect_shop}</div>
+					<div class="bottom-title">昨日：<span id="stat_yesterday_member_count">{$stat_yesterday.collect_shop}</span></div>
+				</div>
+				<div class="summary-item">
+					<div class="title">今日浏览量<span class="iconfont iconwenhao js-prompt-top" data-tips="统计时间内，会员的浏览量"></span></div>
+					<div class="value" id="stat_day_visit_count">{$stat_day.visit_count}</div>
+					<div class="bottom-title">昨日：<span id="stat_yesterday_visit_count">{$stat_yesterday.visit_count}</span></div>
+				</div>
+			</div>
+			<div class="body summary-wrap">
+				<div class="summary-item">
+					<div class="title">订单总数</div>
+					<div class="value" id="shop_stat_sum_order_pay_count">{$shop_stat_sum.order_pay_count}</div>
+				</div>
+				<div class="summary-item">
+					<div class="title">销售总额（元）</div>
+					<div class="value" id="shop_stat_sum_earnings_total_money">{$shop_stat_sum.order_total}</div>
+				</div>
+				<div class="summary-item">
+					<div class="title">店铺收藏总数</div>
+					<div class="value" id="shop_stat_sum_member_count">{$shop_stat_sum.collect_shop}</div>
+				</div>
+				<div class="summary-item">
+					<div class="title">总浏览量</div>
+					<div class="value" id="shop_stat_sum_visit_count">{$shop_stat_sum.visit_count}</div>
+				</div>
+			</div>
+		</div>
+
+		
+		<!--统计图-->
+		<div class="echarts-wrap">
+			<div class="echarts-order f_box_border">
+				<h5>近十天订单数(个)</h5>
+				<div id="order"></div>
+			</div>
+
+			<div class="echarts-money f_box_border">
+				<h5>销售额(元)</h5>
+				<div id="money"></div>
+			</div>
+		</div>
+        <!-- 常用功能 -->
+        <div class="layui-card ns-card-common">
+            <div class="layui-card-header layui-card-headers commonly-used">
+                <div>
+                    <span class="ns-card-title"><strong>常用功能</strong></span>
+                    <span class="ns-card-sub">更新时间：{$today}</span>
+                </div>
+            </div>
+
+			<div class="layui-card-body layui-card-bodys">
+				<div class="ns-item-block-parent">
+					<a class="ns-item-block ns-item-block-hover-a" href="{:url('shop/goods/addgoods')}">
+						<div class="ns-item-block-wrap">
+							<div class="ns-item-pic">
+								<img src="SHOP_IMG/menu_icon/issue_good.png">
+							</div>
+							<div class="ns-item-con">
+								<div class="ns-item-content-title">发布商品</div>
+								<p class="ns-item-content-desc">发布实物商品</p>
+							</div>
+						</div>
+					</a>
+					<a class="ns-item-block ns-item-block-hover-a" href="{:url('shop/order/lists')}">
+						<div class="ns-item-block-wrap">
+							<div class="ns-item-pic">
+								<img src="SHOP_IMG/menu_icon/order_select.png">
+							</div>
+							<div class="ns-item-con">
+								<div class="ns-item-content-title">订单查询</div>
+								<p class="ns-item-content-desc">查询系统普通订单</p>
+							</div>
+						</div>
+					</a>
+					<a class="ns-item-block ns-item-block-hover-a" href="{:url('shop/diy/index')}">
+						<div class="ns-item-block-wrap">
+							<div class="ns-item-pic">
+								<img src="SHOP_IMG/menu_icon/page_decoration.png">
+							</div>
+							<div class="ns-item-con">
+								<div class="ns-item-content-title">页面装修</div>
+								<p class="ns-item-content-desc">主页面进行装修</p>
+							</div>
+						</div>
+					</a>
+					<a class="ns-item-block ns-item-block-hover-a" href="{:url('shop/account/reopenlist')}">
+						<div class="ns-item-block-wrap">
+							<div class="ns-item-pic">
+								<img src="SHOP_IMG/menu_icon/shop_apply.png">
+							</div>
+							<div class="ns-item-con">
+								<div class="ns-item-content-title">店铺续签</div>
+								<p class="ns-item-content-desc">店铺续签管理</p>
+							</div>
+						</div>
+					</a>
+				</div>
+			</div>
+        </div>
+
+		<!-- 插件 -->
+		<div class="addon-tool">
+
+			<!-- 插件 -->
+			<div class="layui-card ns-card-common">
+				{if $count['shopcount']!=0}
+				<div class="layui-card-header layui-card-headers">
+					<div>
+						<span class="ns-card-title">营销活动</span>
+						<a class="ns-text-color" href="{:addon_url('shop/promotion/index')}">更多</a>
+					</div>
+				</div>
+				{/if}
+				<div class="layui-card-body layui-card-bodys">
+					<div class="ns-item-block-parent addon_block">
+						{php} $num = 0; {/php}
+						{foreach $promotion as $list_k => $list_v}
+						{empty name="$list_v['is_developing']"}
+						{if in_array($list_v['show_type'],['shop','member']) && $num <5}
+						{php} $num++;{/php}
+						<a class="addon-tool-item" {empty name="$list_v['is_developing']"} href="{:addon_url($list_v['url'])}" {/empty}>
+							<div class="ns-item-block-wrap">
+								<div class="ns-item-pic">
+									<img src="{:img($list_v.icon)}">
+								</div>
+								<div class="ns-item-con">
+									<div class="ns-item-content-title">{$list_v.title}</div>
+									<p class="ns-item-content-desc ns-line-hiding" title="{$list_v.description}">{$list_v.description}</p>
+								</div>
+							</div>
+						</a>
+						{/if}
+						{/empty}
+						{/foreach}
+					</div>
+				</div>
+			</div>
+
+			<div class="layui-card ns-card-common">
+				{if $count['toolcount']!=0}
+				<div class="layui-card-header layui-card-headers">
+					<div>
+						<span class="ns-card-title">应用工具</span>
+						<a class="ns-text-color" href="{:addon_url('shop/promotion/tool')}">更多</a>
+					</div>
+				</div>
+				{/if}
+				<div class="layui-card-body layui-card-bodys">
+					<div class="ns-item-block-parent addon_block">
+						{php} $tool_num = 0; {/php}
+						{foreach $promotion as $list_k => $list_v}
+						{empty name="$list_v['is_developing']"}
+
+						{if $list_v['show_type'] == 'tool' && $tool_num < 5}
+						{php} $tool_num++; {/php}
+						<a class="addon-tool-item" {empty name="$list_v['is_developing']"} href="{:addon_url($list_v['url'])}" {/empty}>
+							<div class="ns-item-block-wrap">
+								<div class="ns-item-pic">
+									<img src="{:img($list_v.icon)}">
+								</div>
+								<div class="ns-item-con">
+									<div class="ns-item-content-title">{$list_v.title}</div>
+									<p class="ns-item-content-desc ns-line-hiding" title="{$list_v.description}">{$list_v.description}</p>
+								</div>
+							</div>
+						</a>
+						{/if}
+
+						{/empty}
+						{/foreach}
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<div class="ns-survey-right">
+		<!-- 访问店铺 -->
+		<a href="#" onclick="getShopUrl()">
+			<div class="access_shop ns-bg-color">访问店铺</div>
+		</a>
+		<!-- 客服 -->
+		<div class="layui-card ns-survey-customer-service">
+			<div class="ns-item-block-parent customer_service">
+				<a href="">
+					<div class="ns-item-block-wrap">
+						<div class="ns-item-pic">
+<!--							{if condition="$website_info.web_qrcode"}-->
+<!--							<img src="{:img($website_info.web_qrcode)}">-->
+<!--							{else/}-->
+<!--							{/if}-->
+							<img src="__STATIC__/img/listen.png">
+						</div>
+						<div class="ns-item-con">
+							<div class="ns-item-content-title">联系客服</div>
+							<p class="ns-item-content-desc">电话：{$website_info.web_phone}</p>
+						</div>
+					</div>
+				</a>
+			</div>
+		</div>
+
+		<!-- 店铺评分 -->
+		<div class="layui-card ns-survey-guide">
+			<div class="layui-card-header"><span>店铺评分</span></div>
+			<div class="layui-card-body">
+				<a class="layui-elip" href="javascript:;">描述相符：{$shop.shop_desccredit} 分</a>
+				<a class="layui-elip" href="javascript:;">服务态度：{$shop.shop_servicecredit} 分</a>
+				<a class="layui-elip" href="javascript:;">配送服务：{$shop.shop_deliverycredit} 分</a>
+			</div>
+		</div>
+		
+		<!-- 入驻指南 -->
+		<div class="layui-card ns-survey-guide">
+			<div class="layui-card-header"><span>入驻指南</span><a class="ns-text-color" href="{:url('shop/shopjoin/guide')}">更多</a></div>
+			<div class="layui-card-body">
+                {foreach $shop_join_guide_list as $list_k => $list_v}
+			    <a class="layui-elip" href="{:url('shop/shopjoin/guidedetail')}?guide_index={$list_v.guide_index}">
+			    	<span class="date">{$list_v.create_time|date='m/d'}</span><span>{$list_v.title}</span>
+			    </a>
+                {/foreach}
+			</div>
+		</div>
+		<!-- 网站公告 -->
+		<div class="layui-card ns-survey-help">
+			<div class="layui-card-header"><span>网站公告</span><a class="ns-text-color" href="{:url('shop/notice/lists')}">更多</a></div>
+			<div class="layui-card-body">
+				{foreach $notice_list as $list_k => $list_v}
+				<a class="layui-elip" href="{:url('shop/notice/detail')}?id={$list_v.id}">
+					<span class="adorn ns-bg-color">{$list_k+1}</span><span>{$list_v.title}</span>
+				</a>
+				{/foreach}
+			</div>
+		</div>
+
+		<!-- 入驻帮助 -->
+		<div class="layui-card ns-survey-help">
+			<div class="layui-card-header"><span>商家帮助</span><a class="ns-text-color" href="{:url('shop/shophelp/helplist')}">更多</a></div>
+			<div class="layui-card-body">
+                {foreach $help_list as $list_k => $list_v}
+			    <a class="layui-elip" href="{:url('shop/shophelp/helpDetail')}?help_id={$list_v.id}">
+			    	<span class="type">[{$list_v.class_name}]</span><span>{$list_v.title}</span>
+			    </a>
+                {/foreach}
+			</div>
+		</div>
+	</div>
+</div>
+{/block}
+{block name="script"}
+<script src="ADMIN_JS/echarts.min.js"></script>
+<script>
+    var table, form, laytpl, laydate, repeat_flag = false;
+    layui.use(['form', 'laytpl', 'laydate'], function() {
+        form = layui.form;
+        laytpl = layui.laytpl;
+        laydate = layui.laydate;
+		form.render();
+
+        /**
+         * 监听开店套餐下拉选(添加)
+         */
+        form.on('select(shop_group)', function (data) {        //对应lay-filter
+            obj.group_id = data.value;
+            moneyChange(obj);
+        });
+
+        /**
+         * 监听续签年限(添加)
+         */
+        form.on('select(apply_year)', function (data) {        //对应lay-filter
+            obj.apply_year = data.value;
+            moneyChange(obj);
+        });
+
+        function moneyChange(data) {
+            $.ajax({
+                type: "POST",
+                url: ns.url("shop/Apply/getApplyMoney"),
+                data: data,
+                dataType: 'JSON',
+                success: function(res) {
+                    repeat_flag = false;
+
+                    $(".paying-amount").text(res.data.paying_amount + '元');
+                    $(".pay-amount").val(res.data.paying_amount);
+                    if (res.code == 0) {
+                        layer.closeAll('page');
+                    }
+                }
+            });
+        }
+
+        //申请续签
+        $(".reopen_apply").click(function () {
+            location.href = ns.url("shop/cert/reopen");
+        });
+        //编辑续签
+        $(".reopen_apply_detail").click(function () {
+            location.href = ns.url("shop/cert/editreopeninfo");
+        });
+        //认证
+        $(".shop_auth_apply").click(function () {
+            location.href = ns.url("shop/cert/index");
+        });
+    })
+</script>
+<script>
+	var ten_day_json = {:json_encode($ten_day, JSON_UNESCAPED_UNICODE)} ;
+
+	function getDay(day){
+		var today = new Date();
+		var targetday_milliseconds = today.getTime() + 1000 * 60 * 60 * 24 * day;
+		today.setTime(targetday_milliseconds); //注意，这行是关键代码
+		var tYear = today.getFullYear();
+		var tMonth = today.getMonth();
+		var tDate = today.getDate();
+		tMonth = doHandleMonth(tMonth + 1);
+		tDate = doHandleMonth(tDate);
+		return tMonth + "-" + tDate;
+	}
+
+	function doHandleMonth(month){
+		var m = month;
+		if(month.toString().length == 1){
+			m = "0" + month;
+		}
+		return m;
+	}
+
+	var data = [getDay(-9), getDay(-8), getDay(-7), getDay(-6), getDay(-5), getDay(-4), getDay(-3), getDay(-2), getDay(-1), getDay(0)];
+	// 基于准备好的dom，初始化echarts实例
+	var myChart = echarts.init(document.getElementById('order'));
+
+	// 指定图表的配置项和数据
+	option = {
+		xAxis: {
+			type: 'category',
+			data: data
+		},
+		yAxis: {
+			type: 'value'
+		},
+		tooltip: {
+			formatter: function(params, ticket, callback) {
+				return "日期：" + data[params.dataIndex] + '<br />' + params.seriesName + "：" + params.value;
+			},
+			backgroundColor: 'rgba(0, 0, 0, 0.5)',
+			padding: [5, 10],
+			textStyle: {
+				color: '#fff',
+				lineHeight: 30,
+			}
+		},
+		series: [{
+			name: ['订单数'],
+			data: ten_day_json.order_pay_count,
+			type: 'bar',
+			showBackground: true,
+			barCategoryGap: '50%',
+			itemStyle: {
+				color: new echarts.graphic.LinearGradient(
+					0, 0, 0, 1,
+					[
+						{offset: 0, color: '#105CFB'},
+						{offset: 1, color: '#105CFB'}
+					]
+				)
+			}
+		}]
+	};
+
+	// 使用刚指定的配置项和数据显示图表。
+	myChart.setOption(option);
+
+	// 基于准备好的dom，初始化echarts实例
+	var moneyChart = echarts.init(document.getElementById('money'));
+
+	// 指定图表的配置项和数据
+	moneyOption = {
+		xAxis: {
+			type: 'category',
+			data: data
+		},
+		yAxis: {
+			type: 'value'
+		},
+		tooltip: {
+			trigger: 'axis',
+			showContent: true,
+			backgroundColor: 'rgba(0, 0, 0, 0.5)',
+			padding: [5, 10],
+			textStyle: {
+				color: '#fff',
+				lineHeight: 30,
+			},
+			formatter: function(params, ticket, callback) {
+				return "日期：" + params[0].axisValue + '<br />' + params[0].seriesName + "：" + params[0].value + "元";
+			},
+		},
+		series: [{
+			name: ['销售额'],
+			data: ten_day_json.order_total,
+			type: 'line',
+			smooth: true,
+			itemStyle: {
+				color: '#105CFB'
+			}
+		}]
+	};
+
+	// 使用刚指定的配置项和数据显示图表。
+	moneyChart.setOption(moneyOption);
+</script>
+{/block}

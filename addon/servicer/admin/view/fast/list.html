@@ -1,0 +1,219 @@
+{extend name="app/admin/view/base.html"/}
+{block name="resources"}
+{/block}
+{block name="main"}
+<!-- 搜索框 -->
+<div class="ns-single-filter-box">
+    <button class="layui-btn ns-bg-color" id="add_fast">添加快捷回复</button>
+
+    <div class="layui-form" lay-filter="selection_panel_form">
+        <div class="layui-input-inline">
+            <input type="text" name="search_text" placeholder="请输入回复内容搜索" autocomplete="off" class="layui-input ">
+            <button type="button" class="layui-btn layui-btn-primary" lay-filter="search" lay-submit>
+                <i class="layui-icon">&#xe615;</i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 列表 -->
+<table id="page_list" lay-filter="page_list"></table>
+
+{/block}
+{block name="script"}
+<script>
+    layui.use(['form', 'laytpl'], function (form, laytpl) {
+        // 防重复标识
+        var is_submit = false;
+
+        var table = new Table({
+            elem: '#page_list',
+            url: ns.url('servicer://admin/fast/index'),
+            cols: [
+                [
+                    {
+                        title: '回复内容',
+                        field: 'content',
+                        width: '70%'
+                    },
+                    {
+                        title: '创建时间',
+                        width: '15%',
+                        templet: function (data) {
+                            return '<p class="ns-multi-line-hiding">' + ns.time_to_date(data.create_time) + '</p>';
+                        },
+                    },
+                    {
+                        title: '操作',
+                        width: '10%',
+                        templet: function (data) {
+                            var html = '';
+
+                            html += '<div class="ns-table-btn">';
+                                html += '<a class="layui-btn" lay-event="edit">编辑</a>';
+                                html += '<a class="layui-btn" lay-event="delete">删除</a>';
+                            html += '</div>';
+                            return html;
+                        },
+                    }
+                ]
+            ],
+        });
+
+        /**
+         * 搜索功能
+         */
+        form.on('submit(search)', function (data) {
+            table.reload({
+                page: {
+                    curr: 1
+                },
+                where: data.field
+            });
+            return false;
+        });
+
+        /**
+         * 监听工具栏操作
+         */
+        table.tool(function (obj) {
+            var data = obj.data;
+
+            switch (obj.event) {
+                // 编辑
+                case 'edit':
+                    saveFast(data);
+                    break;
+                // 删除
+                case 'delete':
+                    layer.confirm('确定要删除该快捷回复吗?', function (index) {
+                        layer.close(index);
+                        deleteFast(data.id);
+                    });
+                    break;
+            }
+        });
+
+        // 添加快捷回复
+        $('#add_fast').click(function () {
+            saveFast();
+        });
+
+        /**
+         * 添加/编辑快捷回复
+         * @param params
+         */
+        function saveFast(params) {
+            var layer_index, index, title, url;
+
+            if ($.isEmptyObject(params)) {
+                title = '添加快捷回复';
+                url = 'servicer://admin/fast/add';
+                params = {};
+            } else {
+                url = 'servicer://admin/fast/edit';
+                title = '编辑快捷回复';
+            }
+
+            // 渲染
+            laytpl($('#save_keyword_html').html()).render(params, function (html) {
+                index = layer.open({
+                    title: title,
+                    skin: 'layer-tips-class',
+                    type: 1,
+                    area: ['550px'],
+                    content: html,
+                    success: function () {
+                        form.render();
+                    }
+                });
+            });
+
+            // 提交
+            form.on('submit(save_keyword)', function (data) {
+
+                if (is_submit) return false;
+                is_submit = true;
+
+                $.ajax({
+                    url: ns.url(url),
+                    data: data.field,
+                    dataType: 'JSON',
+                    type: 'POST',
+                    beforeSend: function () {
+                        layer_index = layer.load();
+                    },
+                    complete: function () {
+                        layer.close(layer_index);
+                    },
+                    success: function (res) {
+                        is_submit = false;
+                        layer.msg(res.message);
+
+                        if (res.code >= 0) {
+                            layer.close(index);
+                            table.reload();
+                        }
+                    },
+                    error: function () {
+                        is_submit = false;
+                        layer.msg('操作异常');
+                    }
+                });
+            });
+        }
+
+        /**
+         * 删除快捷回复
+         * @param ids
+         */
+        function deleteFast(ids) {
+            var layer_index;
+
+            if (is_submit) return false;
+            is_submit = true;
+
+            $.ajax({
+                url: ns.url('servicer://admin/fast/delete'),
+                data: {ids: ids},
+                dataType: 'JSON',
+                type: 'POST',
+                beforeSend: function () {
+                    layer_index = layer.load();
+                },
+                complete: function () {
+                    layer.close(layer_index);
+                },
+                success: function (res) {
+                    is_submit = false;
+                    layer.msg(res.message);
+
+                    if (res.code >= 0) {
+                        table.reload();
+                    }
+                },
+                error: function () {
+                    is_submit = false;
+                    layer.msg('操作异常');
+                }
+            });
+        }
+    });
+</script>
+
+<script type="text/html" id="save_keyword_html">
+    <div class="layui-form" lay-filter="save_keyword_form">
+        <div class="layui-form-item">
+            <label class="layui-form-label mid"><span class="required">*</span>回复内容：</label>
+            <div class="layui-input-block">
+                <textarea class="layui-textarea" name="content" lay-verify="required" placeholder="请输入回复内容" autocomplete="off">{{d.content ? d.content : ''}}</textarea>
+            </div>
+        </div>
+
+        <input type="hidden" name="id" value="{{d.id ? d.id : 0}}">
+        <div class="ns-form-row mid">
+            <button class="layui-btn ns-bg-color" lay-submit lay-filter="save_keyword">确定</button>
+        </div>
+    </div>
+</script>
+{/block}

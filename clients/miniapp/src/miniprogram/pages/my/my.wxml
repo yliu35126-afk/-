@@ -1,0 +1,163 @@
+<!--my.wxml-->
+<navigation-bar title="异企趣玩" back="{{true}}" color="black" background="white"></navigation-bar>
+<view class="my-container">
+  <!-- 主要内容区域 -->
+  <view class="main-content">
+    <!-- 登录卡片 -->
+    <view class="login-card" bindtap="{{isLoggedIn ? 'goToProfile' : 'handleLogin'}}">
+      <view wx:if="{{isLoggedIn && userInfo}}" class="user-info">
+        <image wx:if="{{userInfo.avatarUrl}}" class="user-avatar" src="{{userInfo.avatarUrl}}" mode="aspectFill"></image>
+        <view wx:else class="user-avatar-placeholder">
+          <text class="avatar-text">{{userInfo.nickName ? userInfo.nickName.charAt(0) : '用'}}</text>
+        </view>
+        <text class="user-name">{{userInfo.nickName || '微信用户'}}</text>
+        <text class="edit-hint">点击设置</text>
+      </view>
+      <view wx:else class="login-prompt">
+        <view class="login-icon">
+          <text class="icon-text">山</text>
+        </view>
+        <text class="login-text">请登录</text>
+      </view>
+    </view>
+    
+    <!-- 菜单列表 -->
+    <view class="menu-list">
+      <!-- 订单记录 -->
+      <view class="menu-item" bindtap="goToOrders">
+        <view class="menu-left">
+          <view class="menu-icon order-icon"></view>
+          <text class="menu-text">订单记录</text>
+        </view>
+        <view class="arrow-icon"></view>
+      </view>
+
+      <!-- 商家核销 -->
+      <view class="menu-item" bindtap="goToMerchantVerification">
+        <view class="menu-left">
+          <view class="menu-icon verify-icon"></view>
+          <text class="menu-text">商家核销</text>
+        </view>
+        <view class="arrow-icon"></view>
+      </view>
+
+      <!-- 提现记录 -->
+      <view class="menu-item" bindtap="openWithdrawRecords">
+        <view class="menu-left">
+          <view class="menu-icon withdraw-icon"></view>
+          <text class="menu-text">提现记录</text>
+        </view>
+        <view class="arrow-icon"></view>
+      </view>
+      
+      <!-- 用户协议 -->
+      <view class="menu-item" bindtap="goToAgreement">
+        <view class="menu-left">
+          <view class="menu-icon agreement-icon"></view>
+          <text class="menu-text">用户协议</text>
+        </view>
+        <view class="arrow-icon"></view>
+      </view>
+
+      <!-- 环境设置入口已移除（审核要求） -->
+    </view>
+  </view>
+</view>
+
+<!-- 提现记录弹窗 -->
+<view class="withdraw-modal {{showWithdrawModal ? 'show' : ''}}" catchtap="closeWithdrawModal">
+  <view class="withdraw-modal-content" catchtap="preventClose">
+    <!-- 头部 -->
+    <view class="withdraw-header">
+      <text class="withdraw-title">提现记录</text>
+      <text class="withdraw-close" catchtap="closeWithdrawModal">✕</text>
+    </view>
+    
+    <!-- 内容区域 -->
+    <view class="withdraw-content">
+      <!-- 加载状态 -->
+      <view wx:if="{{withdrawLoading}}" class="withdraw-loading">
+        <text class="loading-text">加载中...</text>
+      </view>
+      
+      <!-- 提现记录列表 -->
+      <view wx:elif="{{withdrawRecords.length > 0}}" class="withdraw-list">
+        <view wx:for="{{withdrawRecords}}" wx:key="index" class="withdraw-item">
+          <view class="withdraw-item-header">
+            <text class="withdraw-amount">¥{{item.amount || '0.00'}}</text>
+            <text class="withdraw-status {{ item.status === 'WAIT_USER_CONFIRM' ? 'pending' : (item.status === 'SUCCESS' ? 'success' : (item.status === 'PENDING' ? 'pending' : (item.status === 'CANCELLED' ? 'cancelled' : 'failed'))) }}">
+              {{ item.status_text || (item.status === 'WAIT_USER_CONFIRM' ? '待确认' : (item.status === 'SUCCESS' ? '已到账' : (item.status === 'PENDING' ? '处理中' : (item.status === 'CANCELLED' ? '已取消' : '失败')))) }}
+            </text>
+          </view>
+          
+          <view class="withdraw-item-info">
+            <text class="withdraw-time">{{item.create_time}}</text>
+            <text class="withdraw-id">提现单号：{{item.withdraw_id}}</text>
+            <text class="withdraw-trade" wx:if="{{item.trade_no}}">交易号：{{item.trade_no}}</text>
+
+            <!-- 未完成原因展示（原“失败原因”） -->
+            <text class="withdraw-reason" wx:if="{{item.status === 'FAILED' && (item.fail_reason || item.remark)}}">
+              未完成原因：{{item.fail_reason || item.remark}}
+            </text>
+            <!-- 待确认提示 -->
+            <text class="withdraw-tip" wx:if="{{item.status === 'WAIT_USER_CONFIRM'}}">
+              请在微信弹窗中确认收款，24小时内未确认将自动关闭
+            </text>
+
+          </view>
+          
+          <!-- 确认收款按钮 -->
+          <view wx:if="{{item.status === 'WAIT_USER_CONFIRM' && item.package_info}}" class="withdraw-actions">
+            <button class="confirm-btn" 
+                    bindtap="confirmWithdraw" 
+                    data-record="{{item}}">
+              确认收款
+            </button>
+          </view>
+        </view>
+      </view>
+      
+      <!-- 空状态 -->
+      <view wx:else class="withdraw-empty">
+        <text class="empty-text">暂无提现记录</text>
+      </view>
+    </view>
+  </view>
+</view>
+
+<!-- 转账确认弹窗 -->
+<view class="transfer-modal {{showTransferModal ? 'show' : ''}}" catchtap="closeTransferModal">
+  <view class="transfer-modal-content" catchtap="preventClose">
+    <!-- 头部图标 -->
+    <view class="transfer-header">
+      <view class="transfer-icon">💰</view>
+      <view class="transfer-title">确认收款</view>
+    </view>
+    
+    <!-- 转账信息 -->
+    <view class="transfer-info">
+      <view class="transfer-amount">¥{{currentTransfer.amount || '0.00'}}</view>
+      <view class="transfer-message">
+        转账申请成功！请确认收款到微信零钱
+      </view>
+      <view class="transfer-tip">
+        24小时内未确认将自动关闭
+      </view>
+    </view>
+    
+    <!-- 操作按钮 -->
+    <view class="transfer-actions">
+      <button class="transfer-confirm-btn" 
+              bindtap="doConfirmTransfer" 
+              loading="{{transferLoading}}"
+              disabled="{{transferLoading}}">
+        {{transferLoading ? '确认中...' : '确认收款'}}
+      </button>
+      <button class="transfer-cancel-btn" 
+              bindtap="closeTransferModal"
+              disabled="{{transferLoading}}">
+        稍后处理
+      </button>
+    </view>
+  </view>
+</view>

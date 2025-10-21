@@ -1,0 +1,182 @@
+view {
+	line-height: 1.8;
+	// font-family: '-apple-system', 'BlinkMacSystemFont', 'Helvetica Neue', 'Helvetica', 'Segoe UI', 'Arial', 'Roboto', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft Yahei',
+	// 	'sans-serif';
+	font-family: 'PingFang SC', 'Roboto Medium';
+	font-size: $font-size-base;
+	color: $color-title;
+}
+
+page {
+	background-color: $color-bg;
+}
+
+// 热情红·默认
+$base-color: #FF6A00;
+@include base($base-color);
+
+/* 隐藏滚动条 */
+::-webkit-scrollbar {
+	width: 0;
+	height: 0;
+	color: transparent;
+}
+
+scroll-view ::-webkit-scrollbar {
+	width: 0;
+	height: 0;
+	background-color: transparent;
+}
+
+/* 兼容苹果X以上的手机样式 */
+.iphone-x {
+	/* 	padding-bottom: 68rpx !important; */
+	padding-bottom: constant(safe-area-inset-bottom);
+	padding-bottom: env(safe-area-inset-bottom);
+}
+.iphone-safe-area {
+	/* 	padding-bottom: 68rpx !important; */
+	padding-bottom: calc(constant(safe-area-inset-bottom) + 40rpx) !important;
+	padding-bottom: calc(env(safe-area-inset-bottom)  + 40rpx) !important;
+}
+
+.iphone-x-fixed {
+	bottom: 68rpx !important;
+}
+
+.uni-input {
+	font-size: $font-size-base;
+}
+
+// ***************文字颜色***************
+
+// 主标题
+.color-title {
+	color: $color-title !important;
+}
+
+// 副标题
+.color-sub {
+	color: $color-sub !important;
+}
+
+// 辅助提示色
+.color-tip {
+	color: $color-tip !important;
+}
+
+// 灰背景色
+.color-bg {
+	background-color: $color-bg !important;
+}
+
+// 分割线
+.color-line {
+	color: $color-line !important;
+}
+
+// 分割线边框
+.color-line-border {
+	border-color: $color-line !important;
+}
+
+// 禁用色
+.color-disabled {
+	color: $color-disabled !important;
+}
+
+// 禁用色
+.color-disabled-bg {
+	background-color: $color-disabled !important;
+}
+
+// ***************文字大小***************
+
+// 14px，正文文字
+.font-size-base {
+	font-size: $font-size-base !important;
+}
+
+// 16px，用于标题、导航栏
+.font-size-toolbar {
+	font-size: $font-size-toolbar !important;
+}
+
+// 13px，副标题
+.font-size-sub {
+	font-size: $font-size-sub !important;
+}
+
+// 12px，辅助性文字/大标签
+.font-size-tag {
+	font-size: $font-size-tag !important;
+}
+
+// 11px，商品列表角标
+.font-size-goods-tag {
+	font-size: $font-size-goods-tag !important;
+}
+
+// 10px，活动角标（拼团等角标）/小标签文字
+.font-size-activity-tag {
+	font-size: $font-size-activity-tag !important;
+}
+
+// 圆角
+.border-radius {
+	border-radius: $border-radius !important;
+}
+
+//内边距
+.padding {
+	padding: $padding !important;
+	&-top {
+		padding-top: $padding !important;
+	}
+	&-right {
+		padding-right: $padding !important;
+	}
+	&-bottom {
+		padding-bottom: $padding !important;
+	}
+	&-left {
+		padding-left: $padding !important;
+	}
+}
+
+//外边距
+.margin {
+	margin: $margin-updown $margin-both !important;
+	&-top {
+		margin-top: $margin-updown !important;
+	}
+	&-right {
+		margin-right: $margin-both !important;
+	}
+	&-bottom {
+		margin-bottom: $margin-updown !important;
+	}
+	&-left {
+		margin-left: $margin-both !important;
+	}
+}
+
+uni-button:after {
+	border: none !important;
+}
+
+button::after {
+	border: none !important;
+}
+
+.uni-tag--inverted {
+	border-color: $color-line !important;
+	color: $color-title !important;
+}
+
+/deep/::-webkit-scrollbar {
+	width: 0;
+	height: 0;
+	background-color: transparent;
+	display: none;
+}

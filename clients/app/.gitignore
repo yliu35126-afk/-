@@ -1,0 +1,24 @@
+# App project (Native/Flutter/React Native)
+
+# Common
+/node_modules/
+/dist/
+/build/
+*.log
+.DS_Store
+
+# Android
+/android/.gradle/
+/android/.idea/
+/android/build/
+/android/app/build/
+
+# iOS
+/ios/Pods/
+/ios/build/
+/ios/DerivedData/
+
+# Flutter
+/.dart_tool/
+/.pub-cache/
+/build/

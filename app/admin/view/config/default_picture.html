@@ -1,0 +1,342 @@
+{extend name="base"/}
+{block name="resources"}
+<style>
+	.layui-input-inline.js-pid a{
+		margin-left: 20px;
+	}
+	.ns-form {margin-top: 0;}
+</style>
+{/block}
+{block name="main"}
+<div class="layui-form ns-form">
+	<div class="layui-form-item">
+		<label class="layui-form-label">默认店铺图片：</label>
+		<div class="layui-input-block">
+			<div class="upload-img-block img-upload">
+				<div class="upload-img-box {notempty name="$default_img['default_shop_img']"}hover{/notempty}">
+					<div class="ns-upload-default" id="imgUploadShop">
+						{if condition="$default_img.default_shop_img"}
+						<div id="preview_imgUploadShop" class="preview_img">
+							<img layer-src src="{:img($default_img.default_shop_img)}" class="img_prev"/>
+						</div>
+						{else/}
+						<div class="upload">
+							<img src="ADMIN_IMG/upload_img.png"/>
+							<p>点击上传</p>
+						</div>
+						{/if}
+					</div>
+					<div class="operation">
+						<div>
+							<i title="图片预览" class="iconfont iconreview js-preview" style="margin-right: 20px;"></i>
+							<i title="删除图片" class="layui-icon layui-icon-delete js-delete"></i>
+						</div>
+						<div class="replace_img js-replace">点击替换</div>
+					</div>
+					<input type="hidden" name="default_shop_img" value="{$default_img.default_shop_img}">
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">默认商品图片：</label>
+		<div class="layui-input-block">
+			<div class="upload-img-block img-upload">
+				<div class="upload-img-box {notempty name="$default_img['default_goods_img']"}hover{/notempty}">
+					<div class="ns-upload-default" id="imgUploadGoods">
+						{if condition="$default_img.default_goods_img"}
+						<div id="preview_imgUploadGoods" class="preview_img">
+							<img layer-src src="{:img($default_img.default_goods_img)}" class="img_prev"/>
+						</div>
+						{else/}
+						<div class="upload">
+							<img src="ADMIN_IMG/upload_img.png"/>
+							<p>点击上传</p>
+						</div>
+							
+						{/if}
+					</div>
+					<div class="operation">
+						<div>
+							<i title="图片预览" class="iconfont iconreview js-preview" style="margin-right: 20px;"></i>
+							<i title="删除图片" class="layui-icon layui-icon-delete js-delete"></i>
+						</div>
+						
+						<div class="replace_img js-replace">点击替换</div>
+					</div>
+					<input type="hidden" name="default_goods_img" value="{$default_img.default_goods_img}">
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">默认会员头像：</label>
+		<div class="layui-input-block">
+			<div class="upload-img-block img-upload">
+				<div class="upload-img-box {notempty name="$default_img['default_headimg']"}hover{/notempty}">
+					<div class="ns-upload-default" id="imgUploadMember">
+						{if condition="$default_img.default_headimg"}
+						<div id="preview_imgUploadMember" class="preview_img">
+							<img layer-src src="{:img($default_img.default_headimg)}" class="img_prev"/>
+						</div>
+						{else/}
+						<div class="upload">
+							<img src="ADMIN_IMG/upload_img.png"/>
+							<p>点击上传</p>
+						</div>
+						{/if}
+					</div>
+					<div class="operation">
+						<div>
+							<i title="图片预览" class="iconfont iconreview js-preview" style="margin-right: 20px;"></i>
+							<i title="删除图片" class="layui-icon layui-icon-delete js-delete"></i>
+						</div>
+						
+						<div class="replace_img js-replace">点击替换</div>
+					</div>
+					<input type="hidden" name="default_headimg" value="{$default_img.default_headimg}">
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">默认城市分站图片：</label>
+		<div class="layui-input-block">
+			<div class="upload-img-block img-upload">
+				<div class="upload-img-box {notempty name="$default_img['default_city_img']"}hover{/notempty}">
+				<div class="ns-upload-default" id="imgUploadCity">
+					{if condition="!empty($default_img.default_city_img) && $default_img.default_city_img"}
+					<div id="preview_imgUploadCity" class="preview_img">
+						<img layer-src src="{:img($default_img.default_city_img)}" class="img_prev"/>
+					</div>
+					{else/}
+					<div class="upload">
+						<img src="ADMIN_IMG/upload_img.png"/>
+						<p>点击上传</p>
+					</div>
+					{/if}
+				</div>
+				<div class="operation">
+					<div>
+						<i title="图片预览" class="iconfont iconreview js-preview" style="margin-right: 20px;"></i>
+						<i title="删除图片" class="layui-icon layui-icon-delete js-delete"></i>
+					</div>
+
+					<div class="replace_img js-replace">点击替换</div>
+				</div>
+				<input type="hidden" name="default_city_img"  {if condition="!empty($default_img.default_city_img) && $default_img.default_city_img"} value="{$default_img.default_city_img}" {/if}>
+			</div>
+		</div>
+	</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">默认供应商图片：</label>
+		<div class="layui-input-block">
+			<div class="upload-img-block img-upload">
+				<div class="upload-img-box {notempty name="$default_img['default_supply_img']"}hover{/notempty}">
+				<div class="ns-upload-default" id="imgUploadSupply">
+					{if condition="!empty($default_img.default_supply_img) && $default_img.default_supply_img"}
+					<div id="preview_imgUploadSupply" class="preview_img">
+						<img layer-src src="{:img($default_img.default_supply_img)}" class="img_prev"/>
+					</div>
+					{else/}
+					<div class="upload">
+						<img src="ADMIN_IMG/upload_img.png"/>
+						<p>点击上传</p>
+					</div>
+					{/if}
+				</div>
+				<div class="operation">
+					<div>
+						<i title="图片预览" class="iconfont iconreview js-preview" style="margin-right: 20px;"></i>
+						<i title="删除图片" class="layui-icon layui-icon-delete js-delete"></i>
+					</div>
+
+					<div class="replace_img js-replace">点击替换</div>
+				</div>
+				<input type="hidden" name="default_supply_img"  {if condition="!empty($default_img.default_supply_img) && $default_img.default_supply_img"} value="{$default_img.default_supply_img}" {/if}>
+			</div>
+		</div>
+	</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">默认门店图片：</label>
+		<div class="layui-input-block">
+			<div class="upload-img-block img-upload">
+				<div class="upload-img-box {notempty name="$default_img['default_store_img']"}hover{/notempty}">
+				<div class="ns-upload-default" id="imgUploadStore">
+					{if condition="!empty($default_img.default_store_img) && $default_img.default_store_img"}
+					<div id="preview_imgUploadStore" class="preview_img">
+						<img layer-src src="{:img($default_img.default_store_img)}" class="img_prev"/>
+					</div>
+					{else/}
+					<div class="upload">
+						<img src="ADMIN_IMG/upload_img.png"/>
+						<p>点击上传</p>
+					</div>
+
+					{/if}
+				</div>
+				<div class="operation">
+					<div>
+						<i title="图片预览" class="iconfont iconreview js-preview" style="margin-right: 20px;"></i>
+						<i title="删除图片" class="layui-icon layui-icon-delete js-delete"></i>
+					</div>
+
+					<div class="replace_img js-replace">点击替换</div>
+				</div>
+				<input type="hidden" name="default_store_img"  {if condition="!empty($default_img.default_store_img) && $default_img.default_store_img"} value="{$default_img.default_store_img}" {/if}>
+			</div>
+		</div>
+	</div>
+	</div>
+	<div class="layui-form-item">
+		<label class="layui-form-label">默认分类图片：</label>
+		<div class="layui-input-block">
+			<div class="upload-img-block img-upload">
+				<div class="upload-img-box {notempty name="$default_img['default_category_img']"}hover{/notempty}">
+				<div class="ns-upload-default" id="imgUploadCategory">
+					{if condition="!empty($default_img.default_category_img) && $default_img.default_category_img"}
+					<div id="preview_imgUploadCategory" class="preview_img">
+						<img layer-src src="{:img($default_img.default_category_img)}" class="img_prev"/>
+					</div>
+					{else/}
+					<div class="upload">
+						<img src="ADMIN_IMG/upload_img.png"/>
+						<p>点击上传</p>
+					</div>
+					{/if}
+				</div>
+				<div class="operation">
+					<div>
+						<i title="图片预览" class="iconfont iconreview js-preview" style="margin-right: 20px;"></i>
+						<i title="删除图片" class="layui-icon layui-icon-delete js-delete"></i>
+					</div>
+
+					<div class="replace_img js-replace">点击替换</div>
+				</div>
+				<input type="hidden" name="default_category_img"  {if condition="!empty($default_img.default_category_img) && $default_img.default_category_img"} value="{$default_img.default_category_img}" {/if}>
+			</div>
+		</div>
+	</div>
+	</div>
+	<div class="layui-form-item">
+		<label class="layui-form-label">默认品牌图片：</label>
+		<div class="layui-input-block">
+			<div class="upload-img-block img-upload">
+				<div class="upload-img-box {notempty name="$default_img['default_brand_img']"}hover{/notempty}">
+				<div class="ns-upload-default" id="imgUploadBrand">
+					{if condition="!empty($default_img.default_brand_img) && $default_img.default_brand_img"}
+					<div id="preview_imgUploadBrand" class="preview_img">
+						<img layer-src src="{:img($default_img.default_brand_img)}" class="img_prev"/>
+					</div>
+					{else/}
+					<div class="upload">
+						<img src="ADMIN_IMG/upload_img.png"/>
+						<p>点击上传</p>
+					</div>
+					{/if}
+				</div>
+				<div class="operation">
+					<div>
+						<i title="图片预览" class="iconfont iconreview js-preview" style="margin-right: 20px;"></i>
+						<i title="删除图片" class="layui-icon layui-icon-delete js-delete"></i>
+					</div>
+
+					<div class="replace_img js-replace">点击替换</div>
+				</div>
+				<input type="hidden" name="default_brand_img"  {if condition="!empty($default_img.default_brand_img) && $default_img.default_brand_img"} value="{$default_img.default_brand_img}" {/if}>
+			</div>
+		</div>
+	</div>
+	</div>
+	<div class="ns-form-row">
+		<button class="layui-btn ns-bg-color" lay-submit lay-filter="save">保存</button>
+	</div>
+</div>
+{/block}
+{block name="script"}
+<script>
+	layui.use(['form'], function() {
+		var form = layui.form,
+			repeat_flag = false;//防重复标识
+		form.render();
+
+        form.on('submit(save)', function(data) {
+            if (repeat_flag) return false;
+            repeat_flag = true;
+			
+			//图片删除
+			if(!data.field.default_shop_img) shop_upload.delete();
+			if(!data.field.default_goods_img) goods_upload.delete();
+			if(!data.field.default_headimg) member_upload.delete();
+			if(!data.field.default_city_img) city_upload.delete();
+			if(!data.field.default_supply_img) supply_upload.delete();
+			if(!data.field.default_store_img) store_upload.delete();
+			if(!data.field.default_category_img) category_upload.delete();
+			if(!data.field.default_brand_img) brand_upload.delete();
+			
+            $.ajax({
+                type: "POST",
+                url: ns.url("admin/config/defaultpicture"),
+                data: data.field,
+                dataType: 'JSON',
+                success: function(res) {
+                    repeat_flag = false;
+                    if (res.code == 0) {
+                        layer.msg(res.message);
+                        location.reload();
+                    }else{
+                        layer.msg(res.message);
+                    }
+                }
+            });
+        });
+
+		// 店铺图片上传
+		var shop_upload = new Upload({
+			elem: '#imgUploadShop',
+		});
+
+		// 商品图片上传
+		var goods_upload = new Upload({
+			elem: '#imgUploadGoods',
+		});
+
+		// 会员图片上传
+		var member_upload = new Upload({
+			elem: '#imgUploadMember',
+		});
+
+		// 城市分站图片上传
+		var city_upload = new Upload({
+			elem: '#imgUploadCity',
+		});
+
+		// 供应商图片上传
+		var supply_upload = new Upload({
+			elem: '#imgUploadSupply',
+		});
+
+		// 门店图片上传
+		var store_upload = new Upload({
+			elem: '#imgUploadStore',
+		});
+
+		// 商品分类图片上传
+		var category_upload = new Upload({
+			elem: '#imgUploadCategory',
+		});
+
+		// 商品品牌图片上传
+		var brand_upload = new Upload({
+			elem: '#imgUploadBrand',
+		});
+	});
+</script>
+{/block}

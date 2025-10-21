@@ -1,0 +1,321 @@
+{extend name="app/shop/view/base.html"/}
+{block name="resources"}
+<link rel="stylesheet" href="SHOP_CSS/order_detail.css"/>
+<link rel="stylesheet" type="text/css" href="SHOP_CSS/refund_detail.css" />
+{/block}
+{block name="main"}
+
+<div class="order-detail">
+    <div class="layui-row layui-col-space1 order-detail-info" >
+        <div class="layui-col-md4 order-detail-left" >
+            <div class="layui-card">
+                <div class="layui-card-header nav-title">退款订单信息</div>
+                <div class="layui-card-body">
+                    <div class="layui-form">
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">订单编号：</label>
+                            <div class="layui-input-block">
+                                <div class="layui-inline">
+                                    <div class="layui-form-mid layui-word-aux">{$detail.order_no}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">退款编号：</label>
+                            <div class="layui-input-block">
+                                <div class="layui-inline">
+                                    <div class="layui-form-mid layui-word-aux">{$detail.deposit_refund_no}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">买家：</label>
+                            <div class="layui-input-block">
+                                <div class="layui-inline">
+                                    <div class="layui-form-mid layui-word-aux"><a target="_blank" href='{:addon_url("shop/member/editmember?member_id=".$detail["member_id"])}'>{$detail.name}</a></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">申请人：</label>
+                            <div class="layui-input-block">
+                                <div class="layui-inline">
+                                    <div class="layui-form-mid layui-word-aux">{$detail.name}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">申请时间：</label>
+                            <div class="layui-input-block">
+                                <div class="layui-inline">
+                                    <div class="layui-form-mid layui-word-aux">
+                                        <p>{:time_to_date($detail.apply_refund_time)}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-form-item order-detail-hr">
+
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">定金：</label>
+                            <div class="layui-input-block">
+                                <div class="layui-inline">
+                                    <div class="layui-form-mid layui-word-aux">
+                                        <p>{$detail.presale_deposit_money}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">定金支付方式：</label>
+                            <div class="layui-input-block">
+                                <div class="layui-inline">
+                                    <div class="layui-form-mid layui-word-aux">
+                                        <p>{$detail.deposit_pay_type_name}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">定金退款流水号：</label>
+                            <div class="layui-input-block">
+                                <div class="layui-inline">
+                                    <div class="layui-form-mid layui-word-aux">
+                                        <p>{$detail.deposit_refund_no}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {if !empty($detail.final_pay_type_name)}
+                        <div class="layui-form-item order-detail-hr">
+
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">尾款：</label>
+                            <div class="layui-input-block">
+                                <div class="layui-inline">
+                                    <div class="layui-form-mid layui-word-aux">
+                                        <p>{$detail.final_money}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">尾款支付方式：</label>
+                            <div class="layui-input-block">
+                                <div class="layui-inline">
+                                    <div class="layui-form-mid layui-word-aux">
+                                        <p>{$detail.final_pay_type_name}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">尾款退款流水号：</label>
+                            <div class="layui-input-block">
+                                <div class="layui-inline">
+                                    <div class="layui-form-mid layui-word-aux">
+                                        <p>{$detail.final_refund_no}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {/if}
+                        <div class="layui-form-item order-detail-hr">
+
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">配送方式：</label>
+                            <div class="layui-input-block">
+                                <div class="layui-inline">
+                                    <div class="layui-form-mid layui-word-aux">
+                                        <p>{$detail['delivery_type_name']}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">联系电话：</label>
+                            <div class="layui-input-block">
+                                <div class="layui-inline">
+                                    <div class="layui-form-mid layui-word-aux">
+                                        <p>{$detail['mobile']}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="layui-form-item order-detail-hr">
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">订单类型：</label>
+                            <div class="layui-input-block">
+                                <div class="layui-inline">
+                                    <div class="layui-form-mid layui-word-aux">
+                                        <p>{$detail['order_type_name']}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-md8 order-detail-operation">
+            <div class="layui-card">
+                <div class="layui-card-header">退款状态：{$detail.refund_status_name}</div>
+                <div class="layui-card-body">
+                    <p class="order-detail-tips"></p>
+                    {if($detail.refund_status == 1)}
+                        <a class="layui-btn ns-bg-color" onclick="agreeRefund({$detail.id},{$detail.site_id})">同意退款</a>
+                        <a class="layui-btn ns-bg-color" onclick="refuseRefund({$detail.id},{$detail.site_id})">拒绝退款</a>
+                    {/if}
+                    <br>
+                    <i class="layui-icon  layui-icon-about"></i>
+                </div>
+            </div>
+        </div>
+        <!--<div class="layui-col-md12">-->
+        <!--<div class="layui-card">-->
+        <!--<div class="layui-card-header">订单商品</div>-->
+        <!--<div class="layui-card-body">-->
+        <!---->
+        <!--</div>-->
+        <!--</div>-->
+        <!--</div>-->
+        <div class="order-detail-dl">
+            <dl>
+                <dt>温馨提醒</dt>
+                <dd>如果未发货，请点击同意退款给买家。</dd>
+                <dd>如果实际已发货，请主动与买家联系。</dd>
+                <dd>如果订单整体退款后，优惠券和余额会退还给买家。</dd>
+            </dl>
+        </div>
+    </div>
+</div>
+
+<div>
+    <div class="layui-row ns-form">
+        <div class="layui-col-md4">
+            <h4 class="refund-title">售后商品</h4>
+            <ul class="refund-box">
+                <li class="refund-item">
+                    <div class="goods-item">
+                        <div class="image-wrap">
+                            {if condition="$detail.sku_image"}
+                            <img alt="商品图片" layer-src src="{:img($detail.sku_image,'small')}">
+                            {/if}
+                        </div>
+                        <div class="detail-wrap">
+                            <h4 class="title"><span>{$detail.sku_name}</span></h4>
+                            <p class="gray"></p>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <div class="layui-col-md4">
+            <h4 class="refund-title">售后信息</h4>
+            <ul class="refund-box">
+                
+                <li class="refund-item">
+                    <label class="refund-label">退款金额：</label>
+                    <div class="refund-content"><span class="refund-money">￥{$detail.refund_money}</span> </div>
+                </li>
+                <li class="refund-item">
+                    <label class="refund-label">联系方式：</label>
+                    <div class="refund-content">{$detail.mobile}</div>
+                </li>
+            </ul>
+        </div>
+        <div class="layui-col-md4">
+            <h4 class="refund-title">购买信息</h4>
+            <ul class="refund-box">
+                <li class="refund-item">
+                    <label class="refund-label">商品单价：</label>
+                    <div class="refund-content"><span class="refund-money">￥{$detail.price}</span> x{$detail.num}件</div>
+                </li>
+                <li class="refund-item">
+                    <label class="refund-label">实付金额：</label>
+                    <div class="refund-content"><span class="refund-money">￥{$detail['goods_money'] - ($detail['presale_money'] - $detail['presale_deposit_money'])}
+</span></div>
+                </li>
+                <li class="refund-item">
+                    <label class="refund-label">订单编号：</label>
+                    <div class="refund-content"> <a target="_blank"class="ns-text-color" href="{:addon_url('shop/order/detail',['order_id'=>$detail['id']])}">{$detail.order_no}</a></div>
+                </li>
+            </ul>
+        </div>
+
+    </div>
+</div>
+
+{/block}
+{block name="script"}
+<!-- 维权操作 -->
+<script>
+    //同意退款
+    function agreeRefund(id,site_id){
+        layer.confirm('确定同意该退款申请吗?', function() {
+            if (repeat_flag) return;
+            repeat_flag = true;
+
+            $.ajax({
+                url: ns.url("presale://shop/refund/agree"),
+                data: {
+                    id: id,
+                    site_id: site_id
+                },
+                dataType: 'JSON',
+                type: 'POST',
+                success: function(res) {
+                    layer.msg(res.message);
+                    repeat_flag = false;
+                    if (res.code == 0) {
+                        location.reload();
+                    }
+                }
+            });
+        }, function() {
+            layer.close();
+            repeat_flag = false;
+        });
+    }
+
+    //拒绝退款
+    var refuse_repeat_flag = false;
+    function refuseRefund(id,site_id) {
+
+        layer.prompt({
+            title: '拒绝理由',
+            formType: 2,
+            yes: function(index, layero) {
+                var value = layero.find(".layui-layer-input").val();
+
+                if (value) {
+                    if(refuse_repeat_flag) return false;
+                    refuse_repeat_flag = true;
+
+                    $.ajax({
+                        url: ns.url("presale://shop/refund/refuse"),
+                        data: {id:id,refuse_reason:value,site_id:site_id},
+                        dataType: 'JSON', //服务器返回json格式数据
+                        type: 'POST', //HTTP请求类型
+                        success: function(res) {
+                            layer.msg(res.message);
+                            refuse_repeat_flag = false;
+
+                            if (res.code >= 0) {
+                                location.reload();
+                            }
+                        }
+                    });
+                    layer.close(index);
+                } else {
+                    layer.msg('请输入拒绝理由!', {icon: 5, anim: 6});
+                }
+            }
+        });
+    }
+</script>
+{/block}

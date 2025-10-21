@@ -1,0 +1,670 @@
+{extend name="app/admin/view/base.html"/}
+
+{block name="resources"}
+<style>
+	.progress-layer {width:400px;background:#fff;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);box-shadow:1px 1px 50px rgba(0,0,0,.3);padding:20px 20px;z-index:100;display:none;}
+	.progress-layer h3 {line-height:1;margin-bottom:15px;text-align:center;font-size:14px;}
+	.progress-layer .layui-progress-big,.progress-layer .layui-progress-big .layui-progress-bar {height:14px;line-height:14px;}
+	.progress-layer .layui-progress-text {line-height:14px;}
+	.goods-info {padding: 5px 0;align-items: center;flex-wrap:unset!important;}
+	.goods-info .room-name {padding-left: 5px;line-height: 1}
+	.goods-info img {width:50px;height: 50px;}
+	.ns-single-filter-box{justify-content: end}
+	.add-good-form .layui-input-block {width: 450px;}
+	.add-good-form .layui-form-item {position: relative;}
+	.add-good-form .category-wrap {position: absolute; left: 150px; top: 40px; z-index: 9; background-color: #FFFFFF; border: 1px solid #EEEEEE;}
+	.add-good-form .category-wrap .category-list {display: flex;}
+	.add-good-form .category-wrap ul {width: 151px; height: 300px; overflow: auto; background-color: #FFFFFF; border-right: 1px solid #EEEEEE; box-sizing: border-box;}
+	.add-good-form .category-wrap ul:last-child {border-right: 1px solid #EEEEEE;}
+	.add-good-form .category-wrap ul li {line-height: 26px; padding: 0 15px; cursor: pointer;}
+	.add-good-form .category-wrap .category-btn {width: 100%; padding: 10px 15px; box-sizing: border-box; border-top: 1px solid #EEEEEE;}
+	.layui-layer-page .layui-layer-content {overflow: auto !important; position: relative;}
+	.goods-category-mask {width: 100%; height: 100%; position: absolute; left: 0; top: 0; z-index: 9;}
+	.selected-style {color: #FFFFFF;}
+	.reject-reason {height: 100%;padding-bottom: 20px;}
+	.reason .layui-layer-content {overflow: unset!important}
+</style>
+{/block}
+{block name="main"}
+{if $checkres['code'] != 0 || $checkres['data']['status'] != 2}
+<div>
+	<div style="margin-top:10% ">
+		<div style="text-align:center;margin: auto;">
+			<img src="SHOP_IMG/empty.jpg.png" alt="">
+		</div>
+		<div style="text-align:center;margin: auto;margin-top: 10px">
+			<span >视频号未入驻,请先完成视频号入驻</span>
+		</div>
+		<div style="text-align:center;margin: auto;margin-top: 10px">
+			<a href="{:addon_url('shopcomponent://admin/goods/access')}" style="color:red">立即处理</a>
+		</div>
+	</div>
+</div>
+{else\}
+
+<table id="goods_list" lay-filter="goods_list"></table>
+{/if}
+<!-- 直播间信息 -->
+<script type="text/html" id="goodsinfo">
+	<div class="ns-table-btn goods-info">
+		<img src="{{ ns.img(d.cover_img) }}">
+		<span class="room-name" title="{{ d.goods_name }}">{{ d.goods_name }}</span>
+	</div>
+</script>
+
+<script type="text/html" id="cat">
+	<div class="ns-table-btn goods-info" style="position: relative">
+<!--		<input type="text" value="{{d.out_product_id}}" hidden id="goods_id">-->
+<!--		<span class="room-name" style="float: right; width: 100%;  overflow: hidden; z-index: 1" title="{{ d.cat_name }}">{{ d.cat_name }}</span> | <span class="ns-text-color" style="float:left;z-index: 100; margin-right: 1px;cursor:pointer" onclick="check_cat({{d.out_product_id}})">修改</span>-->
+		<span class="room-name" style="float: right; width: 100%;  overflow: hidden; z-index: 1" title="{{ d.cat_name }}">{{ d.cat_name }}</span>
+	</div>
+</script>
+<script type="text/html" id="reason">
+	<div class="reject-reason">
+		{{d.reject_reason}}
+	</div>
+</script>
+<!-- 状态修改 -->
+<script type="text/html" id="goodsStatus">
+	<div class="ns-table-btn goods-info" style="position: relative">
+		<span class="room-name {{# if(d.status==5){ }} ns-text-color {{# } }} " {{# if(d.status!=5){ }}style="color:#808080" {{# } }} title="{{ d.status_name }}">{{ d.status_name }}</span>
+	</div>
+</script>
+
+<!-- 操作 -->
+<script type="text/html" id="operation">
+	<div class="ns-table-btn">
+		<a class="layui-btn" lay-event="delete">删除</a>
+		{{# if(d.edit_status==3){ }}
+		<a class="layui-btn" lay-event="reason">查看失败原因</a>
+		{{# } }}
+		{{# if(d.edit_status==4){ }}
+		{{# if(d.status==5){ }}
+		<a class="layui-btn" lay-event="dellisting">下架</a>
+		{{# } }}
+		{{# if(d.status!=5){ }}
+		<a class="layui-btn" lay-event="listing">上架</a>
+		{{# } }}
+		{{# } }}
+	</div>
+</script>
+<!-- 批量操作 -->
+<script type="text/html" id="batchOperation">
+	<button class="layui-btn layui-btn-primary" lay-event="delete">批量删除</button>
+	<button class="layui-btn layui-btn-primary" lay-event="listing">批量上架</button>
+	<button class="layui-btn layui-btn-primary" lay-event="dellisting">批量下架</button>
+</script>
+<div class="progress-layer">
+	<h3>正在同步中...</h3>
+	<div class="layui-progress layui-progress-big" lay-showPercent="true" lay-filter="progress">
+		<div class="layui-progress-bar layui-bg-blue" lay-percent="0%"></div>
+	</div>
+</div>
+{/block}
+
+{block name="script"}
+<script>
+	var form, table, element, laytpl, syncClick = false,
+		delete_flag = false,
+		save_flag = false,saveEdit_flag = false,
+		dellisting_flag = false,
+		listing_flag = false,
+		goodsId = [], selectedGoodsId = [], goods_list = [],out_product_id='',
+		cate_level_1_id = 0, cate_level_2_id = 0, cate_level_3_id = 0;
+	    reLoad();
+		function reLoad() {
+			layui.use(['form', 'element', 'laytpl'], function () {
+				form = layui.form;
+				element = layui.element;
+				laytpl = layui.laytpl;
+
+				table = new Table({
+					elem: '#goods_list',
+					url: ns.url("shopcomponent://admin/goods/lists"),
+					bottomToolbar: "#batchOperation",
+					cols: [
+						[{
+							type: 'checkbox',
+							unresize: 'false',
+							width: '3%'
+						}, {
+							title: '商品信息',
+							unresize: 'false',
+							width: '15%',
+							templet: "#goodsinfo"
+						}, {
+							title: '微信商品类目',
+							unresize: 'false',
+							width: '15%',
+							templet: "#cat"
+
+						}, {
+							title: '价格',
+							unresize: 'false',
+							width: '10%',
+							field: 'price'
+						}, {
+							field: 'goods_stock',
+							title: '库存',
+							unresize: 'false',
+							width: '6%'
+						}, {
+							templet: "#goodsStatus",
+							title: '状态',
+							unresize: 'false',
+							width: '10%',
+						}, {
+							field: 'create_time',
+							title: '提交时间',
+							unresize: 'false',
+							width: '10%',
+						}, {
+							field: 'audit_time',
+							title: '审核时间',
+							unresize: 'false',
+							width: '10%',
+						}, {
+							field: 'edit_status_name',
+							title: '审核状态',
+							unresize: 'false',
+							width: '10%',
+						}, {
+							title: '操作',
+							toolbar: '#operation',
+							unresize: 'false',
+							width: '11%'
+						}]
+					]
+				});
+
+				table.tool(function (obj) {
+					var data = obj.data;
+					switch (obj.event) {
+						case 'delete': //删除
+							deleteGoods(data.out_product_id,data.site_id);
+							break;
+						case 'listing': //上架
+							listingGoods(data.out_product_id,data.site_id);
+							break;
+						case 'dellisting': //下架
+							dellistingGoods(data.out_product_id,data.site_id)
+							break;
+						case 'reason': //查看失败原因
+							laytpl($("#reason").html()).render(data, function (html) {
+								layer.open({
+									type: 1,
+									shadeClose: true,
+									shade: 0.3,
+									offset: 'auto',
+									fixed: false,
+									title: "失败原因",
+									area: ['450px', 'auto'],
+									btn: ['退出'],
+									content: html,
+									skin: 'reason'
+								});
+
+							});
+							break;
+					}
+				})
+
+				/**
+				 * 保存编辑分类
+				 */
+				form.on('submit(saveEdit)', function (data) {
+					// let goods_id = $('#goods_id').val()
+					let goods_id = out_product_id;
+					if (saveEdit_flag) return;
+					saveEdit_flag = true;
+					if (goods_id == '') {
+						layer.msg('请选择商品');
+					}
+					if (cate_level_3_id == '') {
+						layer.msg('请选择分类');
+					}
+					data.field.goods_id = goods_id;
+					data.field.third_cat_id = cate_level_3_id;
+					data.field.site_id = site_id;
+					$.ajax({
+						type: 'POST',
+						dataType: 'JSON',
+						url: ns.url("shopcomponent://admin/goods/edit"),
+						data: data.field,
+						success: function (res) {
+							save_flag = false;
+							if (res.code == 0) {
+								layer.confirm('编辑成功', {
+									title: '操作提示',
+									btn: ['返回列表', '继续操作'],
+									yes: function () {
+										location.href = ns.url("shopcomponent://admin/goods/lists")
+									},
+									btn2: function () {
+										location.reload();
+									}
+								});
+							} else {
+								layer.msg(res.message);
+							}
+						}
+					})
+				});
+				// 批量操作
+				table.bottomToolbar(function (obj) {
+					if (obj.data.length < 1) {
+						layer.msg('请选择要操作的数据');
+						return;
+					}
+					var id_array = new Array();
+					for (i in obj.data) id_array.push(obj.data[i].out_product_id);
+					switch (obj.event) {
+						case "delete":
+							deleteGoods(id_array.toString(),obj.data[i].site_id);
+							break;
+						case "listing":
+							listingGoods(id_array.toString(),obj.data[i].site_id);
+							break;
+						case "dellisting":
+							dellistingGoods(id_array.toString(),obj.data[i].site_id);
+							break;
+					}
+				});
+
+			});
+		}
+	function deleteGoods(goods_ids,site_id){
+		layer.confirm('是否确定要删除所选商品？', {title: '提示'}, function () {
+			if (delete_flag) return;
+			delete_flag = true;
+
+			$.ajax({
+				url: ns.url("shopcomponent://admin/goods/delete"),
+				data: {out_product_ids: goods_ids,site_id: site_id},
+				dataType: 'JSON',
+				type: 'POST',
+				success: function (res) {
+					layer.msg(res.message);
+					delete_flag = false;
+					if (res.code == 0) {
+						table.reload();
+					}
+				}
+			});
+		});
+	}
+
+	function listingGoods(goods_ids,site_id){
+		layer.confirm('是否确定要上架所选商品？', {title: '提示'}, function () {
+			if (listing_flag) return;
+			listing_flag = true;
+
+			$.ajax({
+				url: ns.url("shopcomponent://admin/goods/listing"),
+				data: {out_product_ids: goods_ids,site_id:site_id},
+				dataType: 'JSON',
+				type: 'POST',
+				success: function (res) {
+					layer.msg(res.message);
+					listing_flag = false;
+					if (res.code == 0) {
+						table.reload();
+					}
+				}
+			});
+		});
+	}
+
+	function dellistingGoods(goods_ids,site_id){
+		layer.confirm('是否确定要下架所选商品？', {title: '提示'}, function () {
+			if (dellisting_flag) return;
+			dellisting_flag = true;
+
+			$.ajax({
+				url: ns.url("shopcomponent://admin/goods/dellisting"),
+				data: {out_product_ids: goods_ids,site_id:site_id},
+				dataType: 'JSON',
+				type: 'POST',
+				success: function (res) {
+					layer.msg(res.message);
+					dellisting_flag = false;
+					if (res.code == 0) {
+						table.reload();
+					}
+				}
+			});
+		});
+	}
+	// 同步商品
+	function sync(start) {
+		if (syncClick) return;
+		syncClick = true;
+		var start = start == undefined ? 0 : start;
+
+		$.ajax({
+			url: ns.url("shopcomponent://admin/goods/sync"),
+			data: {
+				start: start,
+			},
+			dataType: 'JSON',
+			type: 'POST',
+			success: function(res) {
+				syncClick = false;
+				if (res.code == 0) {
+					var data = res.data,
+						next = parseInt(start) + 1;
+
+					if (next < data.total_page) {
+						if (start == 0) {
+							$(".progress-layer").fadeOut();
+						}
+						var progress = (next / data.total_page * 100).toFixed(2);
+						element.progress('progress', progress + '%');
+						// 拉取下一页
+						sync(next);
+					} else {
+						if (!$(".progress-layer").is(':hidden')) $(".progress-layer").fadeOut();
+						layer.closeAll();
+						layer.msg('同步成功');
+						table.reload();
+					}
+				} else {
+					layer.msg(res.message);
+				}
+			}
+		});
+	}
+
+
+	/**
+	 * 修改微信商品分类
+	 */
+	function check_cat(goods_id){
+		if(goods_id!=''){
+			out_product_id = goods_id;
+		}
+		laytpl($("#check_cat").html()).render({}, function(html) {
+			add_good_layer = layer.open({
+				type: 1,
+				title: '修改商品分类',
+				area: ['700px', '500px'],
+				content: html,
+				success: function(layero, index) {
+					form.render();
+				}
+			});
+		})
+	}
+
+	function selectGoods() {
+		goodsSelect(function(res) {
+			if (!res.length) return false;
+
+			for(var i=0;i<res.length;i++) {
+				goodsId.push(res[i].goods_id);
+				res[i].buy_num = 2;
+				goods_list.push(res[i]);
+			}
+
+			laytpl($("#table_goods_list").html()).render(goods_list, function(html) {
+				$(".add-good-form .layui-table tbody").html(html);
+			})
+
+			$("input[name='goods_ids']").val(JSON.stringify(goodsId));
+
+			selectedGoodsId = goodsId.toString();
+		}, selectedGoodsId);
+	}
+
+	function closeAddGoodsLayer() {
+		layer.close(add_good_layer);
+	}
+
+	// 选择分类
+	function selectCategory() {
+		$(".category-wrap").removeClass("layui-hide");
+		$(".goods-category-mask").removeClass("layui-hide");
+	}
+
+	$('body').on('click', '.goods-category-mask', function() {
+		$(".category-wrap").addClass("layui-hide");
+		$(".goods-category-mask").addClass("layui-hide");
+	})
+
+	function selectThird(event){
+		cate_level_3_id = $(event).attr('lay-id');
+		$(event).addClass('selected-style ns-bg-color').siblings('li').removeClass("selected-style ns-bg-color");
+	}
+
+	// 选中分类
+	function selectedCategory(event, level, id) {
+		$(event).addClass('selected-style ns-bg-color').siblings('li').removeClass("selected-style ns-bg-color");
+		$.ajax({
+			url: ns.url("shopcomponent://admin/category/getCategoryByParent"),
+			data: {
+				level: level,
+				pid: id
+			},
+			dataType: 'JSON',
+			type: 'POST',
+			success: function(res) {
+				$(".cate-select").val('');
+				var obj = {};
+				obj.level = level;
+				obj.list = res.data;
+				if (obj.list.length > 0 && obj.level < 4) {
+					renderCategory(obj);
+				}
+				if (level == 2) cate_level_1_id = id;
+				else cate_level_2_id = id;
+			}
+		});
+	}
+
+	function renderCategory(data) {
+		laytpl($("#category_wrap").html()).render(data, function(html) {
+
+			if (data.level == 2) {
+				$(".category-level-2").removeClass("layui-hide");
+				$(".category-level-2").html(html);
+				$(".category-level-3").addClass("layui-hide");
+				$(".category-level-3").html();
+			} else if (data.level == 3) {
+				$(".category-level-3").removeClass("layui-hide");
+				$(".category-level-3").html(html);
+			}
+			form.render();
+		})
+	}
+
+	function saveCate() {
+		if (!$('.category-level-1 li.selected-style').length) {
+			layer.msg('请选择一级分类', {icon: 5, anim: 6});
+			return false;
+		}
+		if (!$('.category-level-2 li.selected-style').length) {
+			layer.msg('请选择二级分类', {icon: 5, anim: 6});
+			return false;
+		}
+		if (!$('.category-level-3 li.selected-style').length) {
+			layer.msg('请选择三级分类', {icon: 5, anim: 6});
+			return false;
+		}
+
+		var firstLevel = $('.category-level-1 li.selected-style'),
+			secondLevel = $('.category-level-2 li.selected-style'),
+			thirdLevel = $('.category-level-3 li.selected-style');
+
+		$(".cate-select").val(firstLevel.text() + '>' + secondLevel.text() + '>' + thirdLevel.text());
+
+
+		$.ajax({
+			type: 'POST',
+			dataType: 'JSON',
+			url: ns.url("shopcomponent://admin/goods/check"),
+			data: {third_cat_id:thirdLevel.attr('lay-id')},
+			success: function(res) {
+				if (res.code != 0) {
+					layer.confirm('该类目需上传相应资质', {
+						title:'操作提示',
+						btn: ['上传资质', '暂不上传'],
+						yes: function(){
+							location.href = ns.url("shopcomponent://admin/category/lists?third_cat_id="+cate_level_3_id)
+						},
+						btn2: function() {
+							location.reload();
+						}
+					});
+				}
+			}
+		})
+
+		$(".category-wrap").addClass("layui-hide");
+		$(".goods-category-mask").addClass("layui-hide");
+	}
+</script>
+
+<script type="text/html" id="check_cat">
+	<div class="goods-category-mask layui-hide"></div>
+
+	<div class="layui-form add-good-form">
+		<div class="layui-form-item">
+			<label class="layui-form-label mid"><span class="required">*</span>商品分类：</label>
+			<div class="layui-input-block">
+				<input type="text" readonly lay-verify="required" autocomplete="off" class="layui-input ns-len-long cate-select" onclick="selectCategory()">
+			</div>
+			<p class="ns-word-aux mid">分类必选，此分类为调取的微信分类内容</p>
+
+			<div class="category-wrap layui-hide">
+				<div class="category-list">
+					<ul class="category-level-1">
+						{foreach $first_cat as $first_k => $first_v}
+						<li onclick="selectedCategory(this, 2, {$first_v.first_cat_id})" lay-id="{$first_v.first_cat_id}">{$first_v.first_cat_name}</li>
+						{/foreach}
+					</ul>
+					<ul class="category-level-2 layui-hide">
+
+					</ul>
+					<ul class="category-level-3 layui-hide">
+
+					</ul>
+				</div>
+
+				<div class="category-btn">
+					<button class="layui-btn ns-bg-color" onclick="saveCate()">确定</button>
+				</div>
+			</div>
+		</div>
+
+		<div class="ns-form-row mid">
+			<button class="layui-btn ns-bg-color" lay-submit lay-filter="saveEdit">保存</button>
+			<button class="layui-btn layui-btn-primary" onclick="closeAddGoodsLayer()">取消</button>
+		</div>
+	</div>
+</script>
+
+<script type="text/html" id="add_good">
+	<div class="goods-category-mask layui-hide"></div>
+
+	<div class="layui-form add-good-form">
+		<div class="layui-form-item">
+			<label class="layui-form-label mid"><span class="required">*</span>商品分类：</label>
+			<div class="layui-input-block">
+				<input type="text" readonly lay-verify="required" autocomplete="off" class="layui-input ns-len-long cate-select" onclick="selectCategory()">
+			</div>
+			<p class="ns-word-aux mid">分类必选，此分类为调取的微信分类内容</p>
+
+			<div class="category-wrap layui-hide">
+				<div class="category-list">
+					<ul class="category-level-1">
+						{foreach $first_cat as $first_k => $first_v}
+						<li onclick="selectedCategory(this, 2, {$first_v.first_cat_id})" lay-id="{$first_v.first_cat_id}">{$first_v.first_cat_name}</li>
+						{/foreach}
+					</ul>
+					<ul class="category-level-2 layui-hide">
+
+					</ul>
+					<ul class="category-level-3 layui-hide">
+
+					</ul>
+				</div>
+
+				<div class="category-btn">
+					<button class="layui-btn ns-bg-color" onclick="saveCate()">确定</button>
+				</div>
+			</div>
+		</div>
+
+		<div class="layui-form-item">
+			<label class="layui-form-label mid"><span class="required">*</span>选择商品：</label>
+			<div class="layui-input-block">
+				<button class="layui-btn ns-bg-color" onclick="selectGoods()">选择商品</button>
+			</div>
+			<p class="ns-word-aux mid">请选择需要关联至视频号直播的商品</p>
+		</div>
+
+		<div class="layui-form-item">
+			<label class="layui-form-label mid"></label>
+			<div class="layui-input-block">
+				<table class="layui-table" lay-skin="line" lay-size="lg">
+					<colgroup>
+						<col width="100%">
+					</colgroup>
+					<thead>
+						<tr>
+							<th>商品</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr><td>暂无商品</td></tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+
+		<div class="ns-form-row mid">
+			<button class="layui-btn ns-bg-color" lay-submit lay-filter="save">保存</button>
+			<button class="layui-btn layui-btn-primary" onclick="closeAddGoodsLayer()">取消</button>
+		</div>
+	</div>
+</script>
+
+<script type="text/html" id="table_goods_list">
+	{{#  layui.each(d, function(index, item) {  }}
+	<tr>
+		<td>
+			<div class="ns-table-title">
+				<div class="ns-title-pic">
+					{{#  if(item.goods_image){  }}
+					<img layer-src src="{{ns.img(item.goods_image.split(',')[0],'small')}}"/>
+					{{#  }  }}
+				</div>
+				<div class="ns-title-content">
+					<a href="javascript:;" class="ns-multi-line-hiding ns-gn-color" title="{{item.goods_name}}">{{item.goods_name}}</a>
+				</div>
+			</div>
+		</td>
+	</tr>
+	{{#  })  }}
+</script>
+
+<script type="text/html" id="category_wrap">
+	{{#  if (d.level == 2) {  }}
+		{{#  layui.each(d.list, function(index, item) {  }}
+		<li onclick="selectedCategory(this, 3, {{item.second_cat_id}})" lay-id="{{item.second_cat_id}}">{{item.second_cat_name}}</li>
+		{{#  })  }}
+	{{#  } else if (d.level == 3) {  }}
+		{{#  layui.each(d.list, function(index, item) {  }}
+		<li onclick="selectThird(this)" lay-id="{{item.third_cat_id}}">{{item.third_cat_name}}</li>
+		{{#  })  }}
+	{{#  }  }}
+</script>
+<script language="JavaScript">
+	// function myrefresh()
+	// {
+	// 	location.href = ns.url("shopcomponent://admin/goods/lists")
+	// 	// window.location.reload();
+	// }
+	// setInterval('reLoad()',5000); //指定5秒刷新一次
+</script>
+{/block}

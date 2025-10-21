@@ -1,0 +1,29 @@
+<?php
+// +----------------------------------------------------------------------
+// | 平台端菜单设置
+// +----------------------------------------------------------------------
+return [
+    [
+        'name' => 'MEMBER_SIGNIN',
+        'title' => '会员签到',
+        'url' => 'membersignin://admin/config/index',
+        'parent' => 'PROMOTION_MEMBER',
+        'is_show' => 0,
+        'is_control' => 0,
+        'is_icon' => 0,
+        'picture' => '',
+        'picture_select' => '',
+        'sort' => 100,
+        'child_list' => [
+            [
+                'name' => 'MEMBER_SIGNIN_CONFIG',
+                'title' => '会员签到',
+                'url' => 'membersignin://admin/config/index',
+                'is_show' => 0,
+                'is_control' => 1,
+                'is_icon' => 0,
+                'sort' => 100,
+            ]
+        ]
+    ],
+];

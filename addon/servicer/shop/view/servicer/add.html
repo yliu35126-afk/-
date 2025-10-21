@@ -1,0 +1,138 @@
+{extend name="app/shop/view/base.html"/}
+{block name="resources"}
+{/block}
+{block name="main"}
+<div class="layui-form ns-form">
+	<div class="layui-form-item">
+		<label class="layui-form-label"><span class="required">*</span>客服账号：</label>
+		<div class="layui-input-block">
+			<input name="username" type="text" lay-verify="required" placeholder="请输入客服账号" autocomplete="off" class="layui-input ns-len-mid">
+		</div>
+		<div class="ns-word-aux">用于客服登录使用</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label"><span class="required">*</span>客服昵称：</label>
+		<div class="layui-input-block">
+			<input name="nickname" type="text" lay-verify="required" placeholder="请输入客服昵称" autocomplete="off" class="layui-input ns-len-mid">
+		</div>
+		<div class="ns-word-aux">用于客服展示使用</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label"><span class="required">*</span>密码：</label>
+		<div class="layui-input-block">
+			<input name="password" type="password" lay-verify="required" placeholder="请输入密码" autocomplete="off" class="layui-input ns-len-mid">
+		</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label"><span class="required">*</span>确认密码：</label>
+		<div class="layui-input-block">
+			<input name="confirm_password" type="password" lay-verify="required|confirm_password" placeholder="请再次输入密码" autocomplete="off" class="layui-input ns-len-mid">
+		</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label"><span class="required">*</span>客服组：</label>
+		<div class="layui-input-block ns-len-mid">
+			<select name="group_id" lay-verify="required">
+				<option value="">选择客服组</option>
+				{foreach $group_list as $val}
+				<option value="{$val.group_id}">{$val.group_name}</option>
+				{/foreach}
+			</select>
+		</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label img-upload-lable ns-short-label"><span class="required">*</span>客服头像：</label>
+		<div class="layui-input-block">
+			<div class="upload-img-block img-upload">
+				<div class="upload-img-box">
+					<div class="ns-upload-default" id="avatar_upload">
+						<div class="upload">
+							<img src="ADMIN_IMG/upload_img.png"/>
+							<p>点击上传</p>
+						</div>
+					</div>
+					<div class="operation">
+						<div>
+							<i title="图片预览" class="iconfont iconreview js-preview" style="margin-right: 20px;"></i>
+							<i title="删除图片" class="layui-icon layui-icon-delete js-delete"></i>
+						</div>
+						<div class="replace_img js-replace">点击替换</div>
+					</div>
+					<input type="hidden" name="avatar" lay-verify="required">
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="ns-form-row">
+		<button class="layui-btn ns-bg-color" lay-submit lay-filter="save">保存</button>
+		<button class="layui-btn layui-btn-primary" onclick="back()">返回</button>
+	</div>
+</div>
+{/block}
+{block name="script"}
+<script>
+	layui.use(['form'], function (form) {
+		var is_submit = false;
+
+		new Upload({elem: '#avatar_upload'});
+
+		// 提交
+		form.on('submit(save)', function(data) {
+
+			if (is_submit) return false;
+			is_submit = true;
+
+			$.ajax({
+				dataType: 'JSON',
+				type: 'POST',
+				url: ns.url('servicer://shop/servicer/add'),
+				data: data.field,
+				success: function(res){
+					if (res.code >= 0) {
+						layer.confirm(res.message, {
+							title: '操作提示',
+							btn: ['返回列表', '继续添加'],
+							yes: function () {
+								back();
+							},
+							btn2: function () {
+								window.location.reload();
+							},
+							cancel: function () {
+								this.yes();
+							}
+						})
+					} else {
+						is_submit = false;
+						layer.msg(res.message);
+					}
+				},
+				error: function () {
+					is_submit = false;
+					layer.msg('操作异常');
+				}
+			});
+		});
+
+		// 验证
+		form.verify({
+			// 确认密码
+			confirm_password: function (value) {
+				if(value !== $('input[name="password"]').val()){
+					return '两次密码输入不一致!';
+				}
+			},
+		});
+	});
+
+	function back() {
+		location.href = ns.url('servicer://shop/servicer/index');
+	}
+</script>
+{/block}

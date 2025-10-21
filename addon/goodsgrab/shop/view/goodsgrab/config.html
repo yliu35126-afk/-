@@ -1,0 +1,73 @@
+{extend name="app/shop/view/base.html"/}
+{block name="resources"}
+<style>
+    .desc a {
+        background: transparent;
+        text-decoration: none;
+        outline: none;
+        cursor: pointer;
+        -webkit-transition: color .2s ease;
+        transition: color .2s ease;
+    }
+    .layui-form{padding-top:10px;}
+</style>
+{/block}
+{block name="main"}
+    <div class="layui-collapse ns-tips">
+        <div class="layui-colla-item">
+            <h2 class="layui-colla-title">操作提示</h2>
+            <ul class="layui-colla-content layui-show">
+                <li>1. 注册99Api帐号。专属注册链接:<a href="http://www.99api.com/Login?log=5&referee=13312" target="_blank">http://www.99api.com/Login?log=5&referee=13312</a></li>
+                <li>2. 注册成功后,进入用户中心复制API key填入表单。</li>
+                <li>3. 添加数据接口(目前只支持京东、淘宝、天猫、1688)。</li>
+            </ul>
+        </div>
+    </div>
+    <div class="layui-form">
+        <div class="layui-form-item">
+            <label class="layui-form-label">99Api apiKey：</label>
+            <div class="layui-input-block">
+                <input class="layui-input ns-len-long" name="key" value="{$config.key}" lay-verify="required">
+
+            </div>
+            <div class="ns-word-aux">
+                <p>请填写99Api apiKey,如果无请<a href="http://www.99api.com/Login?log=5&referee=13312" target="_blank" style="color:#FF6A00;">前往申请</a></p>
+            </div>
+            <input type="hidden" name="type" value="{$config.type}">
+        </div>
+        <div class="ns-form-row">
+            <button class="layui-btn ns-bg-color" lay-submit lay-filter="save">确定</button>
+            <button class="layui-btn layui-btn-primary" onclick="revert()">开始采集</button>
+        </div>
+    </div>
+{/block}
+{block name="script"}
+<script>
+    var laytpl, add_attr_index = -1,
+        form, table;
+    layui.use(['form', 'laytpl'], function() {
+        var repeat_flag = false; //防重复标识
+        laytpl = layui.laytpl;
+        form = layui.form;
+        form.render();
+
+        form.on('submit(save)', function(data) {
+            $.ajax({
+                url: '{:addon_url("goodsgrab://shop/goodsgrab/config")}',
+                data: data.field,
+                dataType: 'JSON',
+                type: 'POST',
+                success: function(data) {
+                    if(data.code==0){
+                        layer.msg(data.message);
+                        window.location.reload()
+                    }
+                }
+            });
+        });
+    })
+    function revert(){
+        location.href = ns.url("goodsgrab://shop/goodsgrab/lists");
+    }
+</script>
+{/block}

@@ -1,0 +1,205 @@
+{extend name="app/shop/view/base.html"/}
+{block name="resources"}
+<style>
+	.layui-table[lay-skin=line] {margin-top: 15px; border-width: 0;}
+	.ns-align-right {text-align: right!important;}
+	.ns-title-pic {
+		flex-shrink: 0;
+		display: inline-block;
+		width: 50px;
+		height: 50px;
+		text-align: center;
+		line-height: 50px;
+		margin-left: 5px;
+	}
+</style>
+{/block}
+{block name="main"}
+
+<div class="layui-form ns-tips">
+	<div class="layui-form-item">
+		<label class="layui-form-label">团长信息：</label>
+		<div class="ns-table-title layui-input-inline">
+			<div class="ns-title-pic">
+				<img layer-src src="{:img($info['headimg'])}"/>
+			</div>
+			<div class="ns-title-content">
+				<a href="javascript:;" class="ns-multi-line-hiding ns-text-color" title="{$info['nickname']}">{$info['nickname']}</a>
+			</div>
+		</div>
+	</div>
+	<div class="layui-form-item">
+		<label class="layui-form-label">商品信息：</label>
+		<div class="ns-table-title layui-input-inline">
+			<div class="ns-title-pic">
+				<img layer-src src="{:img($info['sku_image'])}"/>
+			</div>
+			<div class="ns-title-content">
+				<a href="javascript:;" class="ns-multi-line-hiding ns-text-color" title="{$info['sku_name']}">{$info['sku_name']}</a>
+			</div>
+		</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">拼团价格：</label>
+		<div class="layui-input-inline">￥{$info.pintuan_price}</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">开团时间：</label>
+		<div class="layui-input-inline">{:time_to_date($info.create_time)}</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">成团人数/当前人数：</label>
+		<div class="layui-input-inline">{$info.pintuan_num} / {$info.pintuan_count}</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">是否虚拟成团：</label>
+		<div class="layui-input-inline">{if $info.is_virtual_buy == 1} 是 {else/} 否 {/if}</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">结束时间：</label>
+		<div class="layui-input-inline">{:time_to_date($info.end_time)}</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">拼团状态：</label>
+		<div class="layui-input-inline">
+			{if $info.status == 1}
+			拼团失败
+			{elseif $info.status == 2}
+			组团中
+			{else/}
+			拼团成功
+			{/if}
+		</div>
+	</div>
+
+</div>
+
+<table id="order_list" lay-filter="order_list"></table>
+
+<!-- 参与人 -->
+<script type="text/html" id="member_info">
+	<div class="ns-table-title">
+		<div class="ns-title-pic">
+			{{#  if(d.member_img){  }}
+			<img layer-src src="{{ns.img(d.member_img)}}"/>
+			{{#  }  }}
+		</div>
+		<div class="ns-title-content">
+			<a href="javascript:;" class="ns-multi-line-hiding ns-text-color" title="{{d.nickname}}">{{d.nickname}}</a>
+		</div>
+	</div>
+</script>
+<!-- 商品 -->
+<script type="text/html" id="goods">
+	<div class="ns-table-title">
+		<div class="ns-title-pic">
+			{{#  if(d.sku_image){  }}
+			<img layer-src src="{{ns.img(d.sku_image.split(',')[0],'small')}}"/>
+			{{#  }  }}
+		</div>
+		<div class="ns-title-content">
+			<a href="javascript:;" class="ns-multi-line-hiding ns-text-color">{{d.sku_name}}</a>
+		</div>
+	</div>
+</script>
+
+<!-- 信息标签 -->
+<script type="text/html" id="information">
+	<p class="layui-elip">支付方式：{{d.pay_type_name}}</p>
+	<p class="layui-elip">来源：{{d.order_from_name}}</p>
+</script>
+
+<!-- 余额标签 -->
+<script type="text/html" id="money">
+	<p class="layui-elip">￥{{d.order_money}}</p>
+</script>
+
+<!-- 操作 -->
+<script type="text/html" id="operation">
+	<a class="layui-btn" lay-event="check">查看</a>
+</script>
+
+{/block}
+{block name="script"}
+
+<script>
+	var group_id = "{$group_id}";
+
+	layui.use(['form', 'element'], function() {
+		var table,
+			form = layui.form,
+			element = layui.element;
+		form.render();
+
+		table = new Table({
+			elem: '#order_list',
+			url: ns.url("pintuan://shop/pintuan/groupOrder"),
+			where: {
+				"group_id": group_id
+			},
+			cols: [
+				[{
+					title: '参与人',
+					unresize: 'false',
+					width: '15%',
+					templet:'#member_info'
+				},{
+					field: 'order_no',
+					title: '订单号',
+					unresize: 'false',
+					width: '10%',
+				}, {
+					title: '商品信息',
+					unresize: 'false',
+					width: '20%',
+					templet:'#goods'
+				}, {
+					title: '下单时间',
+					unresize: 'false',
+					width: '17%',
+					templet: function(data) {
+						return ns.time_to_date(data.pay_time);
+					}
+				}, {
+					title: '下单金额',
+					unresize: 'false',
+					width: '10%',
+					templet: '#money'
+				}, {
+					field: 'order_status_name',
+					title: '订单状态',
+					unresize: 'false',
+					width: '8%'
+				}, {
+					title: '操作',
+					toolbar: '#operation',
+					align: 'right',
+					unresize: 'false',
+					width: '6%'
+				}]
+			],
+
+		});
+
+		/**
+		 * 监听工具栏操作
+		 */
+		table.tool(function(obj) {
+			var data = obj.data;
+			switch (obj.event) {
+				case 'check': //查看
+					var newWin = window.open('about:blank');
+					newWin.location.href = ns.url("shop/order/detail", {"order_id": data.order_id});
+					break;
+			}
+		});
+	});
+</script>
+
+{/block}

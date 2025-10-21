@@ -1,0 +1,4 @@
+.draggable-element .rich-text .preview-draggable{padding:0 12px;word-break: break-all;}
+.rich-text img{max-width:100%;}
+.rich-text video{max-width: 100% !important;}
+.rich-text .rich-text-box{border-radius: 8px;}

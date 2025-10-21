@@ -1,0 +1,405 @@
+{extend name="app/admin/view/base.html"/}
+{block name="resources"}
+<style>
+  .progress-layer {width:400px;background:#fff;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);box-shadow:1px 1px 50px rgba(0,0,0,.3);padding:20px 20px;z-index:100;display:none;}
+  .progress-layer h3 {line-height:1;margin-bottom:15px;text-align:center;font-size:14px;}
+  .progress-layer .layui-progress-big,.progress-layer .layui-progress-big .layui-progress-bar {height:14px;line-height:14px;}
+  .progress-layer .layui-progress-text {line-height:14px;}
+  .goods-info {padding: 5px 0;align-items: center;flex-wrap:unset!important;}
+  .goods-info .room-name {padding-left: 5px;line-height: 1}
+  .goods-info img {width:50px;height: 50px;}
+  .ns-single-filter-box{display: flex; justify-content: space-between}
+  .category-search {padding: 20px;}
+  .search-item {margin-bottom: 20px;display: flex;justify-content: space-between;}
+  .item-right select {margin-right: 20px;width: 80px; height: 25px;}
+  .qualification {line-height: 1.5;background: #f5f5f5;color: #999;font-size: 12px;padding: 10px;border: 1px solid #eee;border-radius: 2px}
+  .layui-form-label{width: 205px}
+  .reject-reason {height: 100%;padding-bottom: 20px;}
+</style>
+{/block}
+
+{block name="main"}
+<div class="ns-single-filter-box">
+		 <button class="layui-btn ns-bg-color" onclick="sync()">同步类目库</button>
+		<div class="layui-form">
+			<div class="layui-input-inline">
+				<input type="text" name="keywords" placeholder="类目搜索" autocomplete="off" class="layui-input">
+				<button type="button" class="layui-btn layui-btn-primary" lay-filter="search" lay-submit>
+					<i class="layui-icon">&#xe615;</i>
+				</button>
+			</div>
+		</div>
+<!--  <a href="{:addon_url('live://admin/goods/add')}" class="layui-btn layui-btn-primary">添加商品</a>-->
+</div>
+<table id="category_list" lay-filter="category_list"></table>
+<!-- 搜索 -->
+
+<!-- 修改服务类目弹出层 -->
+<script type="text/html" id="sev">
+	<div class="goods-service">
+		<div class="layui-form-item">
+			<label class="layui-form-label img-upload-lable">服务类目：</label>
+			<div class="layui-input-block">
+				<p>{{d.leimu}}</p>
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<label class="layui-form-label img-upload-lable"><span class="required">*</span>营业执照或组织机构代码证：</label>
+			<div class="layui-input-block img-upload">
+				<div class="upload-img-block">
+					<div class="upload-img-box {{# if (d.license){ }}hover{{# } }}">
+						<div class="ns-upload-default" id="license">
+							{{# if(d.license){ }}
+							<div id="preview_licenseUpload" class="preview_img">
+								<img layer-src src="{{ ns.img(d.license)}}" class="img_prev"/>
+							</div>
+							{{# }else{ }}
+							<div class="upload">
+								<img src="SHOP_IMG/upload_img.png" />
+								<p>上传资质</p>
+							</div>
+							{{# } }}
+						</div>
+						<div class="operation">
+							<div>
+								<i title="图片预览" class="iconfont iconreview js-preview" style="margin-right: 20px;"></i>
+								<i title="删除图片" class="layui-icon layui-icon-delete js-delete"></i>
+							</div>
+							<div class="replace_img js-replace">点击替换</div>
+						</div>
+						<input type="hidden" name="license" id="zhengshu" value="{{# if(d.license){ }}{{d.license}}{{# } }}" lay-verify="license"/>
+					</div>
+				</div>
+			</div>
+		</div>
+		{{# if(d.qualification_type !=0){ }}
+		<div class="layui-form-item">
+			<label class="layui-form-label img-upload-lable"><span class="required">{{# if(d.qualification_type==1){ }}*{{# } }}</span>上传类目资质：</label>
+			<div class="layui-input-block">
+				<p class="qualification">{{d.qualification}}</p>
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<label class="layui-form-label img-upload-lable"></label>
+			<div class="layui-input-block img-upload">
+				<div class="upload-img-block">
+					<div class="upload-img-box {{# if (d.certificate){ }}hover{{# } }}">
+						<div class="ns-upload-default" id="category">
+							{{# if(d.certificate){ }}
+							<div id="preview_categoryUpload" class="preview_img">
+								<img layer-src src="{{ ns.img(d.certificate)}}" class="img_prev"/>
+							</div>
+							{{# }else{ }}
+							<div class="upload">
+								<img src="SHOP_IMG/upload_img.png" />
+								<p>上传资质</p>
+							</div>
+							{{# } }}
+						</div>
+						<div class="operation">
+							<div>
+								<i title="图片预览" class="iconfont iconreview js-preview" style="margin-right: 20px;"></i>
+								<i title="删除图片" class="layui-icon layui-icon-delete js-delete"></i>
+							</div>
+							<div class="replace_img js-replace">点击替换</div>
+						</div>
+						<input type="hidden" name="category" id="leimu_qualification" value="{{# if(d.certificate){ }}{{d.certificate}}{{# } }}" lay-verify="category"/>
+					</div>
+				</div>
+			</div>
+			<div class="ns-word-aux">类目资质示例可到<a href="https://developers.weixin.qq.com/doc/ministore/minishopspecification/leimuzizhi/qiyeleimu.html" class="ns-text-color" target="_blank">《非个人主体开放类目资质要求》</a>中查看</div>
+		</div>
+		{{# } }}
+		{{# if(d.product_qualification_type !=0){ }}
+		<div class="layui-form-item">
+			<label class="layui-form-label img-upload-lable"><span class="required">{{# if(d.product_qualification_type==1){ }}*{{# } }}</span>上传商品资质：</label>
+			<div class="layui-input-block">
+				<p class="qualification">{{d.product_qualification}}</p>
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<label class="layui-form-label img-upload-lable"></label>
+			<div class="layui-input-block img-upload">
+				<div class="upload-img-block">
+					<div class="upload-img-box {{# if (d.qualification_pics){ }}hover{{# } }}" >
+						<div class="ns-upload-default" id="product">
+							{{# if(d.qualification_pics){ }}
+							<div id="preview_productUpload" class="preview_img">
+								<img layer-src src="{{ ns.img(d.qualification_pics)}}" class="img_prev"/>
+							</div>
+							{{# }else{ }}
+							<div class="upload">
+								<img src="SHOP_IMG/upload_img.png" />
+								<p>上传资质</p>
+							</div>
+							{{# } }}
+						</div>
+						<div class="operation">
+							<div>
+								<i title="图片预览" class="iconfont iconreview js-preview" style="margin-right: 20px;"></i>
+								<i title="删除图片" class="layui-icon layui-icon-delete js-delete"></i>
+							</div>
+							<div class="replace_img js-replace">点击替换</div>
+						</div>
+						<input type="hidden" name="product" id="product_qualification" value="{{# if(d.qualification_pics){ }}{{d.qualification_pics}}{{# } }}" lay-verify="product"/>
+					</div>
+				</div>
+			</div>
+			<div class="ns-word-aux">商品资质示例可到<a href="https://developers.weixin.qq.com/doc/ministore/minishopspecification/leimuzizhi/qiyeshangpin.html" class="ns-text-color" target="_blank">《非个人主体开放类目商品资质要求》</a>中查看</div>
+		</div>
+		{{# } }}
+	</div>
+</script>
+<script type="text/html" id="reason">
+	<div class="reject-reason">
+		{{d.reject_reason}}
+	</div>
+</script>
+
+<!-- 操作 -->
+<script type="text/html" id="operation">
+	<div class="ns-table-btn">
+    {{# if(d.status!=1){ }}
+  	{{#  if( (d.qualification_type != 0) || (d.product_qualification_type != 0) ){ }}
+	  	<a class="layui-btn" lay-event="audit">上传资质</a>
+  	{{#  } }}
+	{{# } }}
+		{{# if(d.status==9){ }}
+		<a class="layui-btn" lay-event="reason">查看失败原因</a>
+		{{# } }}
+  	</div>
+</script>
+
+<div class="progress-layer">
+<!--	<h3>正在同步中...</h3>-->
+  <div class="layui-progress layui-progress-big" lay-showPercent="false" lay-filter="progress">
+<!--    <div class="layui-progress-bar layui-bg-blue" lay-percent="0%"></div>-->
+	  <div class="layui-anim" data-anim="layui-anim-rotate layui-anim-loop">正在同步中...</div>
+<!--	  <div class="code">追加：layui-anim-loop</div>-->
+  </div>
+
+</div>
+{/block}
+
+{block name="script"}
+<script>
+	var laytpl;
+	var layer;
+    var form,table,element,syncClick = false,repeat_flag = false;
+  layui.use(['form','layer','upload','laytpl' ,'element'], function() {
+    form = layui.form;
+	 laytpl = layui.laytpl;
+	var layer = layui.layer;
+    element = layui.element;
+	var upload = layui.upload;
+	
+		/**
+		 * 搜索功能
+		 */
+		form.on('submit(search)', function(data) {
+			table.reload({
+				page: {
+					curr: 1
+				},
+				where: data.field
+			});
+		});
+		
+	  
+	  table = new Table({
+		  elem: '#category_list',
+		  url: ns.url("shopcomponent://admin/category/lists"),
+		  where: {
+			  "keywords": $(".keywords").val(),
+			  "third_cat_id" : "{$third_cat_id}",
+	          {notempty name="$third_cat_id"}"page": 1{/notempty}
+		  },
+		  cols: [
+			  [{
+				  title: '类目',
+				  unresize: 'false',
+				  width: '30%',
+				  field: 'leimu'
+			  }, {
+				  title: '类目资质',
+				  unresize: 'false',
+				  width: '15%',
+				  field: 'qualification_type_name'
+			  },{
+				  title: '商品资质',
+				  unresize: 'false',
+				  width: '15%',
+				  field: 'product_qualification_type_name'
+			  },  {
+					  field: 'audit_time',
+					  title: '审核时间',
+					  unresize: 'false',
+					  width: '15%',
+				  }, {
+				  field: 'status_name',
+				  title: '审核状态',
+				  unresize: 'false',
+				  width: '10%',
+			  }, {
+				  title: '操作',
+				  toolbar: '#operation',
+				  unresize: 'false',
+				  width: '15%'
+			  }]
+		  ]
+	  });
+
+    table.tool(function(obj) {
+      	var data = obj.data;
+      	console.log(data)
+ 	 	switch (obj.event) {
+    		case 'audit': //上传资质
+			 	laytpl($("#sev").html()).render(data, function(html) {
+			     	layer.open({
+						type: 1,
+						shadeClose: true,
+						shade: 0.3,
+						offset: 'auto',
+						scrollbar: true,
+						fixed: false,
+						title: "上传资质",
+						area: ['800px', 'auto'],
+						btn: ['确认', '取消'],
+						content: html,
+						yes: function(){
+                             var first_cat_id = data.first_cat_id;
+							 var second_cat_id = data.second_cat_id;
+							 var third_cat_id = data.third_cat_id;
+							 var zhengshu =$('#zhengshu').val();
+							 var leimu_qualification =$('#leimu_qualification').val();
+							 var product_qualification =$('#product_qualification').val();
+							if (repeat_flag) return;
+							repeat_flag = true;
+							$.ajax({
+								url: ns.url("shopcomponent://admin/category/qualifications"),
+								data: {first_cat_id:first_cat_id,second_cat_id:second_cat_id,third_cat_id:third_cat_id,zhengshu:zhengshu,leimu_qualification:leimu_qualification,product_qualification:product_qualification},
+								dataType: 'JSON',
+								type: 'POST',
+								success: function(res) {
+									repeat_flag = false;
+									if (res.code == 0) {
+										layer.confirm('操作成功', {
+											title: '操作提示',
+											btn: ['返回列表', '继续操作'],
+											yes: function() {
+												location.href = ns.url("shopcomponent://admin/category/lists")
+											},
+											btn2: function() {
+												location.reload();
+											}
+										});
+									} else {
+										layer.msg(res.message);
+									}
+								}
+							});
+						},
+						success: function(){
+			     			form.render();
+
+							var categoryUpload = new Upload({
+								elem: '#category'
+							});
+							var productUpload = new Upload({
+								elem: '#product'
+							});
+							var licenseUpload = new Upload({
+								elem: '#license'
+							});
+
+						}
+
+			     	});
+
+			 	});
+          	break;
+			case 'reason': //查看失败原因
+				laytpl($("#reason").html()).render(data, function(html) {
+					layer.open({
+						type: 1,
+						shadeClose: true,
+						shade: 0.3,
+						offset: 'auto',
+						scrollbar: true,
+						fixed: false,
+						title: "失败原因",
+						area: ['450px', 'auto'],
+						btn: ['退出'],
+						content: html,
+					});
+
+				});
+				break;
+      	}
+    });
+ //多图片上传
+  // 上传资质
+	form.on('submit(save)', function(data){
+		// 删除图片
+		// if(!data.field.logo) upload.delete();
+
+	});
+
+  });
+
+  // 同步商品
+  function sync(start){
+    if (syncClick) return;
+    syncClick = true;
+    var start = start == undefined ? 0 : start;
+	  // $(".progress-layer").show();
+	  i=showSync();
+    $.ajax({
+      url: ns.url("shopcomponent://admin/category/sync"),
+      data: {
+        start: start,
+      },
+      dataType: 'JSON',
+      type: 'POST',
+      success: function(res) {
+        syncClick = false;
+        if (res.code == 0) {
+          var data = res.data,
+                  next = parseInt(start) + 1;
+
+          if (next < data.total_page) {
+            if (start == 0) {
+              $(".progress-layer").fadeOut();
+            }
+            var progress = (next / data.total_page * 100).toFixed(2);
+            element.progress('progress', progress + '%');
+            // 拉取下一页
+            sync(next);
+          } else {
+            if (!$(".progress-layer").is(':hidden')) $(".progress-layer").fadeOut();
+            closeSync(i)
+            layer.closeAll();
+            layer.msg('同步成功');
+            table.reload();
+          }
+        } else {
+          layer.msg(res.message);
+        }
+      }
+    });
+  }
+	// 同步等待
+	function showSync() {
+		return layer.msg('正在同步中...', {icon: 16,shade: [0.5, '#f5f5f5'],scrollbar: false,offset: 'auto', time:100000});
+	}
+	// 关闭
+	function closeSync(index) {
+		layer.close(index);
+
+	}
+  $('#layerDemo .layui-btn').on('click', function(){
+      var othis = $(this), method = othis.data('method');
+      active[method] ? active[method].call(this, othis) : '';
+    });
+</script>
+{/block}

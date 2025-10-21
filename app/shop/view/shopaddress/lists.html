@@ -1,0 +1,157 @@
+{extend name="base"/}
+{block name="resources"}
+<style>
+    .ns-screen{margin: 15px 0;}
+    .member-info-wrap{display: flex;align-items: center;padding: 10px 0;}
+    .member-face{width: 40px;height: 40px;border-radius: 50%;overflow: hidden;}
+    .member-face img{width: 100%;height: auto;max-width: 100%;max-height: 100%;}
+    .member-nickname{margin-left: 10px;}
+
+</style>
+
+<link rel="stylesheet" type="text/css" href="SHOP_CSS/member_coupon.css" />
+{/block}
+
+{block name="main"}
+
+<!-- 按钮容器 -->
+<div class="ns-single-filter-box">
+    <button class="layui-btn ns-bg-color add_address">添加地址</button>
+</div>
+
+<!-- 地址列表 -->
+<table id="address_list" lay-filter="address_list"></table>
+
+<!-- 地址信息 -->
+<script type="text/html" id="member_info">
+    <div class="ns-table-title">
+        <div class="member-info-wrap">
+            <div class="member-face">
+                <img src="{{ns.img(d.headimg)}}" alt="" onerror="this.src = 'ADMIN_IMG/default_headimg.png'">
+            </div>
+            <div class="member-nickname">{{d.nickname}}</div>
+        </div>
+    </div>
+</script>
+
+<!-- 操作 -->
+<script type="text/html" id="action">
+    <div class="ns-table-btn">
+        <a class="layui-btn" lay-event="info">编辑</a>
+        <a class="layui-btn" lay-event="recive_coupon">删除</a>
+    </div>
+</script>
+
+<!-- 批量操作 -->
+<script type="text/html" id="batchOperation">
+    <!-- <button class="layui-btn layui-btn-primary" lay-event="setlabel">设置标签</button> -->
+</script>
+{/block}
+
+{block name="script"}
+<script type='text/javascript' src='SHOP_JS/coupon_list.js'></script>
+
+<script>
+    //添加地址
+    $('.add_address').click(function(){
+        location.href = ns.url("shop/shopaddress/addAddress");
+    });
+    layui.use(['form'], function () {
+        var form = layui.form;
+        form.render();
+
+        var table = new Table({
+            elem: '#address_list',
+            url: ns.url("shop/shopaddress/lists"),
+            cols: [
+                [
+                    {
+                        title: '联系人',
+                        unresize: 'false',
+                        width: '20%',
+                        templet: function (data) {
+                            return data.contact_name == '' ? '--' : data.contact_name;
+                        }
+                    },
+                    {
+                        title: '联系人手机号',
+                        unresize: 'false',
+                        width: '15%',
+                        templet: function (data) {
+                            return data.mobile == '' ? '--' : data.mobile;
+                        }
+                    },
+                    {
+                        title: '详细地址',
+                        unresize: 'false',
+                        width: '20%',
+                        templet: function (data) {
+                            return data.address == '' ? '--' : data.address;
+                        }
+                    },
+                    {
+                        title: '退货地址',
+                        unresize: 'false',
+                        width: '15%',
+                        templet: function (data) {
+                            return data.is_return == '0' ? '否' : '是';
+                        }
+                    },
+                    {
+                        title: '发货地址',
+                        unresize: 'false',
+                        width: '17%',
+                        templet: function (data) {
+                            return data.is_delivery == '0' ?  '否' : '是';
+                        }
+                    },
+                    {
+                        title: '操作',
+                        toolbar: '#action',
+                        unresize: 'false',
+                        width: '10%'
+                    }
+                ]
+            ],
+            // bottomToolbar: "#batchOperation"
+        });
+
+
+        /**
+         * 监听工具栏操作
+         */
+        table.tool(function(obj) {
+            var data = obj.data;
+            switch (obj.event) {
+                case 'info': //编辑
+                    location.href = ns.url("shop/shopaddress/editAddress",{"address_id":data.id});
+                    break;
+                case 'recive_coupon': //删除
+                    deleteAddress(data.id);
+                    break;
+            }
+        });
+        /**
+         * 删除
+         */
+        function deleteAddress(address_id) {
+            layer.confirm('确定要删除该地址吗？', function() {
+                $.ajax({
+                    url: ns.url("shop/shopaddress/deleteAddress"),
+                    data: {address_id: address_id},
+                    dataType: 'JSON',
+                    type: 'POST',
+                    success: function (res) {
+                        layer.msg(res.message);
+                        if (res.code == 0) {
+                            table.reload();
+                        }
+                    }
+                });
+            });
+        }
+
+    })
+</script>
+
+{/block}

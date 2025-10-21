@@ -1,0 +1,101 @@
+{extend name="app/admin/view/base.html"/}
+{block name="resources"}
+<style>
+
+</style>
+{/block}
+{block name="main"}
+<div class="ns-screen layui-collapse" lay-filter="selection_panel">
+	<div class="layui-colla-item">
+		<form class="layui-colla-content layui-form layui-show"  lay-filter="addForm">
+			<div class="layui-form-item">
+				<label class="layui-form-label">模板选择</label>
+				<div class="layui-input-block">
+					<input type="radio" name="category" value="1" lay-filter="category_filter" title="一级分类" {$config_info.category==1?'checked':''}>
+					<input type="radio" name="category" value="2" lay-filter="category_filter" title="二级分类" {$config_info.category==2?'checked':''}>
+					<input type="radio" name="category" value="3" lay-filter="category_filter" title="三级分类" {$config_info.category==3?'checked':''}>
+				</div>
+			</div>
+			<div class="layui-form-item">
+				<input type="text" name="img" id="img" value="{$config_info.img}" hidden/>
+				<label class="layui-form-label">分类图</label>
+				<div class="layui-input-block">
+					<button type="button" class="layui-btn layui-btn-primary propertychange noimg">无图模式</button>
+					<button type="button" class="layui-btn layui-btn-primary propertychange youimg">有图模式</button>
+				</div>
+			</div>
+			<div class="ns-form-row">
+				<button class="layui-btn ns-bg-color" lay-submit lay-filter="save">保存</button>
+			</div>
+		</form>
+	</div>
+</div>
+<div class="layui-form ns-form">
+	<div class="layui-form-item">
+		<img class="index-classify" src="" alt="" width="1260" >
+	</div>
+
+</div>
+{/block}
+{block name="script"}
+<script>
+	var template = {$config_info.category};
+	var img = {$config_info.img};
+	var classifyData = {
+		template: template,
+		img: img
+	};
+	renderImg();
+
+	layui.use(['form'], function() {
+		var form = layui.form;
+		form.on('radio(category_filter)', function(data){
+			classifyData.template = data.value;
+			//classifyData.img = 0;
+			renderImg();
+		});
+		//批量导出（订单项）
+		form.on('submit(save)', function(data){
+			$.ajax({
+				type: 'post',
+				dataType: 'json',
+				url: ns.url("pc://admin/pc/category"),
+				data: data.field,
+				success: function (res) {
+
+				}
+			});
+			location.href = ns.url("pc://admin/pc/category");
+			return false;
+		});
+	});
+	if(classifyData.img==1){
+		$(".youimg").addClass('ns-border-color ns-text-color');
+		$('.noimg').removeClass('ns-border-color ns-text-color');
+	}else{
+		$('.noimg').addClass('ns-border-color ns-text-color');
+		$('.youimg').removeClass('ns-border-color ns-text-color');
+	}
+	$('.youimg').click(function () {
+		classifyData.img = 1;
+		$("#img").attr("value","1");
+		$(".youimg").addClass('ns-border-color ns-text-color');
+		$('.noimg').removeClass('ns-border-color ns-text-color');
+		renderImg();
+	});
+	$('.noimg').click(function () {
+		classifyData.img = 0;
+		$("#img").attr("value","0");
+		$('.noimg').addClass('ns-border-color ns-text-color');
+		$('.youimg').removeClass('ns-border-color ns-text-color');
+		renderImg();
+	});
+	
+	function renderImg() {
+		var imgSrc = "upload/default/admin/category_" + classifyData.template + '_' + classifyData.img + '.png';
+		imgSrc = ns.img(imgSrc);
+		$(".index-classify").attr("src",imgSrc);
+	}
+
+</script>
+{/block}

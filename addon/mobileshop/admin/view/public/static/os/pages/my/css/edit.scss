@@ -1,0 +1,170 @@
+.container-wrap {
+	margin-bottom: 160rpx;
+}
+.item-wrap {
+	background: #fff;
+	margin-top: $margin-updown;
+	.form-wrap {
+		display: flex;
+		align-items: center;
+		margin: 0 $margin-both;
+		border-bottom: 1px solid $color-line;
+		min-height: 100rpx;
+		line-height: 100rpx;
+		&:last-child {
+			border-bottom: none;
+		}
+		.required {
+			font-weight: bold;
+		}
+		.label {
+			min-width:150rpx;
+			vertical-align: middle;
+			margin-right: $margin-both;
+		}
+		.time-change {
+			display: flex;
+			align-items: center;
+			flex: 1;
+			justify-content: flex-end;
+		}
+		textarea,
+		.picker,
+		input {
+			vertical-align: middle;
+			display: inline-block;
+			flex: 1;
+			text-align: right;
+		}
+		.picker {
+			.iconfont {
+				vertical-align: middle;
+			}
+		}
+		textarea {
+			height: 100rpx;
+			padding: $padding;
+		}
+
+		.value {
+			vertical-align: middle;
+			display: inline-block;
+			flex: 1;
+			text-align: right;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: pre;
+		}
+		&.more-wrap {
+			.selected {
+				vertical-align: middle;
+				display: inline-block;
+				flex: 1;
+				text-align: right;
+				color: $color-tip;
+				overflow: hidden;
+				white-space: pre;
+				text-overflow: ellipsis;
+				&.have {
+					color: $color-title;
+				}
+			}
+			.flex_1{
+				flex:1;
+				text-align: right;
+				padding-right: 20rpx;
+				input{
+					height:100rpx;
+					display: block;
+				}
+			}
+			.iconfont {
+				color: $color-tip;
+				margin-left: 20rpx;
+			}
+		}
+		&.goods-img {
+			display: flex;
+			.label{
+				align-self: flex-start;
+				margin-top: 20rpx;
+			}
+			.img-list {
+				padding-top: 40rpx;
+				padding-bottom: 40rpx;
+				padding-left: 40rpx;
+				.add{
+					position: relative;
+					width:140rpx;
+					text-align: center;
+					border: 1px dashed #cccccc;
+					font-weight: bold;
+					color: $color-tip;
+					.iconfont{
+						font-size: 40rpx;
+					}
+					&.logo{
+						height:84rpx;
+						line-height: 84rpx;
+					}
+					&.avatar{
+						height:140rpx;
+						line-height: 140rpx;
+					}
+					&.banner{
+						height:120rpx;
+						line-height: 120rpx;
+					}
+					image{
+						width:100%;
+						height:100%
+					}
+					.del-wrap{
+						position: absolute;
+						top:-16rpx;
+						right:-16rpx;
+						line-height: 1;
+						width: 16px;
+						height: 16px;
+						background-color: rgba(0, 0, 0, 0.5);
+						border-radius: 50%;
+						display: -webkit-box;
+						display: -webkit-flex;
+						display: flex;
+						-webkit-box-pack: center;
+						-webkit-justify-content: center;
+						justify-content: center;
+						-webkit-box-align: center;
+						-webkit-align-items: center;
+						align-items: center;
+						font-size: 12px;
+						color: #fff;
+						font-weight: bold;
+					}
+				}
+			}
+			.tips {
+				color: $color-tip;
+				font-size: $font-size-activity-tag;
+				margin-top: 20rpx;
+				word-wrap: break-word;
+				word-break: break-all;
+			}
+		}
+	}
+}
+.footer-wrap {
+	position: fixed;
+	width: 100%;
+	bottom: 0;
+	padding: 40rpx 0;
+	z-index: 10;
+	/* #ifdef MP */
+	padding-bottom: 40rpx;
+	padding-bottom: 40rpx;
+	/* #endif */
+	/* #ifndef MP */
+	padding-bottom: calc(constant(safe-area-inset-bottom) + 100rpx);
+	padding-bottom: calc(env(safe-area-inset-bottom) + 100rpx);
+	/* #endif */
+}

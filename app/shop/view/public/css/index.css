@@ -1,0 +1,598 @@
+:root {
+    --aside-space: 10px;
+    --content-space: 15px;
+}
+.ns-body-content {
+	padding: 0 !important;
+}
+/* 到期提示*/
+	.expire-hint {
+	display: flex;
+	align-items: center;
+	padding: 15px 30px;
+	height: 75px;
+	line-height: 75px;
+	background-color: #fff9f5;
+	box-sizing: border-box;
+}
+.expire-hint .expire-logo {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	margin-right: 15px;
+	width: 40px;
+	height: 40px;
+}
+.expire-hint .expire-logo img {
+	max-height: 100%;
+	max-width: 100%;
+}
+.expire-hint .expire-center {
+	line-height: 1;
+}
+.expire-hint .expire-center h3 {
+	font-size: 15px;
+	font-weight: 700;
+}
+.expire-hint .expire-center p {
+	margin-top: 10px;
+	color:#5d5c5c;
+}
+.expire-hint .expire-center p span:nth-of-type(2) {
+	margin-left: 15px;
+}
+.expire-hint .expire-center h3 a {
+	font-size: 12px;
+	font-weight: normal;
+	margin-left: 5px;
+	cursor: pointer;
+}
+/*头部数量统计*/
+.num_block {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    padding: 10px 2% 10px 1%;
+}
+.num_box {
+    cursor: pointer;
+    margin: 10px 0;
+}
+.num_box_text {
+	font-size:14px;
+	text-align: center;
+}
+.num_box_num {
+	font-size:28px;
+	text-align: center;
+	margin-top: 10px;
+}
+.num_block .num_box:first-of-type{
+    margin-left: 0;
+}
+/*今日统计*/
+	.today_box {
+	border:none !important;
+	padding: 0!important;
+	box-sizing: border-box;
+}
+.today_box .layui-card-body {
+	padding: 0!important;
+}
+.f_box_border {
+	background:#fff !important;
+}
+#order {
+	width: 100%;
+	height: 400px;
+}
+#money {
+	width: 100%;
+	height: 400px;
+}
+.addon-tool{
+    display: flex;
+    justify-content: space-between;
+}
+.addon-tool .ns-card-common {
+    width: calc(50% - 7.5px);
+    box-sizing: border-box;
+}
+.addon-tool .ns-card-common:nth-child(2) {
+	width:49%;
+	float:left;
+	margin-right:0;
+}
+.addon_block {
+	display: flex;
+}
+.addon_block a {
+	width:201px;
+	border: 1px solid #eee;
+	box-sizing: border-box;
+	margin-right: 15px;
+	margin-top: 15px;
+}
+/* 图表*/
+.echarts-wrap {
+	display: flex;
+    justify-content: space-between;
+    margin-top: var(--content-space);
+}
+.echarts-wrap>div {
+	width: calc(50% - 7.5px);
+	background-color: #FAFAFA;
+}
+.echarts-wrap>div h5 {
+	font-size: 16px;
+	padding-left: 20px;
+	padding-top: 20px;
+}
+/* 内容*/
+	.ns-survey {
+	display: flex;
+	background-color: #eff0f4;
+}
+.ns-survey-left {
+	flex: 1;
+	padding-right: 15px;
+}
+.ns-survey-right {
+	width: 240px;
+}
+/* 营销插件*/
+.ns-card-common .layui-card-header {
+	line-height: 1;
+	height: auto;
+	border: 0;
+}
+.ns-card-common .ns-card-title{
+    font-size: 16px;
+}
+.ns-card-common .layui-card-body {
+	padding-top: 0;
+	padding-bottom: 0;
+}
+.ns-item-block-parent .ns-item-block {
+	margin-right: 15px;
+	margin-top: 15px;
+	margin-bottom: 0;
+	background-color: transparent;
+}
+.ns-item-block-parent .ns-item-pic {
+	overflow: hidden;
+	border-radius: 5px;
+}
+.ns-item-block-parent {
+	padding: 0;
+}
+/* 商家信息*/
+	.ns-survey-item .ns-survey-info {
+	margin-left: 15px;
+	flex: 1;
+	border:none !important;
+}
+.ns-survey-item {
+	display: flex;
+	justify-content: space-between;
+	background-color: #fff;
+}
+.ns-survey-item .ns-survey-shop {
+	display: flex;
+	padding: 10px 20px;
+	box-sizing: border-box;
+}
+.ns-survey-item .ns-survey-shop .ns-item-pic {
+	display: flex;
+	width: 65px;
+	height: 65px;
+	justify-content: center;
+	align-items: center;
+}
+.ns-survey-item .ns-survey-shop .ns-item-pic img {
+	max-width: 100%;
+	max-height: 100%;
+}
+.ns-survey-item .ns-survey-shop .ns-surver-shop-detail {
+	margin-left: 15px;
+	flex: 1;
+}
+.ns-survey-item .ns-survey-shop .ns-survey-shop-name {
+	font-size: 16px;
+	font-weight: 600;
+	color: rgba(38,38,38,1);
+	height: 25px !important;
+	line-height: 25px !important;
+	margin-bottom: 10px;
+	float:left;
+	max-width: 125px;
+	overflow: hidden;
+}
+.ns-survey-item .ns-survey-shop .ns-surver-shop-detail p {
+	line-height: 30px;
+	color: #595959;
+}
+.ns-survey-item .ns-survey-shop .ns-surver-shop-detail p:nth-of-type(2) {
+	font-size: 12px;
+}
+.ns-shop-detail-label {
+	display: flex;
+}
+.ns-shop-detail-label span {
+	padding: 5px;
+	border: 1px solid #ff8143;
+	border-radius: 2px;
+	color: #ff8143;
+	font-size: 12px;
+	line-height: 12px;
+	margin-right: 5px;
+}
+/* 概况信息*/
+	.ns-survey-info {
+	margin: 0;
+}
+.ns-survey-info .layui-card-body .ns-survey-detail-con {
+	flex-basis: 23.5%;
+	margin-bottom: 20px;
+}
+.ns-survey-info .layui-card-body .ns-survey-detail-aco {
+	font-weight:400;
+	color:rgba(89,89,89,1);
+}
+.ns-survey-info .layui-card-body .ns-survey-detail-num {
+	margin: 10px 0;
+	font-size: 28px;
+	font-weight:400;
+	color:rgba(89,89,89,1);
+}
+.ns-survey-info .layui-card-body .ns-survey-detail-yesterday {
+	font-size:14px;
+	font-weight:400;
+	color:rgba(175,175,175,1);
+}
+.ns-survey-guide .layui-card-header, .ns-survey-help .layui-card-header {
+	display: flex;
+	justify-content: space-between;
+}
+.ns-survey-guide .layui-card-header span, .ns-survey-help .layui-card-header span {
+	display: flex;
+	align-items: center;
+	font-size:16px;
+	font-weight:400;
+	color:rgba(0,0,0,1);
+}
+.ns-survey-guide .layui-card-header a, .ns-survey-help .layui-card-header a {
+	font-size:14px;
+	font-weight:400;
+	color:rgba(255,129,67,1);
+}
+.ns-survey-guide .layui-card-header i, .ns-survey-help .layui-card-header i {
+	margin-right: 6px;
+	width: 18px;
+	height: 18px;
+}
+.ns-survey-guide:nth-of-type(2) .layui-card-header i {
+	background: url("../img/index/grade.png") no-repeat center / 18px 18px;
+}
+.ns-survey-guide:nth-of-type(3) .layui-card-header i {
+	background: url("../img/index/fingerpost.png") no-repeat center / 18px 18px;
+}
+.ns-survey-help:nth-of-type(4) .layui-card-header i {
+	background: url("../img/index/help.png") no-repeat center / 18px 18px;
+}
+.ns-survey-help:nth-of-type(5) .layui-card-header i {
+	background: url("../img/index/announcement.png") no-repeat center / 18px 18px;
+}
+.ns-survey-help .layui-card-body > a {
+	display: block;
+}
+.ns-survey-help .layui-card-body .adorn {
+	display: inline-block;
+	font-size: 12px;
+	width: 16px;
+	height: 16px;
+	text-align: center;
+	line-height: 16px;
+	color: #FFFFFF;
+	border-radius: 50%;
+	margin-right: 5px;
+}
+.ns-survey-guide:nth-of-type(3) .layui-card-body {
+	display: flex;
+	flex-direction: column;
+}
+.ns-prompt-block {
+	display: inline-block;
+	align-items: center;
+	position:relative;
+}
+.ns-prompt-block:hover .ns-prompt-box {
+	display:block;
+}
+/* 概况信息*/
+	.ns-survey-info {
+	margin: 0;
+}
+.ns-survey-info .layui-card-body {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+}
+.ns-survey-info .layui-card-body .ns-survey-detail-con {
+	display: inline-block;
+	width: calc( 94% / 4);
+	margin-right: 2%;
+	margin-bottom: 30px;
+	background-color: #FFF;
+	box-sizing: border-box;
+	position: relative;
+}
+.ns-survey-bottom {
+	padding: 0 20px;
+}
+.ns-survey-line {
+	width:100%;
+	height:1px;
+	background-color:#F5F5F5;
+	margin-top:20px;
+}
+.ns-survey-info .layui-card-body .ns-survey-detail-con:last-child {
+	margin-right: 0;
+}
+.ns-survey-info .layui-card-body .ns-survey-detail-aco {
+	font-size: 16px;
+	line-height: 18px;
+	margin-top: 20px;
+	font-weight: 400;
+	padding: 0 20px;
+}
+.ns-survey-info .layui-card-body .ns-survey-detail-num {
+	margin: 10px 0;
+	font-size: 36px;
+	font-weight: 400;
+	margin-top: 48px;
+}
+.ns-survey-detail-rate {
+	font-size: 14px;
+	line-height: 30px;
+	display: flex;
+	align-items: center;
+	margin-top: 25px;
+}
+.ns-survey-detail-rate div i {
+	margin-left: 5px;
+}
+.ns-survey-detail-rate div:nth-child(2) {
+	margin-left: 25px;
+}
+.layui-icon-triangle-d {
+	font-size: 12px;
+	display: inline-block;
+	transform: scale(0.8, 0.9);
+	-webkit-transform: scale(0.8, 0.9);
+	/*兼容-webkit-引擎浏览器*/
+	-moz-transform: scale(0.8, 0.9);
+	/*兼容-moz-引擎浏览器*/
+	color: #5ED300;
+}
+.layui-icon-increase {
+	transform: scale(0.8, 0.9) rotate(180deg);
+	-ms-transform: rotate(180deg);
+	/* IE 9*/
+	-moz-transform: scale(0.8, 0.9) rotate(180deg);
+	/* Firefox*/
+	-webkit-transform: scale(0.8, 0.9) rotate(180deg);
+	/* Safari 和 Chrome*/
+	-o-transform: rotate(180deg);
+	/* Opera*/
+}
+.layui-icon-triangle-d.is-null {
+	display: none;
+}
+.ns-survey-detail-split {
+	width: 100%;
+	height: 1px;
+	background-color: #FFFFFF;
+	margin-top: 25px;
+}
+.ns-survey-detail-total {
+	display: flex;
+	justify-content: space-between;
+	margin: 18px 0 15px;
+	font-size: 14px;
+	line-height: 16px;
+}
+.ns-prompt-block {
+	position: absolute;
+	top: 18px;
+	right: 20px;
+	font-size: 12px;
+	cursor: pointer;
+}
+.ns-prompt-block .ns-prompt {
+	width: auto;
+	height: auto;
+	line-height: unset;
+}
+.ns-prompt-block .ns-prompt-box {
+	top: 40px;
+	left: -53px;
+	width: 150px;
+	text-align: center;
+}
+.ns-prompt-block .ns-prompt-box:before, .ns-prompt-block .ns-prompt-box:after {
+	left: 62px;
+	top: unset;
+}
+.ns-prompt-block .ns-prompt-box:before {
+	border-bottom-color: #e4e4e4;
+	border-right-color: transparent;
+	top: -25px;
+}
+.ns-prompt-block .ns-prompt-box:after {
+	border-bottom-color: #FFFFFF;
+	border-right-color: transparent;
+	top: -23px;
+}
+.ns-survey-yesterday-btn {
+	font-size: 12px;
+	width: 44px;
+	height: 22px;
+	padding: 0;
+	line-height: 22px;
+}
+.ns-survey-right .layui-card {
+	margin-bottom: var(--aside-space);
+	box-shadow: inherit;
+}
+.ns-survey-right .layui-card .layui-card-body {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.ns-shop-state {
+	margin: 30px 40px 0;
+	padding: 10px;
+	padding-right: 20px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	height: 35px;
+	background-color: rgba(255, 129, 67, 0.1);
+	color: #fff;
+	border: 1px solid red;
+}
+.ns-shop-state p {
+	color: #666;
+}
+.ns-shop-state p i {
+	margin-right: 6px;
+}
+.ns-shop-state button {
+	border: none;
+	background-color: transparent;
+	cursor: pointer;
+}
+.statistics-wrap {
+	display: flex;
+}
+.statistics-wrap .item {
+	display: inline-block;
+	width: calc((100% - 90px) / 4);
+	margin-right: 30px;
+	margin-bottom: 30px;
+	display: flex;
+}
+.statistics-wrap .item:last-child {
+	margin-right: 0;
+}
+.statistics-wrap .item .flex-box {
+	flex: 1;
+	background: #f5f5f5;
+	height: 120px;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-direction: column;
+	cursor: pointer;
+}
+.statistics-wrap .item .flex-box:first-child {
+	margin-right: 30px;
+}
+.statistics-wrap .flex-box .title {
+	font-size: 14px;
+}
+.statistics-wrap .flex-box .num {
+	font-size: 28px;
+	font-weight: 400;
+	color: #4685FD;
+	margin-top: 10px;
+}
+.access_shop {
+	width:100%;
+	height:44px;
+	color:#fff;
+	text-align: center;
+	line-height:44px;
+	margin-bottom: var(--aside-space);
+}
+/*背景样式*/
+body {
+	background-color:#FAFAFA;
+}
+.ns-card-common {
+    padding: 15px;
+}
+.ns-item-block-parent {
+	background-color:transparent;
+}
+.ns-item-block-wrap {
+	padding:10px!important;
+}
+.ns-survey-guide {
+	background-color:#fff;
+}
+.ns-survey-help {
+	background-color:#fff;
+}
+.customer_service {
+	background-color:#fff;
+}
+.ns-item-content-title {
+	font-weight: bold;
+}
+.layui-card-headers {
+	padding:0!important;
+}
+.layui-card-bodys {
+	padding:0!important;
+}
+
+.common-wrap {
+    background: #fff;
+    padding: 15px;
+    margin-top: var(--content-space);
+    background: #fff;
+}
+.common-wrap .head {
+    display: flex;
+    align-items: center
+}
+.common-wrap .head .title {
+    font-size: 16px;
+    font-weight: bolder
+}
+.common-wrap .head .sub-title {
+    margin-left: 10px;
+    color: #999
+}
+.common-wrap .body {
+    margin-top: 15px;
+}
+.summary-wrap {
+    display: flex;
+    flex-wrap: wrap;
+}
+.summary-wrap .summary-item {
+    width: 25%;
+    padding: 0 15px 10px 15px;
+    box-sizing: border-box;
+}
+.summary-wrap .summary-item .title .iconfont{
+    color: #C8C9CC;
+    font-size: 14px;
+    z-index: 999;
+    cursor: pointer;
+    margin-left: 5px;
+}
+.summary-wrap .summary-item .title,.summary-wrap .summary-item .bottom-title {
+    color: #909399;
+    font-size: 14px;
+    margin-top: 5px;
+}
+.summary-wrap .summary-item .value {
+    color: #303133;
+    font-size: 26px;
+    margin-top: 10px;
+}

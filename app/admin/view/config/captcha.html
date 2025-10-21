@@ -1,0 +1,104 @@
+{extend name="base"/}
+{block name="resources"}
+<style>
+	.ns-form {margin-top: 0;}
+</style>
+{/block}
+{block name="main"}
+<div class="layui-form ns-form">
+	<div class="layui-form-item">
+		<label class="layui-form-label">是否启用平台登录：</label>
+		<div class="layui-input-block">
+				<input type="checkbox" name="admin_login" value="1" lay-skin="switch" {if condition="!empty($config_info.admin_login) && $config_info.admin_login == 1"} checked {/if} />
+		</div>
+		<div class="ns-word-aux">设置平台端登录验证码是否开启</div>
+	</div>
+	
+	<div class="layui-form-item">
+		<label class="layui-form-label">是否启用商家登录：</label>
+		<div class="layui-input-block">
+			<input type="checkbox" name="shop_login" value="1" lay-skin="switch" {if condition="!empty($config_info.shop_login) && $config_info.shop_login == 1" }checked {/if} />
+		</div>
+		<div class="ns-word-aux">设置商户端登录验证码是否开启</div>
+	</div>
+
+	{if addon_is_exit('store')}
+		<div class="layui-form-item">
+			<label class="layui-form-label">是否启用门店登录：</label>
+			<div class="layui-input-block">
+				<input type="checkbox" name="store_login" value="1" lay-skin="switch" {if condition="!empty($config_info.store_login) && $config_info.store_login == 1" }checked {/if} />
+			</div>
+			<div class="ns-word-aux">设置门店登录验证码是否开启</div>
+		</div>
+	{/if}
+	{if addon_is_exit('supply')}
+		<div class="layui-form-item">
+			<label class="layui-form-label">是否启用供应商登录：</label>
+			<div class="layui-input-block">
+				<input type="checkbox" name="supply_login" value="1" lay-skin="switch" {if condition="!empty($config_info.supply_login) && $config_info.supply_login == 1" }checked {/if} />
+			</div>
+			<div class="ns-word-aux">设置供应商登录验证码是否开启</div>
+		</div>
+	{/if}
+	{if addon_is_exit('city')}
+		<div class="layui-form-item">
+			<label class="layui-form-label">是否启用城市分站登录：</label>
+			<div class="layui-input-block">
+				<input type="checkbox" name="city_login" value="1" lay-skin="switch" {if condition="!empty($config_info.city_login) && $config_info.city_login == 1" }checked {/if} />
+			</div>
+			<div class="ns-word-aux">设置城市分站登录验证码是否开启</div>
+		</div>
+	{/if}
+	{if addon_is_exit('mobileshop')}
+	<div class="layui-form-item">
+		<label class="layui-form-label">是否启用H5端会员登录注册：</label>
+		<div class="layui-input-block">
+			<input type="checkbox" name="shop_reception_login" value="1" lay-skin="switch" {if condition="!empty($config_info.shop_reception_login) && $config_info.shop_reception_login == 1" }checked {/if} />
+		</div>
+		<div class="ns-word-aux">设置H5端会员登录注册验证码是否开启</div>
+	</div>
+	{/if}
+	{if addon_is_exit('pc')}
+	<div class="layui-form-item">
+		<label class="layui-form-label">是否启用PC端会员登录注册：</label>
+		<div class="layui-input-block">
+			<input type="checkbox" name="shop_pc_reception_login" value="1" lay-skin="switch" {if condition="!empty($config_info.shop_pc_reception_login) && $config_info.shop_pc_reception_login == 1" }checked {/if} />
+		</div>
+		<div class="ns-word-aux">设置PC端会员登录注册验证码是否开启</div>
+	</div>
+	{/if}
+	<div class="ns-form-row">
+		<button class="layui-btn ns-bg-color" lay-submit lay-filter="save">保存</button>
+	</div>
+</div>
+
+{/block}
+{block name="script"}
+<script>
+	layui.use('form', function() {
+		var form = layui.form,
+			repeat_flag = false; //防重复标识
+		form.render();
+
+		form.on('submit(save)', function(data) {
+			
+			if (repeat_flag) return false;
+			repeat_flag = true;
+			
+			$.ajax({
+				type: 'POST',
+				dataType: 'JSON',
+				url: ns.url("admin/config/captcha"),
+				data: data.field,
+				success: function(res) {
+					layer.msg(res.message);
+					repeat_flag = false;
+					if (res.code == 0) {
+						location.reload();
+					}
+				}
+			});
+		});
+	});
+</script>
+{/block}

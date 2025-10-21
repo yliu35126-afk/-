@@ -1,0 +1,191 @@
+{extend name="base"/}
+{block name="resources"}
+{/block}
+{block name="main"}
+<div  class="layui-form">
+	<div class="layui-form-item">
+		<label class="layui-form-label">开店套餐：</label>
+		<div class="layui-input-inline">
+			<p class="ns-input-text ns-len-mid">{$shop_info.group_name}</p>
+		</div>
+	</div>
+	<div class="layui-form-item">
+		<label class="layui-form-label">主营行业：</label>
+		<div class="layui-input-inline">
+			<p class="ns-input-text ns-len-mid">{$shop_info.category_name}</p>
+		</div>
+	</div>
+	<div class="layui-form-item">
+		<label class="layui-form-label">店铺名称：</label>
+		<div class="layui-input-inline">
+			<p class="ns-input-text ns-len-mid">{$shop_info.site_name}</p>
+		</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label img-upload-lable">店铺logo：</label>
+		<div class="layui-input-block img-upload">
+			<div class="upload-img-block">
+				<div class="upload-img-box {notempty name="$shop_info['logo']"}hover{/notempty}">
+					<div class="ns-upload-default" id="logoUpload">
+						{notempty name="$shop_info.logo"}
+						<div id="preview_logoUpload" class="preview_img">
+							<img layer-src src="{:img($shop_info.logo)}" class="img_prev"/>
+						</div>
+						{else/}
+						<div class="upload">
+							<img src="SHOP_IMG/upload_img.png" data-id="logoUpload"/>
+							<p>点击上传</p>
+						</div>
+						{/notempty}
+					</div>
+					<div class="operation">
+						<div>
+							<i title="图片预览" class="iconfont iconreview js-preview" style="margin-right: 20px;"></i>
+							<i title="删除图片" class="layui-icon layui-icon-delete js-delete"></i>
+						</div>
+						<div class="replace_img js-replace">点击替换</div>
+					</div>
+					<input type="hidden" name="logo" value="{$shop_info.logo}"/>
+				</div>
+			</div>
+		</div>
+
+		<div class="ns-word-aux">
+			<p>建议图片尺寸：200*60像素；图片格式：jpg、png、jpeg。</p>
+		</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label img-upload-lable">店铺头像：</label>
+		<div class="layui-input-block img-upload">
+			<div class="upload-img-block">
+				<div class="upload-img-box {notempty name="$shop_info['avatar']"}hover{/notempty}">
+					<div class="ns-upload-default" id="avatarUpload">
+						{notempty name="$shop_info.avatar"}
+						<div id="preview_avatarUpload" class="preview_img">
+							<img layer-src src="{:img($shop_info.avatar)}" class="img_prev"/>
+						</div>
+						{else/}
+						<div class="upload">
+							<img src="SHOP_IMG/upload_img.png" data-id="avatarUpload"/>
+							<p>点击上传</p>
+						</div>
+						{/notempty}
+					</div>
+					<div class="operation">
+						<div>
+							<i title="图片预览" class="iconfont iconreview js-preview" style="margin-right: 20px;"></i>
+							<i title="删除图片" class="layui-icon layui-icon-delete js-delete"></i>
+						</div>
+						<div class="replace_img js-replace">点击替换</div>
+					</div>
+					<input type="hidden" name="avatar" value="{$shop_info.avatar}"/>
+				</div>
+			</div>
+		</div>
+		<div class="ns-word-aux">
+			<p>建议图片尺寸：800*800像素；图片格式：jpg、png、jpeg。</p>
+		</div>
+	</div>
+	<div class="layui-form-item">
+		<label class="layui-form-label img-upload-lable">店铺大图：</label>
+		<div class="layui-input-block img-upload">
+			<div class="upload-img-block">
+				<div class="upload-img-box {notempty name="$shop_info['banner']"}hover{/notempty}">
+					<div class="ns-upload-default" id="bannerUpload">
+						{notempty name="$shop_info.banner"}
+						<div id="preview_bannerUpload" class="preview_img">
+							<img layer-src src="{:img($shop_info.banner)}" class="img_prev"/>
+						</div>
+						{else/}
+						<div class="upload">
+							<img src="SHOP_IMG/upload_img.png" data-id="bannerUpload"/>
+							<p>点击上传</p>
+						</div>
+						{/notempty}
+					</div>
+					<div class="operation">
+						<div>
+							<i title="图片预览" class="iconfont iconreview js-preview" style="margin-right: 20px;"></i>
+							<i title="删除图片" class="layui-icon layui-icon-delete js-delete"></i>
+						</div>
+						<div class="replace_img js-replace">点击替换</div>
+					</div>
+					<input type="hidden" name="banner" value="{$shop_info.banner}"/>
+				</div>
+			</div>
+		</div>
+		<div class="ns-word-aux">
+			<p>建议图片高度：150像素；图片格式：jpg、png、jpeg。</p>
+		</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">店铺简介：</label>
+		<div class="layui-input-block">
+			<textarea name="seo_description" class="layui-textarea ns-len-long">{$shop_info.seo_description}</textarea>
+		</div>
+	</div>
+	<div class="layui-form-item">
+		<label class="layui-form-label">店铺关键字：</label>
+		<div class="layui-input-block">
+			<input type="text" name="seo_keywords" autocomplete="off" value="{$shop_info.seo_keywords}" class="layui-input ns-len-long">
+			<span class="layui-word-aux">多个关键字之间用英文“,”隔开</span>
+		</div>
+	</div>
+	
+	<div class="ns-form-row">
+		<button class="layui-btn ns-bg-color" lay-submit lay-filter="save">保存</button>
+	</div>
+</div>
+{/block}
+{block name="script"}
+<script>
+	layui.use(['form'], function(){
+		var form = layui.form,
+			repeat_flag = false; //防重复标识
+			
+		form.render();
+			
+		form.on('submit(save)', function(data){
+			if (repeat_flag) return;
+			repeat_flag = true;
+			
+			//图片删除
+			if(!data.field.logo) logo_upload.delete();
+			if(!data.field.avatar) avatar_upload.delete();
+			if(!data.field.banner) banner_upload.delete();
+			
+			$.ajax({
+				type: 'POST',
+				url: ns.url("shop/shop/config"),
+				data: data.field,
+				dataType: 'JSON',
+				success: function(res) {
+					layer.msg(res.message);
+					repeat_flag = false;
+					if (res.code == 0) {
+						setTimeout(function(){ location.reload(); }, 1000);
+					}
+				}
+			});
+		});
+
+		// 店铺LOGO
+		var logo_upload = new Upload({
+			elem: '#logoUpload'
+		});
+
+		// 店铺头像
+		var avatar_upload = new Upload({
+			elem: '#avatarUpload'
+		});
+
+		// 店铺大图
+		var banner_upload = new Upload({
+			elem: '#bannerUpload'
+		});
+	});
+</script>
+{/block}

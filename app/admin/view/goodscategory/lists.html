@@ -1,0 +1,545 @@
+{extend name="base"/}
+{block name="resources"}
+<style>
+	.table_body {
+		font-family: arial;
+		-webkit-user-select: none;
+		-moz-user-select: none;
+		-ms-user-select: none;
+		user-select: none;
+	}
+	.goods-category-list .layui-table td {
+		border-left: 0;
+		border-right: 0;
+	}
+	.goods-category-list .layui-table .switch {
+		font-size: 16px;
+		cursor: pointer;
+		width: 12px;
+		line-height: 1;
+		display: inline-block;
+		text-align: center;
+		vertical-align: middle;
+	}
+	.goods-category-list .layui-table img {width: 40px;}
+	.goods-category-list .layui-table td {
+		border-left: 0;
+		border-right: 0;
+	}
+	.goods-category-list .layui-table .switch {
+		font-size: 16px;
+		cursor: pointer;
+		width: 12px;
+		line-height: 1;
+		display: inline-block;
+		text-align: center;
+		vertical-align: middle;
+	}
+	.goods-category-list .layui-table img {width: 40px;}
+	/* 分类样式 */
+	.table_div{
+		color:#666
+	}
+	.table_head{
+		display: flex;
+		font-weight: bold;
+		background-color: #F7F7F7;
+	}
+	.table_head li{
+		height: 40px;
+		line-height: 40px;
+		border: 0;
+		border-bottom: 1px solid #e6e6e6;
+		padding: 9px 15px;
+		font-size: 14px;
+		
+	}
+	.table_head li:first-child{
+		padding-right: 0;
+		
+	}
+	.table_tr{
+		display: flex;
+		border-bottom: 1px solid #e6e6e6;
+	}
+	.table_tr .table_td{
+		position: relative;
+		padding: 11px 15px 8px;
+		min-height: 30px;
+		line-height: 33px;
+		font-size: 14px;
+	}
+	.table_tr .table_td span{
+		cursor: pointer;
+	}
+	.table_tr .table_td span>img{
+		width:12px;
+		height:12px
+	}
+	.table_tr .table_td span>img.rotate{
+		transform:rotate(90deg);
+	}
+	.table_tr .table_td .ns-img-box{
+		width:30px;
+		height:30px;
+		line-height: 30px;
+	}
+	.table_tr .table_td:first-child{
+		padding-right:0
+	}
+	.table_tr .ns-table-btn {
+	    display: flex;
+	    flex-wrap: wrap;
+	}
+	.table_tr .layui-btn {
+	    display: flex;
+	    justify-content: center;
+	    align-items: center;
+	    height: 23px;
+	    border-radius: 50px;
+	    background-color: transparent;
+	    color: #4685FD;
+	    text-align: center;
+	    padding: 2px 8px 2px 0;
+	    margin: 5px 0 5px 5px;
+	    position: relative;
+	}
+	.table_two_div{
+		display: none;
+	}
+	.table_three{
+		display: none;
+	}
+	.empty_switch{
+		display: inline-block;
+		width:30px;
+		height:25px;
+		padding-right:15px;
+	}
+	.js-switch{display: inline-block;height:30px;width:30px;text-align: center;}
+	.table_move{
+		cursor: move;float:left;margin-right: 10px;
+	}
+	.table_moves{
+		cursor: move;float:left;margin-right: 10px;
+	}
+	.tables_move{
+		cursor: move;float:left;margin-right: 20px;padding-left: 70px;
+	}
+</style>
+{/block}
+{block name="main"}
+<div class="layui-collapse ns-tips">
+	<div class="layui-colla-item">
+		<h2 class="layui-colla-title">操作提示</h2>
+		<ul class="layui-colla-content layui-show">
+			<li>商品分类由平台端进行维护，商家添加商品的时候需要选择对应的商品分类,用户可以根据商品分类搜索商品。</li>
+			<li>点击商品分类名前“+”符号，显示当前商品分类的下级分类。</li>
+			<li>商品分类关联类型是前台搜索分类查询商品之后可以通过商品类型的属性进行进一步搜索。</li>
+			<li>商品分类的佣金比率是商家商品销售之后，平台获取佣金，具体佣金金额按照商品分类进行计算。</li>
+			<li>可通过拖拽进行分类排序</li>
+		</ul>
+	</div>
+</div>
+<div class="ns-single-filter-box">
+	<button class="layui-btn ns-bg-color" onclick="addCategory()">添加商品分类</button>
+</div>
+<div class="goods-category-list layui-table-view">
+	<div class="table_div" >
+		<ul class="table_head">
+			<!-- <li style="width:30px"></li> -->
+			<li style="flex:6">分类名称</li>
+			<li style="flex:2">简称</li>
+			<li style="flex:2">图片</li>
+			<li style="flex:2">关联类型</li>
+			<li style="flex:2">平台抽成比率</li>
+			<!-- <li style="flex:2">排序</li> -->
+			<li style="flex:2">是否显示</li>
+			<li style="flex:2">操作</li>
+		</ul>
+		<div  class="table_body">
+			{if condition="$list"}
+			{foreach name="$list" item="vo" key="index"}
+			<div class="table_one" data-index="{$index}" data-sort="{$vo['sort']}" data-cateid="{$vo['category_id']}">
+				<div class="table_tr">
+					<div class="table_td" style="flex:6;display: flex;">
+						<div style="width:60px;display: inline-block;">
+							<div class="table_move iconfont icontuodong"></div>
+							{notempty name="$vo['child_list']"}
+							<span class="switch ns-text-color js-switch" data-category-id="{$vo['category_id']}" data-level="{$vo['level']}" data-open="0">
+								+
+							</span>
+						
+							{/notempty}
+						</div>
+						{$vo['category_name']}
+					</div>
+					<div class="table_td" style="flex:2">{$vo['short_name']}</div>
+					<div class="table_td" style="flex:2">
+						{notempty name="$vo['image']"}
+						<div class="ns-img-box">
+							<img layer-src src="{:img($vo['image'])}"/>
+						</div>
+						{/notempty}
+					</div>
+					<!-- <div class="table_td" style="flex:2">
+						<input type="number" class="layui-input ns-len-short" value="{$vo['sort']}" onchange="editSort('{$vo.category_id}')" id="category_sort{$vo.category_id}">
+					</div> -->
+					<div class="table_td" style="flex:2">
+						{$vo['attr_class_name']}
+					</div>
+					<div class="table_td" style="flex:2">
+						{$vo['commission_rate']}%
+					</div>
+					<div class="table_td" style="flex:2">
+						{if $vo['is_show'] == 1}是{else/}否{/if}
+					</div>
+					
+					<div class="table_td" style="flex:2">
+						<div class="ns-table-btn">
+							<a class="layui-btn" href="{:addon_url('admin/goodscategory/editcategory',['category_id'=>$vo['category_id']])}">编辑</a>
+							<a class="layui-btn" href="javascript:deleteCategory({$vo['category_id']});">删除</a>
+						</div>
+					</div>
+				</div>
+				{notempty name="$vo['child_list']"}
+					<div class="table_two_div">
+					{foreach name="$vo['child_list']" item="second"}
+					<div class="table_two table_two{$index}" data-index="{$index}" data-sort="{$second['sort']}" data-cateid="{$second['category_id']}">
+					<div class="table_tr">
+						
+						<div class="table_td" style="flex:6;display: flex;">
+							<div style="width:30px">
+								
+							</div>
+							<div class="table_moves iconfont icontuodong"></div>
+							{notempty name="$second['child_list']"}
+							<span class="switch ns-text-color js-switch" data-category-id="{$second['category_id']}" data-level="{$second['level']}" data-open="0" style="padding-right: 15px;">
+								+
+							</span>
+							{else /}
+							<span class="switch ns-text-color empty_switch" >  </span>
+							{/notempty}
+							<span>{$second['category_name']}</span>
+						</div>
+						<div class="table_td" style="flex:2">{$second['short_name']}</div>
+						<div class="table_td" style="flex:2">
+							{notempty name="$vo['image']"}
+							<div class="ns-img-box">
+								<img layer-src src="{:img($second['image'])}"/>
+							</div>
+							{/notempty}
+						</div>
+						<!-- <div class="table_td" style="flex:2">
+							<input type="number" class="layui-input ns-len-short" value="{$second['sort']}" onchange="editSort('{$second.category_id}')" id="category_sort{$second.category_id}">
+						</div> -->
+						<div class="table_td" style="flex:2">
+							{$second['attr_class_name']}
+						</div>
+						<div class="table_td" style="flex:2">
+							{$second['commission_rate']}%
+						</div>
+						<div class="table_td" style="flex:2">
+							{if $second['is_show'] == 1}是{else/}否{/if}
+						</div>
+						<div class="table_td" style="flex:2">
+							<div class="ns-table-btn">
+								<a class="layui-btn" href="{:addon_url('admin/goodscategory/editcategory',['category_id'=>$second['category_id']])}">编辑</a>
+								<a class="layui-btn" href="javascript:deleteCategory({$second['category_id']});">删除</a>
+							</div>
+						</div>
+					</div>
+					{notempty name="$second['child_list']"}
+						
+					<div class="table_three">
+						{foreach name="$second['child_list']" item="third"}
+						<div class="table_tr table_three_tr" data-sort="{$third['sort']}" data-cateid="{$third['category_id']}">
+							
+							<div class="table_td" style="flex:6;display: flex;">
+								<div style="width:30px">
+									
+								</div>
+								<div class="tables_move iconfont icontuodong"></div>
+								<span>{$third['category_name']}</span>
+							</div>
+							<div class="table_td" style="flex:2">{$third['short_name']}</div>
+							<div class="table_td" style="flex:2">
+								{notempty name="$third['image']"}
+								<div class="ns-img-box">
+									<img layer-src src="{:img($third['image'])}"/>
+								</div>
+								{/notempty}
+							</div>
+							<!-- <div class="table_td" style="flex:2">
+								<input type="number" class="layui-input ns-len-short" value="{$second['sort']}" onchange="editSort('{$second.category_id}')" id="category_sort{$second.category_id}">
+							</div> -->
+							<div class="table_td" style="flex:2">
+								{$third['attr_class_name']}
+							</div>
+							<div class="table_td" style="flex:2">
+								{$third['commission_rate']}%
+							</div>
+							<div class="table_td" style="flex:2">
+								{if $third['is_show'] == 1}是{else/}否{/if}
+							</div>
+							<div class="table_td" style="flex:2">
+								<div class="ns-table-btn">
+									<a class="layui-btn" href="{:addon_url('admin/goodscategory/editcategory',['category_id'=>$third['category_id']])}">编辑</a>
+									<a class="layui-btn" href="javascript:deleteCategory({$third['category_id']});">删除</a>
+								</div>
+							</div>
+						</div>
+						{/foreach}
+						
+					</div>
+					{/notempty}
+					</div>
+					{/foreach}
+					</div>
+				{/notempty}
+			</div>
+			
+			{/foreach}
+			{else/}
+			<div class="table_tr">
+				<div class="table_td" style="flex:1;text-align: center;">暂无数据</div>
+			</div>
+			{/if}
+		</div>
+	</div>
+</div>
+{/block}
+{block name="script"}
+<script src="STATIC_EXT/drag-arrange.js"></script>
+<script src="STATIC_EXT/diyview/js/ddsort.js"></script>
+<script>
+
+	$(function() {
+		var tempPos = '';
+		$('.table_one').arrangeable({
+			dragSelector: '.table_move',
+			callback:function(e){
+				var temparr = [];
+				$('.table_one').each(function(index,item){
+					var tempObj = {};
+					tempObj.category_id = item.getAttribute('data-cateid');
+					tempObj.sort = index;
+					temparr.push(tempObj)
+				});
+				setTimeout(function(){
+					$.ajax({
+						url: ns.url("admin/goodscategory/modifySort"),
+						data: {category_sort_array : JSON.stringify(temparr)},
+						dataType: 'JSON',
+						type: 'POST',
+						async: false,
+						success: function (res) {
+							layer.msg(res.message);
+						}
+					});
+				},100);
+			}
+		});
+		$('.table_one').each(function(index,value){
+			$('.table_one:eq('+index+') .table_two').arrangeable({
+				dragSelector: '.table_moves',
+				callback:function(e){
+					var temparrs = [];
+					$('.table_two').each(function(index,item){
+						var tempObjs = {};
+						tempObjs.category_id = item.getAttribute('data-cateid');
+						tempObjs.sort = index;
+						temparrs.push(tempObjs)
+					})
+					setTimeout(function(){
+						$.ajax({
+							url: ns.url("admin/goodscategory/modifySort"),
+							data: {category_sort_array : JSON.stringify(temparrs)},
+							dataType: 'JSON',
+							type: 'POST',
+							async: false,
+							success: function (res) {
+								layer.msg(res.message);
+							}
+						});
+					},100);
+				}
+			});
+		})
+		$('.table_two').each(function(index,value){
+			$('.table_two:eq('+index+') .table_three_tr').arrangeable({
+				dragSelector: '.tables_move',
+				callback:function(e){
+					var temparres = [];
+					$('.table_three_tr').each(function(index,item){
+						var tempObjes = {};
+						tempObjes.category_id = item.getAttribute('data-cateid');
+						tempObjes.sort = index;
+						temparres.push(tempObjes)
+					})
+					setTimeout(function(){
+						$.ajax({
+							url: ns.url("admin/goodscategory/modifySort"),
+							data: {category_sort_array : JSON.stringify(temparres)},
+							dataType: 'JSON',
+							type: 'POST',
+							async: false,
+							success: function (res) {
+								layer.msg(res.message);
+							}
+						});
+					},100);
+				}
+			});
+		})
+		
+		// $('.table_three_tr').arrangeable({
+		// 	dragSelector: '.tables_move',
+		// 	callback:function(e){
+		// 		var temparres = [];
+		// 		$('.table_three_tr').each(function(index,item){
+		// 			var tempObjes = {};
+		// 			tempObjes.category_id = item.getAttribute('data-cateid');
+		// 			tempObjes.sort = index;
+		// 			temparres.push(tempObjes)
+		// 		})
+		// 		console.log(temparres);
+		// 		setTimeout(function(){
+		// 			$.ajax({
+		// 				url: ns.url("admin/goodscategory/modifySort"),
+		// 				data: {category_sort_array : JSON.stringify(temparres)},
+		// 				dataType: 'JSON',
+		// 				type: 'POST',
+		// 				async: false,
+		// 				success: function (res) {
+		// 					layer.msg(res.message);
+		// 				}
+		// 			});
+		// 		},100);
+		// 	}
+		// });
+	});
+
+$(function () {
+	loadImgMagnify();  //图片放大
+	
+	//展开收齐点击事件
+	$(".js-switch").click(function () {
+		var category_id = $(this).attr("data-category-id");
+		var level = $(this).attr("data-level");
+		var open = parseInt($(this).attr("data-open").toString());
+		if(open){
+			$(".goods-category-list .layui-table tr[data-category-id-"+ level+"='" + category_id + "']").hide();
+			// $(this).children("img").removeClass('rotate');
+			$(this).text("+");
+			if(level == 1) $(this).parents('.table_tr').siblings('.table_two_div').hide();
+			else if(level == 2) $(this).parents('.table_tr').siblings('.table_three').hide();
+			
+		}else{
+			$(".goods-category-list .layui-table tr[data-category-id-"+ level+"='" + category_id + "']").show();
+			$(this).text("-");
+			// $(this).children("img").addClass('rotate');
+			if(level == 1) $(this).parents('.table_tr').siblings('.table_two_div').show();
+			else if(level == 2) $(this).parents('.table_tr').siblings('.table_three').show();
+			
+		}
+		$(this).attr("data-open", (open ? 0 : 1));
+		
+	});
+});
+
+// var tempPos = '';
+// bindDragSort('.table_body' ,'.table_one');
+// bindDragSort('.table_two_div' ,'.table_two');
+// bindDragSort('.table_three' ,'.table_tr');
+// function bindDragSort(paremtElem,childElem){
+// 	$(paremtElem ).DDSort({
+// 	    target: childElem,
+// 	    floatStyle: {
+// 	        'border': '1px solid #ccc',
+// 	        'background-color': '#fff'
+// 	    },
+// 		down:function(e){
+// 			tempPos = $(this).data('sort');
+// 		},
+// 		up:function(e){
+// 			var index = $(this).index(),self = $(this);
+// 			if(index != tempPos){
+// 				var temparr = [];
+// 				$(childElem).each(function(index,item){
+// 					var tempObj = {};
+// 					tempObj.category_id = item.getAttribute('data-cateid');
+// 					tempObj.sort = index;
+// 					temparr.push(tempObj)
+// 				});
+// 				setTimeout(function(){
+// 					$.ajax({
+// 						url: ns.url("admin/goodscategory/modifySort"),
+// 						data: {category_sort_array : JSON.stringify(temparr)},
+// 						dataType: 'JSON',
+// 						type: 'POST',
+// 						async: false,
+// 						success: function (res) {
+// 							self.data('sort',index);
+// 							layer.msg(res.message);
+// 						}
+// 					});
+// 				},100);
+// 			}
+//
+// 		}
+// 	});
+// }
+
+function deleteCategory(category_id,level) {
+	
+	layer.confirm('子级分类也会删除，请谨慎操作', function() {
+		$.ajax({
+			url: ns.url("admin/goodscategory/deleteCategory"),
+			data: {category_id : category_id},
+			dataType: 'JSON',
+			type: 'POST',
+			async: false,
+			success: function (res) {
+				layer.msg(res.message);
+				if (res.code == 0) {
+					location.reload();
+				}
+			}
+		});
+	});
+}
+function addCategory() {
+	location.href = ns.url("admin/goodscategory/addcategory");
+}
+
+// 监听单元格编辑
+function editSort(category_id) {
+    var sort = $("#category_sort"+category_id).val();
+
+    if (!new RegExp("^-?[1-9]\\d*$").test(sort)) {
+        layer.msg("排序号只能是整数");
+        return;
+    }
+    if(sort<0){
+        layer.msg("排序号必须大于0");
+        return ;
+    }
+    $.ajax({
+        type: 'POST',
+        url: ns.url("admin/goodscategory/modifySort"),
+        data: {
+            sort: sort,
+            category_id: category_id
+        },
+        dataType: 'JSON',
+        success: function(res) {
+            layer.msg(res.message);
+            if (res.code == 0) {
+                location.reload();
+            }
+        }
+    });
+}
+</script>
+{/block}

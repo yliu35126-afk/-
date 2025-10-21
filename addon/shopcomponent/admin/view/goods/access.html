@@ -1,0 +1,289 @@
+{extend name="app/admin/view/base.html"/}
+
+{block name="resources"}
+<style type="text/css">
+    .access{padding: 10px;}
+    .access-title {font-size: 18px;font-family: Microsoft YaHei;font-weight: 400;color: #333333;}
+    .access-item{background-color: #F8F8F8;display: flex;flex-direction: column;justify-content: space-between;}
+    .item {display: flex;justify-content: space-between;margin: 20px 0 20px 10px;}
+    .item-datail {position: relative;}
+    .item-number {width: 30px;height: 30px;border-radius: 50%;border: 5px solid #eee;position: absolute;top: -5px;left: -45px;box-sizing: border-box;font-size: 10px;line-height: 20px;}
+    .item-number label{width: 20px;height: 20px;background: #ddd;border-radius: 50%; text-align: center;color: #FFFFFF !important;display: inline-block;font-size: 12px;}
+    .item-number.active {border: 5px solid rgba(70,133,253,0.5);}
+    .item-number.active label {background: #4685FD;}
+    .item-check{position: absolute;top: 5px; left: 20px;width: 25px;height: 25px;background: #CCCCCC;border-radius: 50%;display: flex;align-items: center;justify-content: center;}
+    .item-check i{border-radius: 50%;border: none;font-size: 14px;color: #fff}
+    .item-checked{background: rgba(70,133,253,0.5);border-radius: 50%;}
+    .item-checked i {color: #4685FD}
+    .item-datail div {font-size: 14px;font-family: Microsoft YaHei;font-weight: 400;color: #333333;margin-bottom: 10px;}
+    .item-datail p {display: inline-block; font-size: 12px;font-family: Microsoft YaHei;font-weight: 400;color: #999999;}
+    .item-datail a {font-size: 12px;font-family: Microsoft YaHei;font-weight: 400;color: #4685FD!important;}
+    .item button {width: 88px;height: 34px;background: #4685FD;border-radius: 2px;border: 1px solid #FFFFFF;font-weight: 400;color: #FFFFFF;cursor: pointer;}
+    .item span,.item a,.item button {margin-right:15px;margin-top: 10px;}
+    .layui-timeline-item:before{top: 27px;}
+    .order-pay-layer .wrap{display: flex;}
+    .order-pay-layer .wrap .flex{flex: 1}
+    .order-pay-layer .wrap .flex:last-child{border-left: 1px solid #eee}
+    .order-pay-layer .qrcode img{width: 150px;margin: auto;display: block;}
+    .order-pay-layer .goods-name {margin-right: 15px;font-weight: bold;}
+    .order-pay-layer .price {margin-right: 15px;margin-top: 15px;font-weight: bold;}
+    .order-pay-layer .tips {margin-bottom: 15px;}
+    a:hover{text-decoration: none!important;cursor: pointer}
+    .layui-timeline .layui-btn {background: #4685FD}
+</style>
+{/block}
+
+{block name="main"}
+<div class="access">
+    <div class="access-title">微信视频号</div>
+    <ul class="layui-timeline">
+        <li class="layui-timeline-item">
+            <div class="layui-timeline-content layui-text">
+                <div class="item">
+                    <div class="item-datail">
+                        <div class="item-number active">
+                            <label>1</label>
+                        </div>
+                        <div>创建微信视频号</div>
+                        <p>在微信中创建视频号，如已有视频号可越过该步骤。</p>
+                    </div>
+                    <a href="https://www.kancloud.cn/niucloud/niushop_b2c_v4/2251549" target="_blank" class="layui-btn">接入指南</a>
+                </div>
+            </div>
+        </li>
+        <li class="layui-timeline-item">
+            <div class="layui-timeline-content layui-text">
+                <div class="item">
+                    <div class="item-datail">
+                        <div class="item-number {if $checkres['code'] == 0 && $checkres['data']['status'] == 2}active{/if}">
+                            <label>2</label>
+                        </div>
+                        <div>申请开通自定义版交易组件</div>
+                        <p>完成自定义版交易组件接入后，小程序即可在视频号中实现商品展示和带货等功能，进一步提升经营能力。若您已开通标准化交易组件，则暂不支持切换</p>
+                    </div>
+                    {if $checkres['code'] == 0}
+                    {if $checkres['data']['status'] != 2 && $checkres['data']['status'] != 3}
+                    <button type="button" onclick="apply()">立即开通</button>
+                    {/if}
+                    {else/}
+                    <button type="button" onclick="apply()">立即开通</button>
+                    {/if}
+                </div>
+                <div class="access-item">
+                    <div class="item">
+                        <div class="item-datail">
+                            <div class="item-check {if $checkres['code'] == 0 && $checkres['data']['status'] == 2}item-checked{/if}">
+                                <i class="iconfont iconduihao"></i>
+                            </div>
+                            <div style="margin-left: 60px;">
+                                <label>完成自定义版交易组件开通申请</label>
+                                <br>
+                                <p>官方审核团队将对接入资质进行审核，通过后可进行下一步操作。</p>
+                            </div>
+                        </div>
+                        {if $checkres['code'] == 0}
+                        {if $checkres['data']['status'] == 2}
+                        <span>已开通</span>
+                        {elseif $checkres['data']['status'] == 3}
+                        <span>封禁中</span>
+                        {else/}
+                        <span>未开通</span>
+                        {/if}
+                        {else/}
+                        <span>未开通</span>
+                        {/if}
+                    </div>
+                </div>
+            </div>
+        </li>
+        <li class="layui-timeline-item">
+            <div class="layui-timeline-content layui-text">
+                <div class="item">
+                    <div class="item-datail">
+                        <div class="item-number {if $checkres['code'] == 0 && $checkres['data']['status'] == 2}active{/if}">
+                            <label>3</label>
+                        </div>
+                        <div>自定义版交易组件申请通过，接口调用场景检测</div>
+                        <p>自定义交易组件开通之后，如果当前小程序版本低于4.1.5，则需下载4.1.5或更高版本小程序进行发布，<a href="{:addon_url('weapp://shop/weapp/package')}" target="_blank">前去发布</a></p>
+                    </div>
+                </div>
+                <div class="access-item">
+                    <div class="item">
+                        <div class="item-datail">
+                            <div class="item-check {if $checkres['code'] == 0 && $checkres['data']['status'] == 2 && $checkres['data']['access_info']['spu_audit_finished'] eq 1}item-checked{/if}">
+                                <i class="iconfont iconduihao"></i>
+                            </div>
+                            <div style="margin-left: 60px;">
+                                <label>商品接口调用</label>
+                                <br>
+                                <p>请至少将一件商品同步到微信，并等待商品审核通过<a href="{:addon_url('shopcomponent://admin/goods/lists')}">前去添加</a></p>
+                            </div>
+                        </div>
+                        {if $checkres['code'] == 0 && $checkres['data']['status'] == 2 && $checkres['data']['access_info']['spu_audit_finished'] eq 1}
+                        <span>已完成</span>
+                        {else/}
+                        <button type="button" onclick="finishAccess(6)">完成</button>
+                        {/if}
+                    </div>
+                    <div class="item" style="margin-top: 0;">
+                        <div class="item-datail">
+                            <div class="item-check {if $checkres['code'] == 0 && $checkres['data']['status'] == 2 && $checkres['data']['access_info']['ec_order_finished'] eq 1}item-checked{/if}">
+                                <i class="iconfont iconduihao"></i>
+                            </div>
+                            <div style="margin-left: 60px;">
+                                <label>订单接口调用</label>
+                                <br>
+                                <p>需手动扫码下单，使用微信支付并付款成功</p>
+                            </div>
+                        </div>
+                        {if $checkres['code'] == 0 && $checkres['data']['status'] == 2 && $checkres['data']['access_info']['ec_order_finished'] eq 1}
+                        <span>已完成</span>
+                        {else/}
+                        {if $checkres['code'] == 0 && $checkres['data']['access_info']['pay_order_success'] eq 1}
+                        <button type="button" onclick="finishAccess(7)">完成</button>
+                        {else/}
+                        <button type="button" onclick="orderPay()">扫码下单</button>
+                        {/if}
+                        {/if}
+                    </div>
+                    <div class="item" style="margin-top: 0;">
+                        <div class="item-datail">
+                            <div class="item-check {if $checkres['code'] == 0 && $checkres['data']['status'] == 2 && $checkres['data']['access_info']['send_delivery_finished'] eq 1}item-checked{/if}">
+                                <i class="iconfont iconduihao"></i>
+                            </div>
+                            <div style="margin-left: 60px;">
+                                <label>物流接口调用</label>
+                                <br>
+                                <p>订单支付之后，需对该测试订单进行发货操作</p>
+                            </div>
+                        </div>
+                        {if $checkres['code'] == 0 && $checkres['data']['status'] == 2 && $checkres['data']['access_info']['send_delivery_finished'] eq 1}
+                        <span>已完成</span>
+                        {else/}
+                        <button type="button" onclick="finishAccess(8)">完成</button>
+                        {/if}
+                    </div>
+                    <div class="item" style="margin-top: 0;">
+                        <div class="item-datail">
+                            <div class="item-check {if $checkres['code'] == 0 && $checkres['data']['status'] == 2 && $checkres['data']['access_info']['ec_after_sale_finished'] eq 1}item-checked{/if}">
+                                <i class="iconfont iconduihao"></i>
+                            </div>
+                            <div style="margin-left: 60px;">
+                                <label>售后接口调用</label>
+                                <br>
+                                <p>订单发货之后，需下单人对该测试订单进行申请维权操作</p>
+                            </div>
+                        </div>
+                        {if $checkres['code'] == 0 && $checkres['data']['status'] == 2 && $checkres['data']['access_info']['ec_after_sale_finished'] eq 1}
+                        <span>已完成</span>
+                        {else/}
+                        <button type="button" onclick="finishAccess(9)">完成</button>
+                        {/if}
+                    </div>
+                </div>
+            </div>
+        </li>
+        <li class="layui-timeline-item">
+            <div class="layui-timeline-content layui-text">
+                <div class="item">
+                    <div class="item-datail">
+                        <div class="item-number {if $checkres['code'] == 0 && $checkres['data']['status'] == 2 && $checkres['data']['access_info']['ec_after_sale_finished'] eq 1}active{/if}">
+                            <label>4</label>
+                        </div>
+                        <div>自定义版交易组件开通成功</div>
+                        <p>开通成功之后可在小程序中“功能>交易组件>场景接入>视频号推广”中关联视频号，关联之后视频号管理员可前往“视频号创作者中心>商品橱窗”中添加商品<a href="https://mp.weixin.qq.com" target="_blank">前去添加</a>。 </p>
+                    </div>
+                </div>
+            </div>
+        </li>
+    </ul>
+</div>
+{/block}
+
+{block name="script"}
+<script type="text/html" id="orderPay">
+    <div class="order-pay-layer">
+        <div class="tips text-color">注：需使用微信扫码下单使用微信支付，且支付成功。</div>
+        <div class="wrap">
+            <div class="flex">
+                <div class="goods-name">{{ d.goods_name }}</div>
+                <div class="price">¥{{ d.price }}</div>
+            </div>
+            <div class="flex">
+                <div class="qrcode">
+                    <img src="{{ ns.img(d.qrcode_path) }}" alt="">
+                </div>
+            </div>
+        </div>
+    </div>
+</script>
+<script type="text/javascript">
+    var laytpl,repeatTag = false;
+    layui.use(['laytpl'], function() {
+        laytpl = layui.laytpl;
+    });
+
+    function apply(){
+        $.ajax({
+            url: ns.url("shopcomponent://admin/goods/access"),
+            dataType: 'JSON',
+            type: 'POST',
+            success: function(res) {
+                if (res.code == 0) {
+                    layer.msg('开通成功');
+                    setTimeout(function () {
+                        location.reload();
+                    }, 1000)
+                } else {
+                    layer.msg(res.message);
+                }
+            }
+        });
+    }
+
+    function orderPay() {
+        $.ajax({
+            url: ns.url("shopcomponent://admin/goods/getorderpayinfo"),
+            dataType: 'JSON',
+            type: 'POST',
+            success: function(res) {
+                if (res.code == 0) {
+                    laytpl($('#orderPay').html()).render(res.data, function(string){
+                        layer.open({
+                            type: 1,
+                            title: '订单测试',
+                            content: string,
+                            area: ['500px', '340px'],
+                            btn: ['支付成功', '取消'],
+                            yes: function () {
+                                location.reload();
+                            }
+                        })
+                    });
+                } else {
+                    layer.msg(res.message);
+                }
+            }
+        });
+    }
+
+    function finishAccess(item) {
+        if (repeatTag) return;
+        repeatTag = true;
+        $.ajax({
+            url: ns.url("shopcomponent://admin/goods/finishaccess"),
+            dataType: 'JSON',
+            type: 'POST',
+            data: {item: item},
+            success: function (res) {
+                if (res.code == 0) {
+                    location.reload();
+                } else {
+                    repeatTag = false;
+                    layer.msg(res.message);
+                }
+            }
+        })
+    }
+</script>
+{/block}

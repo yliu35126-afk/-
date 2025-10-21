@@ -1,0 +1,432 @@
+{extend name="app/shop/view/base.html"/}
+{block name="resources"}
+<style>
+	.ns-screen{margin-bottom: 15px;}
+	.contraction span {
+		cursor: pointer;
+		display: inline-block;
+		width: 17px;
+		height: 17px;
+		text-align: center;
+		line-height: 14px;
+		user-select: none;
+	}
+	.sku-list {
+		overflow: hidden;
+		padding: 0 45px;
+	}
+	.sku-list li .img-wrap {
+		vertical-align: middle;
+		margin-right: 8px;
+		width: 120px;
+		height: 120px;
+		text-align: center;
+		line-height: 120px;
+	}
+	.sku-list li .img-wrap img {
+		max-width: 100%;
+		max-height: 100%;
+	}
+	.sku-list li .info-wrap span.sku-name {
+		-webkit-line-clamp: 2;
+		margin-bottom: 5px;
+	}
+	.sku-list li .info-wrap span {
+		display: -webkit-box;
+		margin-bottom: 5px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: normal;
+		word-break: break-all;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 1;
+	}
+	.sku-list li {
+		float: left;
+		display: flex;
+		padding: 10px;
+		margin-right: 10px;
+		margin-bottom: 10px;
+		border: 1px solid #EFEFEF;
+		width: 294px;
+		height: 180px;
+		align-items: center;
+	}
+</style>
+{/block}
+{block name="main"}
+<!-- 搜索框 -->
+<div class="ns-single-filter-box">
+	<button class="layui-btn ns-bg-color" onclick="add()">添加砍价</button>
+
+	<div class="layui-form">
+		<div class="layui-input-inline">
+		    <input type="text" name="start_time" id="start_time" placeholder="开始时间" class="layui-input" autocomplete="off" readonly>
+		    <i class="ns-calendar"></i>
+		</div>
+		<div class="layui-input-inline end-time">
+		    <input type="text" name="end_time" id="end_time" placeholder="结束时间" class="layui-input" autocomplete="off" readonly>
+		    <i class="ns-calendar"></i>
+		</div>
+
+		<div class="layui-input-inline">
+			<input type="text" name="goods_name" placeholder="请输入商品名称" class="layui-input" autocomplete="off">
+			<button type="button" class="layui-btn layui-btn-primary" lay-filter="search" lay-submit>
+				<i class="layui-icon">&#xe615;</i>
+			</button>
+		</div>
+	</div>
+</div>
+
+<div class="layui-tab ns-table-tab" lay-filter="bargain_tab">
+	<ul class="layui-tab-title">
+		<li class="layui-this" data-status="">全部</li>
+		{foreach $bargain_status as $k=>$v}
+		<li data-status="{$k}">{$v}</li>
+		{/foreach}
+	</ul>
+	<div class="layui-tab-content">
+		<table id="bargain_list" lay-filter="bargain_list"></table>
+	</div>
+</div>
+
+<!-- 商品 -->
+<script type="text/html" id="goods_info">
+	<div class="ns-table-title">
+
+		<div class="contraction" data-id="{{d.bargain_id}}" data-open="0">
+			<span>+</span>
+		</div>
+
+		<div class="ns-title-pic">
+			{{#  if(d.goods_image){  }}
+			<img layer-src src="{{ns.img(d.goods_image.split(',')[0],'small')}}"/>
+			{{#  }  }}
+		</div>
+		<div class="ns-title-content">
+			<a href="javascript:;" class="ns-multi-line-hiding ns-gn-color" title="{{d.goods_name}}">{{d.goods_name}}</a>
+		</div>
+	</div>
+</script>
+<!-- 时间 -->
+<script id="time" type="text/html">
+	<div class="layui-elip">开始：{{ns.time_to_date(d.start_time)}}</div>
+	<div class="layui-elip">结束：{{ns.time_to_date(d.end_time)}}</div>
+</script>
+
+<!-- 操作 -->
+<script type="text/html" id="operation">
+	<div class="ns-table-btn">
+		<a class="layui-btn" lay-event="detail">查看</a>
+		<a class="layui-btn" lay-event="edit">编辑</a>
+		{{# if(d.status == 0){ }}
+		<a class="layui-btn" lay-event="del">删除</a>
+		{{# }else if(d.status == 1){ }}
+		<a class="layui-btn" lay-event="launch">砍价列表</a>
+		<a class="layui-btn" lay-event="close">结束</a>
+		{{# }else{ }}
+		<a class="layui-btn" lay-event="launch">砍价列表</a>
+		<a class="layui-btn" lay-event="del">删除</a>
+		{{# } }}
+	</div>
+</script>
+
+<!-- 商品sku -->
+<script type="text/html" id="skuList">
+	<tr class="js-list-{{d.index}}" id="sku_img_{{d.index}}">
+		<td colspan="10">
+			<ul class="sku-list">
+				{{# for(var i=0; i<d.list.length; i++){ }}
+				<li>
+					<div class="img-wrap">
+						<img layer-src src="{{ns.img(d.list[i].sku_image)}}">
+					</div>
+					<div class="info-wrap">
+						<span class="sku-name" title="{{d.list[i].sku_name}}">{{d.list[i].sku_name}}</span>
+						<span class="price">商品价格：￥{{d.list[i].price}}</span>
+						<span class="price">底价：￥{{d.list[i].floor_price}}</span>
+						<span class="price">库存：￥{{d.list[i].bargain_stock}}</span>
+						<span class="sale_num">销量：{{d.list[i].sale_num}}</span>
+						<span class="sale_num">参与人数：{{d.list[i].join_num}}</span>
+					</div>
+				</li>
+				{{# } }}
+			</ul>
+		</td>
+	</tr>
+</script>
+
+{/block}
+
+{block name="script"}
+<script>
+	var laytpl;
+	$(function () {
+		$("body").on("click", ".contraction", function () {
+
+			var bargain_id = $(this).attr("data-id");
+			var open = $(this).attr("data-open");
+			var tr = $(this).parent().parent().parent().parent();
+			var index = tr.attr("data-index");
+			if (open == 1) {
+				$(this).children("span").text("+");
+				$(".js-list-" + index).remove();
+			} else {
+				$(this).children("span").text("-");
+				$.ajax({
+					url: ns.url("bargain://shop/bargain/getSkuList"),
+					data: {bargain_id: bargain_id},
+					dataType: 'JSON',
+					type: 'POST',
+					async: false,
+					success: function (res) {
+
+						var sku_list = $("#skuList").html();
+						var data = {
+							list: res.data,
+							index: index
+						};
+						laytpl(sku_list).render(data, function (html) {
+							tr.after(html);
+						});
+						layer.photos({
+							photos: '.img-wrap',
+							anim: 5
+						});
+					}
+				});
+			}
+			$(this).attr("data-open", (open == 0 ? 1 : 0));
+		});
+
+		layui.use(['form', 'element', 'laytpl', 'laydate'], function () {
+			laytpl = layui.laytpl;
+			var table,
+					form = layui.form,
+					element = layui.element,
+					laydate = layui.laydate,
+					repeat_flag = false; //防重复标识
+			form.render();
+
+			//监听Tab切换，以改变地址hash值
+			element.on('tab(bargain_tab)', function () {
+				table.reload({
+					page: {
+						curr: 1
+					},
+					where: {
+						'status': this.getAttribute('data-status')
+					}
+				});
+			});
+
+			//开始时间
+			laydate.render({
+				elem: '#start_time' //指定元素
+				, done: function (value, date, endDate) {
+					start_time = ns.date_to_time(value);
+
+				}
+			});
+			//结束时间
+			laydate.render({
+				elem: '#end_time' //指定元素
+				, done: function (value, date, endDate) {
+					end_time = ns.date_to_time(value);
+				}
+			});
+
+			table = new Table({
+				elem: '#bargain_list',
+				url: ns.url("bargain://shop/bargain/lists"),
+				cols: [
+					[{
+						title: '商品信息',
+						unresize: 'false',
+						width: '28%',
+						templet: '#goods_info'
+					}, {
+						title: '商品价格',
+						unresize: 'false',
+						width: '8%',
+						templet: function (data) {
+							return '￥' + data.price;
+						}
+					}, {
+						field: 'floor_price',
+						title: '底价',
+						unresize: 'false',
+						width: '7%',
+						sort : true,
+						templet: function (data) {
+							return '￥' + data.floor_price;
+						}
+					}, {
+						field: 'join_num',
+						title: '参与人数',
+						unresize: 'false',
+						width: '8%',
+						sort : true
+					}, {
+						field: 'sale_num',
+						title: '砍价成功人数',
+						unresize: 'false',
+						width: '8%',
+						sort : true
+					}, {
+						field: 'bargain_stock',
+						title: '砍价总库存',
+						unresize: 'false',
+						width: '7%'
+					// }, {
+					// 	title: '库存剩余',
+					// 	unresize: 'false',
+					// 	width: '8%',
+					// 	templet: function (data) {
+					// 		return data.bargain_stock - data.sale_num;
+					// 	}
+					}, {
+						title: '活动时间',
+						unresize: 'false',
+						width: '12%',
+						templet: '#time'
+					}, {
+						field: 'status_name',
+						title: '状态',
+						unresize: 'false',
+						width: '8%'
+					}, {
+						title: '操作',
+						toolbar: '#operation',
+						unresize: 'false',
+						width: '12%'
+					}]
+				],
+			});
+
+			/**
+			 * 搜索功能
+			 */
+			form.on('submit(search)', function (data) {
+				table.reload({
+					page: {
+						curr: 1
+					},
+					where: data.field
+				});
+			});
+
+			table.on("sort",function (obj) {
+				table.reload({
+					page: {
+						curr: 1
+					},
+					where: {
+						order:obj.field,
+						sort:obj.type
+					}
+				});
+			});
+
+			//监听Tab切换
+			element.on('tab(status)', function (data) {
+				var status = $(this).attr("data-status");
+				table.reload({
+					page: {
+						curr: 1
+					},
+					where: {
+						'status': status
+					}
+				});
+			});
+
+			/**
+			 * 监听工具栏操作
+			 */
+			table.tool(function (obj) {
+				var data = obj.data;
+				switch (obj.event) {
+					case 'detail': //详情
+						location.href = ns.url("bargain://shop/bargain/detail", {"bargain_id": data.bargain_id});
+						break;
+					case 'edit': //编辑
+						location.href = ns.url("bargain://shop/bargain/edit", {"bargain_id": data.bargain_id});
+						break;
+					case 'del': //删除
+						deleteGroupbuy(data.bargain_id);
+						break;
+					case 'close': //使结束
+						closeGroupbuy(data.bargain_id);
+						break;
+
+					case 'launch': //砍价列表
+						location.href = ns.url("bargain://shop/bargain/launchlist", {"bargain_id": data.bargain_id});
+						break;
+				}
+			});
+
+			/**
+			 * 删除
+			 */
+			function deleteGroupbuy(bargain_id) {
+				layer.confirm('确定要删除该砍价活动吗?', function () {
+					if (repeat_flag) return;
+					repeat_flag = true;
+
+					$.ajax({
+						url: ns.url("bargain://shop/bargain/delete"),
+						data: {
+							bargain_id: bargain_id
+						},
+						dataType: 'JSON',
+						type: 'POST',
+						success: function (res) {
+							layer.msg(res.message);
+							repeat_flag = false;
+							if (res.code == 0) {
+								table.reload();
+							}
+						}
+					});
+				}, function () {
+					layer.close();
+					repeat_flag = false;
+				});
+			}
+
+			//使结束
+			function closeGroupbuy(bargain_id) {
+
+				layer.confirm('确定要结束该砍价活动吗?', function () {
+					if (repeat_flag) return;
+					repeat_flag = true;
+
+					$.ajax({
+						url: ns.url("bargain://shop/bargain/finish"),
+						data: {
+							bargain_id: bargain_id
+						},
+						dataType: 'JSON',
+						type: 'POST',
+						success: function (res) {
+							layer.msg(res.message);
+							repeat_flag = false;
+							if (res.code == 0) {
+								table.reload();
+							}
+						}
+					});
+				}, function () {
+					layer.close();
+					repeat_flag = false;
+				});
+			}
+		});
+
+	});
+	function add() {
+		location.href = ns.url("bargain://shop/bargain/add");
+	}
+</script>
+{/block}

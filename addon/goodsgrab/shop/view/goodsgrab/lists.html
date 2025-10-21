@@ -1,0 +1,316 @@
+{extend name="app/shop/view/base.html"/}
+{block name="resources"}
+<style>
+.grab_select{border:1px #ccc solid;padding:30px 0;}
+.layui-layer-loading{width:400px;height:200px;}
+.layui-layer.layui-layer-loading .layui-layer-content{
+    width: 100%;
+    background-color: #fff;
+    border-radius: 5px;
+    background-position: top center;
+    background-position-y: 75px;
+    background-repeat: no-repeat;
+    background-size: 50px;
+    color: #000;
+    height: auto;
+    padding-top: 150px; text-align: center;
+    padding-bottom: 20px;
+    text-align: center;
+}
+.add_width{
+    width:260px!important;
+}
+.goods-category-container{width:100%;}
+.process{
+   width:80%;height:10px;background-color:#e2e2e2;margin: 0 auto 10px;position: relative;border-radius:20px;
+}
+.present{position:absolute;top:0;left:0;background:#5FB878;height:10px;border-radius:20px;}
+.present_num{position: absolute;top:-20px;left:96%;}
+.load_head{text-align:center;position: relative;top:-140px;font-size:14px;}
+.load_text{font-size:12px;}
+</style>
+{/block}
+{block name="main"}
+<!--进程条-->
+<div class="layui-collapse ns-tips">
+    <div class="layui-colla-item">
+        <h2 class="layui-colla-title">操作提示</h2>
+        <ul class="layui-colla-content layui-show">
+            <li>目前商品采集只支持淘宝、天猫、1688、京东的商品</li>
+            <li>商品采集需要一段时间同步商品信息,大约每个商品约需10-30秒</li>
+        </ul>
+    </div>
+</div>
+<div class="ns-single-filter-box">
+    <span>如果99Api key已经配置可直接开始采集,如果未配置请 <a onclick="set()" style="color: #105CFB;cursor:pointer;">前往配置</a></span>
+</div>
+<div class="grab_select">
+    <!--商品连接-->
+    <div class="layui-form">
+        <div class="layui-form-item">
+            <div class="layui-input-inline">
+                <label class="layui-form-label">采集商品链接：</label>
+                <textarea class="layui-textarea ns-len-long goods_link" placeholder="请输入淘宝、天猫、1688商品详情的网址，例如：http://item.jd.com/2174898.html"></textarea>
+                <div class="ns-word-aux">
+                    <p>商品链接复制完成后请换行再复制下一个商品链接</p>
+                </div>
+            </div>
+
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-inline">
+                <label class="layui-form-label">采集商品类型：</label>
+                <input type="radio" name="is_virtual" value="0" title="实物商品" checked>
+                <input type="radio" name="is_virtual" value="1" title="虚拟商品">
+            </div>
+
+        </div>
+<!--        后期完善部分     商品品牌     商品分类-->
+<!--        <div class="layui-form-item">-->
+<!--            <label class="layui-form-label">商品品牌：</label>-->
+<!--            <div class="layui-input-inline ns-len-mid">-->
+<!--                <select name="brand_id" lay-search="" lay-filter="brand_id">-->
+<!--                    <option value="">请选择商品品牌</option>-->
+<!--                    {foreach name="$brand_list" item="vo"}-->
+<!--                    <option value="{$vo['brand_id']}">{$vo['brand_name']}</option>-->
+<!--                    {/foreach}-->
+<!--                </select>-->
+<!--                <input type="hidden" name="brand_name" />-->
+<!--            </div>-->
+<!--        </div>-->
+<!--        {if $is_install_supply}-->
+<!--        <div class="layui-form-item js-supplier">-->
+<!--            <label class="layui-form-label">供应商：</label>-->
+<!--            <div class="layui-input-inline">-->
+<!--                <select name="supplier">-->
+<!--                    <option value="">请选择供应商</option>-->
+<!--                    {foreach name="$supplier_list" item="vo"}-->
+<!--                    <option value="{$vo['supplier_site_id']}">{$vo['title']}</option>-->
+<!--                    {/foreach}-->
+<!--                </select>-->
+<!--                <input type="hidden" name="supplier_id" />-->
+<!--            </div>-->
+<!--        </div>-->
+<!--        {/if}-->
+        <div class="layui-form-item">
+            <label class="layui-form-label">采集商品分类：</label>
+            <div class="layui-input-inline add_width">
+                {include file="goodsgrab/category_select" /}
+            </div>
+        </div>
+        <input type="hidden" class="api_key" value="{$config.key}">
+        <div class="ns-form-row mid">
+            <button class="layui-btn ns-bg-color" lay-submit lay-filter="save">采集</button>
+        </div>
+    </div>
+</div>
+<!-- 操作 -->
+<script type="text/html" id="operation">
+    <div class="operation-wrap" data-goods-id="{{d.goods_id}}">
+        <div class="ns-table-btn">
+            <a class="layui-btn" lay-event="detail">查看</a>
+            <a class="layui-btn" lay-event="del">删除</a>
+        </div>
+    </div>
+</script>
+<!-- 列表 -->
+<div class="layui-card ns-card-common ns-card-brief">
+    <div class="layui-card-header">
+        <div>
+            <span class="ns-card-title">采集记录</span>
+        </div>
+    </div>
+</div>
+<table id="goods_grab_list" lay-filter="goods_grab_list"></table>
+{/block}
+{block name="script"}
+<script>
+    var laytpl, add_attr_index = -1,
+        form, table;
+    layui.use(['form', 'laytpl'], function() {
+        var repeat_flag = false; //防重复标识
+        laytpl = layui.laytpl;
+        form = layui.form;
+        form.render();
+
+        table = new Table({
+            elem: '#goods_grab_list',
+            url: ns.url("goodsgrab://shop/goodsgrab/lists"),
+            cols: [
+                [ {
+                    unresize: 'false',
+                    title: '采集商品类型',
+                    width: '14%',
+                    templet: function (data) {
+                        var str = '';
+                        if (data.is_virtual == 0) {
+                            str = '实物商品';
+                        } else if (data.is_virtual == 1) {
+                            str = '虚拟商品';
+                        }
+                        return str;
+                    }
+                }, {
+                    field: 'category_name',
+                    title: '采集商品分类',
+                    width: '14%',
+                    unresize: 'false',
+                }, {
+                    field: 'total_num',
+                    title: '采集数',
+                    width: '14%',
+                    unresize: 'false',
+                }, {
+                    field: 'success_num',
+                    title: '成功数',
+                    width: '14%',
+                    unresize: 'false',
+                }, {
+                    field: 'error_num',
+                    title: '失败数',
+                    width: '14%',
+                    unresize: 'false',
+                }, {
+                    title: '采集时间',
+                    width: '14%',
+                    unresize: 'false',
+                    templet: function (data) {
+                        return ns.time_to_date(data.create_time);
+                    }
+                }, {
+                    title: '操作',
+                    width: '14%',
+                    toolbar: '#operation',
+                    unresize: 'false',
+                }]
+            ]
+        });
+
+        /**
+         * 监听工具栏操作
+         */
+        table.tool(function(obj) {
+            var data = obj.data;
+            switch (obj.event) {
+                case 'detail':
+                    location.href = ns.url("goodsgrab://shop/goodsgrab/detail?grab_id=" + data.grab_id);
+                    break;
+                case 'del':
+                    deleteGoods(data.grab_id);
+                    break;
+            }
+        });
+
+        form.on('submit(save)', function(data) {
+            var goods_link = $(".goods_link").val();
+            var category_name = $(".select-category").val();
+            var api_key = $(".api_key").val();
+            if(api_key == ""){
+                layer.msg('99Apikey还未配置请前往配置');
+                return false;
+            }
+            if(goods_link == ""){
+                layer.msg('商品链接不能为空');
+                return false;
+            }
+            if(category_name == ""){
+                layer.msg('商品分类不能为空');
+                return false;
+            }
+            // 商品分类
+            var category_id = [];
+            var cate_id = $("#select_category_id").val();
+            category_id.push(cate_id);
+
+            data.field.category_id = category_id;
+            data.field.category_name = category_name;
+            // if (repeat_flag) return false;
+            // repeat_flag = true;
+            $.ajax({
+                url: '{:addon_url("goodsgrab://shop/Grab/startGrab")}',
+                data: data.field,
+                dataType: 'JSON',
+                type: 'POST',
+                success: function(data) {
+                    if(data.code>=0){
+                        var grab_id = data.data;
+                        var is_virtual = $("input[name='is_virtual']:checked").val();
+                        //调
+                        var content = goods_link.split("https");
+                        var link_array = $.grep(content, function(n) {return $.trim(n).length > 0;})
+                        var datas = Array();
+                        data.grab_id = grab_id;
+                        data.url = "https"+link_array[0];
+                        data.is_virtual = is_virtual;
+                        data.category_id = category_id;
+                        grab(0,link_array.length,data,link_array);
+                        var index = layer.load(3, {
+                            shade: [0.2, '#fff'],
+                            content:"<div class='process'> <div class='present'><div class='present_num'></div></div></div>" +
+                                "<div class='load_head'>商品采集中,请勿关闭页面</div>"+
+                                "<div class='load_text'>正在采集商品    采集进度<span id='num'>1/"+link_array.length+"</span></div>"
+                        }, {time: 15 * 1000});
+                    }
+                }
+            });
+        });
+
+        //单条采集
+        function grab(i,length,data,link_array){
+            $("#num").text((i+1)+"/"+length);
+            $.ajax({
+                url: ns.url("goodsgrab://shop/Grab/grab"),
+                data:data,
+                dataType: 'JSON',
+                type: 'POST',
+                success: function(res) {
+                    if(res){
+                        width = ((i+1)/length)*100;
+                        $(".present_num").text(Math.round(width)+'%');
+                        $(".present").css('width',width+'%');
+                        i=i+1;
+                        if(i<length){
+                            data.url = "https"+link_array[i];
+                            grab(i,length,data,link_array);
+                        }else{
+                            layer.close(index);
+                            layer.msg(res.message,{
+                                offset:['50%'],
+                                time: 2000 //（如果不配置，默认是3秒）
+                            },function(){
+                                window.location.reload()
+                            });
+
+                        }
+                    }
+                }
+            });
+        }
+    });
+
+    // 删除
+    function deleteGoods(grab_id) {
+        layer.confirm('确定删除吗?', function () {
+            if (repeat_flag) return;
+            repeat_flag = true;
+            $.ajax({
+                url: ns.url("goodsgrab://shop/goodsgrab/del"),
+                data: {grab_id: grab_id},
+                dataType: 'JSON',
+                type: 'POST',
+                success: function (res) {
+                    layer.msg(res.message);
+                    repeat_flag = false;
+                    if (res.code == 0) {
+                        table.reload();
+                    }
+                }
+            });
+        });
+    }
+
+    function set(){
+        location.href = ns.url("goodsgrab://shop/goodsgrab/config");
+    }
+</script>
+{/block}

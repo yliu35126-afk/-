@@ -1,0 +1,730 @@
+{
+	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+		{
+			"path": "pages/index/index",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"enablePullDownRefresh": true,
+				"navigationBarTitleText": "店铺概况"
+			}
+		},
+		{
+			"path": "pages/login/login",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "登录"
+			}
+		},
+		//****************** 公告 ******************
+		{
+			"path": "pages/notice/list",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "公告列表"
+			}
+		},
+		{
+			"path": "pages/notice/detail",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "公告详情"
+			}
+		},
+		//****************** 商品管理 ******************
+		{
+			"path": "pages/goods/list",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "商品管理"
+			}
+		},
+		{
+			"path": "pages/goods/edit/index",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "编辑商品"
+			}
+		},
+		{
+			"path": "pages/goods/edit/category",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "选择商品分类"
+			}
+		},
+		{
+			"path": "pages/goods/edit/spec",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "规格类型"
+			}
+		},
+		{
+			"path": "pages/goods/edit/spec_edit",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "编辑多规格"
+			}
+		},
+		{
+			"path": "pages/goods/edit/express_freight",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "快递运费"
+			}
+		},
+		{
+			"path": "pages/goods/edit/state",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "商品状态"
+			}
+		},
+		{
+			"path": "pages/goods/edit/content",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "商品详情"
+			}
+		},
+		{
+			"path": "pages/goods/edit/attr",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "商品参数"
+			}
+		},
+		{
+			"path": "pages/goods/output",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "库存管理"
+			}
+		},
+		{
+			"path": "pages/goods/album",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "选择相册图片"
+			}
+		},
+		//****************** 订单管理 ******************
+		{
+			"path": "pages/order/list",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "订单管理"
+			}
+		},
+		{
+			"path": "pages/order/adjust_price",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "调整价格"
+			}
+		},
+		{
+			"path": "pages/order/address_update",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "修改地址"
+			}
+		},
+		{
+			"path": "pages/order/delivery",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "订单发货"
+			}
+		},
+		{
+			"path": "pages/order/local_delivery",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "订单发货"
+			}
+		},
+		{
+			"path": "pages/order/detail/basis",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "订单详情"
+			}
+		},
+		{
+			"path": "pages/order/detail/store",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "订单详情"
+			}
+		},
+		{
+			"path": "pages/order/detail/local",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "订单详情"
+			}
+		},
+		{
+			"path": "pages/order/detail/virtual",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "订单详情"
+			}
+		},
+		{
+			"path": "pages/order/logistics",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "物流信息"
+			}
+		},
+		{
+			"path": "pages/order/edit_logistics",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "修改物流"
+			}
+		},
+		{
+			"path": "pages/order/refund/list",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "退款维权"
+			}
+		},
+		{
+			"path": "pages/order/refund/detail",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "退款维权详情"
+			}
+		},
+		{
+			"path": "pages/order/refund/refuse",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "退款维权拒绝"
+			}
+		},
+		{
+			"path": "pages/order/refund/agree",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "退款维权同意"
+			}
+		},
+		{
+			"path": "pages/order/refund/take_delivery",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "退款维权收货"
+			}
+		},
+		{
+			"path": "pages/order/refund/transfer",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "退款维权转账"
+			}
+		},
+		//****************** 会员管理 ******************
+		{
+			"path": "pages/member/list",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "会员管理"
+			}
+		},
+		{
+			"path": "pages/member/detail",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "会员详情"
+			}
+		},
+		{
+			"path": "pages/member/coupon",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "发放优惠券"
+			}
+		},
+		//****************** 我的 ******************
+		{
+			"path": "pages/my/index",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "个人中心"
+			}
+		},
+		//****************** 开店 ******************
+		{
+			"path": "pages/apply/register",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "商家账号申请"
+			}
+		},
+		{
+			"path": "pages/apply/mode",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "选择开店方式"
+			}
+		},
+		{
+			"path": "pages/apply/agreement",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "同意商家入驻协议"
+			}
+		},
+		{
+			"path": "pages/apply/fastinfo",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "快速开店"
+			}
+		},
+		{
+			"path": "pages/apply/shopset",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "申请开店"
+			}
+		},
+		{
+			"path": "pages/apply/successfully",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "开店成功"
+			}
+		},
+		{
+			"path": "pages/apply/audit",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"enablePullDownRefresh": true,
+				"navigationBarTitleText": "信息审核"
+			}
+		},
+		{
+			"path": "pages/apply/payinfo",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "结算信息"
+			}
+		},
+		{
+			"path": "pages/apply/openinfo",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "认证信息"
+			}
+		},
+		{
+			"path": "pages/apply/bankInfo",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "银行结算信息"
+			}
+		},
+		{
+			"path": "pages/apply/storeInfo",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "店铺信息"
+			}
+		}, {
+			"path": "pages/renew/apply",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "续签信息"
+			}
+		},
+		{
+			"path": "pages/index/all_menu",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "全部功能"
+			}
+
+		},
+		//****************** 资产 ******************
+		{
+			"path": "pages/property/dashboard/index",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "资产概况"
+			}
+
+		}, {
+			"path": "pages/property/dashboard/orderlist",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "交易记录"
+			}
+
+		}, {
+			"path": "pages/property/withdraw/index",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "提现"
+			}
+
+		}, {
+			"path": "pages/property/withdraw/list",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "提现记录"
+			}
+
+		}, {
+			"path": "pages/property/withdraw/detail",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "提现详情"
+			}
+
+		}, {
+			"path": "pages/property/fee",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "入驻费用"
+			}
+
+		}, {
+			"path": "pages/property/reopen/list",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "续签记录"
+
+			}
+
+		}, {
+			"path": "pages/property/reopen/detail",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "续签详情"
+			}
+
+		}, {
+			"path": "pages/property/settlement/list",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "店铺结算"
+			}
+
+		}, {
+			"path": "pages/property/settlement/detail",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "结算详情"
+			}
+
+		}, {
+			"path": "pages/property/settlement/list_store",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "门店结算"
+			}
+
+		}, {
+			"path": "pages/property/settlement/detail_store",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "门店结算详情"
+			}
+
+		}, {
+			"path": "pages/statistics/transaction",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "交易分析"
+			}
+		}, {
+			"path": "pages/statistics/shop",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "店铺统计"
+			}
+
+		}, {
+			"path": "pages/statistics/goods",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "商品统计"
+			}
+
+		}, {
+			"path": "pages/statistics/visit",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "访问统计"
+			}
+
+		}, {
+			"path": "pages/verify/index",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "核销台"
+			}
+
+		}, {
+			"path": "pages/verify/records",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "核销记录"
+			}
+
+		}, {
+			"path": "pages/verify/user",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "核销人员"
+			}
+
+		}, {
+			"path": "pages/verify/user_edit",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "编辑核销人员"
+			}
+
+		}
+		//****************** 我的-账户权限 ******************
+		, {
+			"path": "pages/my/user/user",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "用户管理"
+			}
+
+		}, {
+			"path": "pages/my/user/user_edit",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "用户编辑"
+			}
+
+		}, {
+			"path": "pages/my/shop/config",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "店铺信息"
+			}
+
+		}, {
+			"path": "pages/my/shop/contact",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "联系地址"
+			}
+
+		}, {
+			"path": "pages/login/modify_pwd",
+			"style": {
+				// #ifdef H5
+				"navigationStyle": "custom",
+				// #endif
+				"navigationBarTitleText": "修改密码"
+			}
+
+		}
+	],
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "",
+		"navigationBarBackgroundColor": "#ffffff",
+		"backgroundColor": "#F7f7f7",
+		"backgroundColorTop": "#f7f7f7",
+		"backgroundColorBottom": "#f7f7f7"
+	},
+	"tabBar": {
+		// #ifdef H5
+		"custom": true,
+		// #endif
+		"color": "#333",
+		"selectedColor": "#FF6A00",
+		"backgroundColor": "#fff",
+		"borderStyle": "white",
+		"iconWidth":"20px",
+		"list": [{
+				"pagePath": "pages/order/list",
+				"text": "订单",
+				"iconPath": "static/images/tabbar/order.png",
+				"selectedIconPath": "static/images/tabbar/order_selected.png"
+			},
+			{
+				"pagePath": "pages/goods/list",
+				"text": "商品",
+				"iconPath": "static/images/tabbar/goods.png",
+				"selectedIconPath": "static/images/tabbar/goods_selected.png"
+			}, {
+				"pagePath": "pages/index/index",
+				"text": "店铺",
+				"iconPath": "static/images/tabbar/shop.png",
+				"selectedIconPath": "static/images/tabbar/shop_selected.png"
+			},
+			{
+				"pagePath": "pages/member/list",
+				"text": "会员",
+				"iconPath": "static/images/tabbar/member.png",
+				"selectedIconPath": "static/images/tabbar/member_selected.png"
+			},
+			{
+				"pagePath": "pages/my/index",
+				"text": "我的",
+				"iconPath": "static/images/tabbar/my.png",
+				"selectedIconPath": "static/images/tabbar/my_selected.png"
+			}
+		]
+	}
+}

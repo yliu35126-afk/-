@@ -1,0 +1,126 @@
+{extend name="app/shop/view/base.html"/}
+{block name="resources"}
+{/block}
+{block name="main"}
+<div class="layui-form ns-form">
+	<div class="layui-form-item">
+		<label class="layui-form-label">客服账号：</label>
+		<div class="layui-input-block">{$info.user_info.username}</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label"><span class="required">*</span>客服昵称：</label>
+		<div class="layui-input-block">
+			<input name="nickname" type="text" lay-verify="required" placeholder="请输入客服昵称" autocomplete="off" class="layui-input ns-len-mid" value="{$info.nickname}">
+		</div>
+		<div class="ns-word-aux">用于客服展示使用</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label"><span class="required">*</span>客服组：</label>
+		<div class="layui-input-block ns-len-mid">
+			<select name="group_id" lay-verify="required">
+				<option value="">选择客服组</option>
+				{foreach $group_list as $val}
+				<option value="{$val.group_id}" {if $info.user_info.group_id eq $val.group_id}selected{/if}>{$val.group_name}</option>
+				{/foreach}
+			</select>
+		</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label img-upload-lable ns-short-label"><span class="required">*</span>客服头像：</label>
+		<div class="layui-input-inline">
+			<div class="upload-img-block img-upload">
+				<div class="upload-img-box {if !empty($info.avatar)}hover{/if}">
+					<div class="ns-upload-default" id="avatar_upload">
+						{if !empty($info.avatar)}
+						<div id="preview_avatar_upload" class="preview_img">
+							<img layer-src src="{:img($info.avatar)}" class="img_prev"/>
+						</div>
+						{else/}
+						<div class="upload">
+							<img src="ADMIN_IMG/upload_img.png" />
+							<p>点击上传</p>
+						</div>
+						{/if}
+					</div>
+					<div class="operation">
+						<div>
+							<i title="图片预览" class="iconfont iconreview js-preview" style="margin-right: 20px;"></i>
+							<i title="删除图片" class="layui-icon layui-icon-delete js-delete"></i>
+						</div>
+						<div class="replace_img js-replace">点击替换</div>
+					</div>
+					<input type="hidden" name="avatar" lay-verify="required" value="{$info.avatar}">
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">客服状态：</label>
+		<div class="layui-input-block">
+			<input type="checkbox" name="status" value="1" lay-skin="switch" {if $info.user_info.status eq 1}checked{/if} />
+		</div>
+		<div class="ns-word-aux">关闭后，用户将被锁定，无法登录</div>
+	</div>
+
+	<input type="hidden" name="uid" value="{$info.user_id}">
+	<div class="ns-form-row">
+		<button class="layui-btn ns-bg-color" lay-submit lay-filter="save">保存</button>
+		<button class="layui-btn layui-btn-primary" onclick="back()">返回</button>
+	</div>
+</div>
+{/block}
+{block name="script"}
+<script>
+	layui.use(['form'], function (form) {
+		var is_submit = false;
+
+		new Upload({elem: '#avatar_upload'});
+
+		// 提交
+		form.on('submit(save)', function(data) {
+
+			if (is_submit) return false;
+			is_submit = true;
+
+			$.ajax({
+				dataType: 'JSON',
+				type: 'POST',
+				url: ns.url('servicer://shop/servicer/edit'),
+				data: data.field,
+				success: function(res){
+					if (res.code >= 0) {
+						layer.confirm(res.message, {
+							title: '操作提示',
+							btn: ['返回列表', '继续编辑'],
+							yes: function () {
+								back();
+							},
+							btn2: function () {
+								window.location.reload();
+							},
+							cancel: function () {
+								this.yes();
+							}
+						})
+					} else {
+						is_submit = false;
+						layer.msg(res.message);
+					}
+				},
+				error: function () {
+					is_submit = false;
+					layer.msg('操作异常');
+				}
+			});
+		});
+	});
+
+	function back() {
+		location.href = ns.url('servicer://shop/servicer/index');
+	}
+</script>
+{/block}

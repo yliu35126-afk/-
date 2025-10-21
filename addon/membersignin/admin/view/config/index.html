@@ -1,0 +1,563 @@
+{extend name="app/admin/view/base.html"/}
+{block name="resources"}
+<style>
+	.ns-noboder-searchbox {margin-right: 0 !important;}
+	.ns-search-noborder {border-width: 1px;width: 42px;border-style: solid;text-align: center;border-color: #e6e6e6;padding: 0px !important;cursor: pointer;}
+
+	.ns-width {width: 115px;}
+	.layui-block {overflow: hidden; margin-bottom: 20px;}
+	.layui-table+button {margin-top: 15px;}
+	.ns-empty {text-align: center;}
+	.layui-table[lay-size=lg] td, .layui-table[lay-size=lg] th {
+		padding: 15px;
+	}
+</style>
+{/block}
+{block name="main"}
+<div class="layui-collapse ns-tips">
+	<div class="layui-colla-item">
+		<h2 class="layui-colla-title">操作说明</h2>
+		<ul class="layui-colla-content layui-show">
+			<li>用户可在签到页每日签到一次，每日签到按设置的每日奖励进行发放，连续签到天数大于设置的天数，按最后一日的奖励进行发放；若签到中断则重新计算；</li>
+			<li>点击 “+” 按钮可以添加更多的推荐奖励规则</li>
+			<li>点击删除图标按钮可以删除该条规则</li>
+		</ul>
+	</div>
+</div>
+
+<div class="layui-form ns-form">
+	<div class="layui-form-item">
+		<label class="layui-form-label">是否启用：</label>
+		<div class="layui-input-block">
+			<input type="checkbox" name="is_use" lay-filter="is_use" value="1" lay-skin="switch" {if !empty($config) && $config.is_use==1 }checked{/if}>
+		</div>
+	</div>
+
+	<div class="reward-wrap {if !empty($config) && $config.is_use!=1 }layui-hide{/if}">
+		<div class="layui-form-item">
+			<label class="layui-form-label"><span class="required">*</span>签到周期：</label>
+			<div class="layui-input-block">
+				<div class="layui-input-inline">
+					<input type="number" name="cycle" lay-verify="required|number|int|cycle" value="{$config['value']['cycle'] ?: 30}" autocomplete="off" class="layui-input ns-len-short"><input type="hidden" value="签到周期" />
+				</div>
+				<div class="layui-form-mid">天</div>
+			</div>
+			<div class="ns-word-aux">
+				<p>签到周期需在7-100天内</p>
+			</div>
+		</div>
+
+		<div class="layui-form-item">
+			<div class="layui-block">
+				<label class="layui-form-label"><span class="required">*</span>每日签到：</label>
+				<label class="layui-form-mid ns-width">每日签到赠送奖励</label>
+				<div class="layui-input-inline ns-len-short">
+					<input type="number" name="point" lay-verify="everyday|number|int" value="{$config['value']['reward'][0]['point'] ?: ''}" autocomplete="off" class="layui-input ">
+				</div>
+				<span class="layui-form-mid">积分</span>
+			</div>
+
+			<div class="layui-block">
+				<label class="layui-form-label"></label>
+				<label class="layui-form-mid ns-width"></label>
+				<div class="layui-input-inline ns-len-short">
+					<input type="number" name="growth" lay-verify="everyday|number|flnum" value="{$config['value']['reward'][0]['growth'] ?: ''}" autocomplete="off" class="layui-input ">
+				</div>
+				<span class="layui-form-mid">成长值</span>
+			</div>
+		</div>
+
+		<div class="layui-form-item">
+			<label class="layui-form-label">连续签到：</label>
+
+			<div class="layui-input-block">
+				<table class="layui-table sign-view" id="sign" lay-skin="line" lay-size="lg">
+					<colgroup>
+						<col width="40%">
+						<col width="20%">
+						<col width="20%">
+						<col width="20%">
+					</colgroup>
+					<thead>
+					<tr>
+						<th>连续签到天数</th>
+						<th>奖励积分</th>
+						<th>奖励成长值</th>
+						<th class="operation">操作</th>
+					</tr>
+					</thead>
+					<tbody>
+					{if count($config.value.reward) > 1}
+					{foreach $config.value.reward as $k =>$v}
+					{if $k>0}
+					<tr>
+						<td><input type="number" class="layui-input ns-len-short day" value="{$v.day}" lay-verify="required|int|day" autocomplete="off" /><input type="hidden" value="连续签到天数" /></td>
+						<td><input type="number" class="layui-input ns-len-short point" value="{$v.point}" lay-verify="signDay|number|int" autocomplete="off" /></td>
+						<td><input type="number" class="layui-input ns-len-short growth" value="{$v.growth}" lay-verify="signDay|number|int" autocomplete="off" /></td>
+						<td><div class="ns-table-btn"><a href="javascript:;" class="layui-btn" onclick="deleteSign(this)">删除连续签到</a></div></td>
+					</tr>
+					{/if}
+					{/foreach}
+					{else/}
+					<tr class="ns-empty-box">
+						<td colspan="5">
+							<div class="ns-empty">暂无数据</div>
+						</td>
+					</tr>
+					{/if}
+					</tbody>
+				</table>
+				<button class="layui-btn ns-bg-color" onclick="addSign()">添加连续签到奖励</button>
+			</div>
+		</div>
+		<div class="layui-form-item">
+			<label class="layui-form-label">送优惠券：</label>
+			<div class="layui-input-block">
+				<div class="coupon-item coupon">
+					<div>
+						<input type="checkbox" name="discount_type" value="coupon"  class="ns-input-checkbox" lay-skin="primary" {if !empty($config.value.return_coupon) }checked{/if} ><label>送优惠券</label>
+					</div>
+					<div class="discount-cont {if empty($config.value.return_coupon) }layui-hide{/if}">
+						<div><a href="javascript:;" class="ns-text-color select-coupon">选择优惠券</a></div>
+						<div class="ns-word-aux" style="margin-left: 0">
+							<p>请确认优惠券数量是否充足，优惠券数量不足将导致赠送失败</p>
+						</div>
+						<div>
+							<table class="layui-table" lay-skin="nob">
+								<colgroup>
+									<col width="30%">
+									<col width="50%">
+									<col width="20%">
+								</colgroup>
+								<thead>
+								<tr>
+									<th>优惠券</th>
+									<th>优惠内容</th>
+									<th style="text-align:center;">操作</th>
+								</tr>
+								</thead>
+								<tbody>
+								{if isset($config.value.coupon_list) && !empty($config.value.coupon_list)}
+
+								{foreach $config.value.coupon_list as $k => $vo}
+								<tr data-coupon="{$vo.platformcoupon_type_id}">
+									<td>{$vo.platformcoupon_name }</td>
+									{if $vo.at_least > 0 }
+									<td>满{$vo.at_least }减{$vo.money }</td>
+									{else/}
+									<td>无门槛，减{$vo.money }</td>
+									{/if}
+									<td style="text-align:center;"><a href="javascript:;" onclick="deleteCoupon(this)" class="ns-text-color">删除</a></td>
+								</tr>
+								{/foreach}
+
+								{/if}
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="ns-form-row">
+		<button class="layui-btn ns-bg-color" lay-submit lay-filter="save">保存</button>
+		<button class="layui-btn layui-btn-primary" onclick="back()">返回</button>
+	</div>
+</div>
+{/block}
+{block name="script"}
+<script>
+
+    //添加连续签到奖励
+	function addSign() {
+		$("#sign").find("tbody .ns-empty-box").remove();
+		var html = '';
+		html += `<tr>`+
+				`<td><input type="number" class="layui-input ns-len-short day" lay-verify="required|number|int" autocomplete="off" /><input type="hidden" value="连续签到天数" /></td>`+
+				`<td><input type="number" class="layui-input ns-len-short point" lay-verify="required|number|int" autocomplete="off" /><input type="hidden" value="连续签到积分" /></td>`+
+				`<td><input type="number" class="layui-input ns-len-short growth" lay-verify="required|number|int" autocomplete="off" /><input type="hidden" value="连续签到成长值" /></td>`+
+				`<td><div class="ns-table-btn"><a href="javascript:;" class="layui-btn" onclick="deleteSign(this)">删除连续签到</a></div></td>`+
+				`</tr>`;
+
+		$("#sign").find("tbody").append(html);
+	}
+    //删除连续签到奖励
+	function deleteSign(e) {
+		$(e).parents("tr").remove();
+
+		if ($(".layui-table tbody tr").length == 0) {
+			$(".layui-table tbody").html('<tr class="ns-empty-box"><td colspan="5"><div class="ns-empty">暂无数据</div></td></tr>');
+		}
+	}
+
+	function back(){
+		location.href = ns.url("admin/promotion/member");
+	}
+</script>
+
+<!-- 优惠券 -->
+<script type="text/html" id="couponList">
+	<div class="gift-box">
+		<div class="ns-single-filter-box">
+			<div class="layui-form">
+				<div class="layui-input-inline">
+					<input type="text" name="platformcoupon_name" placeholder="请输入优惠券名称" class="layui-input ns-len-mid">
+					<button type="button" class="layui-btn layui-btn-primary" lay-filter="coupon-search" lay-submit>
+						<i class="layui-icon">&#xe615;</i>
+					</button>
+				</div>
+			</div>
+		</div>
+		<table id="coupon_list" lay-filter="coupon_list"></table>
+	</div>
+</script>
+
+<!-- 优惠券-名称 -->
+<script type="text/html" id="couponName">
+	<div class="ns-table-tuwen-box">
+		<div class="ns-font-box">
+			<p class="ns-multi-line-hiding">{{d.platformcoupon_name}}</p>
+		</div>
+	</div>
+</script>
+
+
+
+<!-- 优惠券-操作 -->
+<script type="text/html" id="couponOperation">
+	{{# var select_coupon_list = ','+coupon_list+','}}
+	{{# if(select_coupon_list.indexOf(','+d.platformcoupon_type_id+',') != -1){ }}
+	<p title="该优惠券已参加">已添加</p>
+	{{# }else{ }}
+	<a class="layui-btn" lay-event="add">添加</a>
+	{{# } }}
+</script>
+<script type="text/javascript">
+
+
+	var laytpl;
+	var coupon_list = '';
+
+	layui.use(['form','laytpl'], function(){
+		// 监听返积分是否启用
+		var form = layui.form,
+				repeat_flag = false; //防重复标识
+		laytpl = layui.laytpl;
+		form.render();
+
+		form.on('submit(save)', function(data) {
+
+			var arr = [];
+			arr.push({point: data.field.point, growth:data.field.growth, day: 1});
+
+			$(".sign-view tbody tr").each(function () {
+				if (!$(this).hasClass("ns-empty-box")) {
+					var point = $(this).find(".point").val(),
+							growth = $(this).find(".growth").val(),
+							day = $(this).find(".day").val();
+					arr.push({point: point, growth: growth, day: day});
+				}
+			});
+			data.field.json = JSON.stringify(arr);
+
+			if (repeat_flag) return;
+			repeat_flag = true;
+			if(data.field.discount_type == undefined){
+				coupon_list = '';
+			}
+			data.field.coupon = coupon_list;
+
+
+			$.ajax({
+				type: 'POST',
+				url: ns.url("membersignin://admin/config/index"),
+				dataType: 'JSON',
+				data: data.field,
+				success: function (res) {
+					repeat_flag = false;
+					if (res.code == 0) {
+						layer.confirm('编辑成功', {
+							title: '操作提示',
+							btn: ['返回列表', '继续操作'],
+							yes: function () {
+								location.href = ns.url("admin/promotion/member")
+							},
+							btn2: function () {
+								location.reload();
+							}
+						});
+					} else {
+						layer.msg(res.message);
+					}
+				}
+			})
+
+
+
+
+		});
+		var isEnable = $('.signin [name="is_use"]').is(':checked');
+
+		form.on('switch(is_use)', function(data) {
+			isEnable = $(data.elem).is(':checked');
+			if (isEnable) {
+				$('.reward-wrap').removeClass('layui-hide');
+			} else {
+				$('.reward-wrap').addClass('layui-hide');
+			}
+		});
+		form.on('submit(coupon-search)', function(data) {
+			couponTable.reload({
+				page: {
+					curr: 1
+				},
+				where: data.field
+			})
+		});
+
+
+		form.verify({
+			everyday: function(){
+				var point = $('[name="point"]').val(),
+						growth = $('[name="growth"]').val();
+				if (isEnable && (!/[\S]+/.test(point) && !/[\S]+/.test(growth))) {
+					return "每日签到奖励至少设置一项";
+				}
+			},
+			number: function (value, item) {
+				if (isEnable) {
+					var str = $(item).parents(".layui-block").find("span").text();
+					var _str = $(item).siblings().val();
+					if (value != '' && value <= 0) {
+						if (str) {
+							return str + "不能小于等于0";
+						} else {
+							return _str + "不能小于等于0";
+						}
+					}
+				}
+			},
+			int: function (value, item) {
+				if (isEnable && value != '') {
+					var str = $(item).parents(".layui-block").find("span").text();
+					var _str = $(item).siblings().val();
+					if (value%1 != 0) {
+						if (str) {
+							return str + "必须为整数";
+						} else {
+							return _str + "必须为整数";
+						}
+					}
+				}
+			},
+			flnum: function (value, item) {
+				if (isEnable && value != '') {
+					var str = $(item).parents(".layui-block").find("span").text();
+					var _str = $(item).siblings().val();
+					var arrMen = value.split(".");
+					var val = 0;
+					if (arrMen.length == 2) {
+						val = arrMen[1];
+					}
+					if (val.length > 2) {
+						if (str) {
+							return str + "最多可保留两位小数";
+						} else {
+							return _str + "最多可保留两位小数";
+						}
+					}
+				}
+			},
+			required: function (value, item) {
+				if (isEnable) {
+					var str = $(item).parents(".layui-block").find("span").text();
+					var _str = $(item).siblings().val();
+
+					if (value.trim() == "" || value == undefined || value == null) {
+						if (str) {
+							return str + "不能为空";
+						} else {
+							return _str + "不能为空";
+						}
+					}
+				}
+			},
+			day: function(value, item){
+				if (isEnable) {
+					var cycle = $('[name="cycle"]').val();
+					if (parseInt(value) < 2) {
+						return "连签天数不能小于2天";
+					}
+					if (parseInt(value) > parseInt(cycle)) {
+						return "最大连签天数不能大于签到周期";
+					}
+					var index = $(item).parents('tr').index();
+					if (index) {
+						var agoDay = $('.signin tbody tr:eq('+ (index - 1) +') .day').val();
+						if (parseInt(value) <= parseInt(agoDay)) {
+							return "连续签到天数不能相同或者小于上一个连签天数";
+						}
+					}
+				}
+			},
+			signDay: function(value, item){
+				if (isEnable) {
+					var point = $(item).parents('tr').find('.point').val(),
+							growth = $(item).parents('tr').find('.growth').val();
+					if (isEnable && (!/[\S]+/.test(point) && !/[\S]+/.test(growth))) {
+						return "连签奖励至少设置一项";
+					}
+				}
+			},
+			cycle: function(value) {
+				if (isEnable) {
+					if (parseInt(value) < 7 || parseInt(value) > 100) {
+						return '签到周期需在7-100天内';
+					}
+				}
+			},
+			number: function (value) {
+				if (value < 0) {
+					return '请输入不小于0的数!'
+				}
+			},
+			int: function (value) {
+				if (value%1 != 0) {
+					return '积分必须为整数!'
+				}
+			},
+
+			flnum: function (value) {
+				var arrMen = value.split(".");
+				var val = 0;
+				if (arrMen.length == 2) {
+					val = arrMen[1];
+				}
+				if (val.length > 2) {
+					return '保留小数点后两位!'
+				}
+			}
+		});
+
+
+		form.on('submit(coupon-search)', function(data) {
+			couponTable.reload({
+				page: {
+					curr: 1
+				},
+				where: data.field
+			})
+		})
+	});
+
+
+	// 选择优惠
+	$('body').on('click', '.coupon-item .layui-form-checkbox', function(e){
+		if ($(this).prev('[name="discount_type"]').is(':checked')) {
+			$(this).parents('.coupon-item').find('.discount-cont').removeClass('layui-hide');
+		} else {
+			$(this).parents('.coupon-item').find('.discount-cont').addClass('layui-hide');
+		}
+	})
+
+	$('body').on('click', '.coupon-item .select-coupon', function(e){
+		var event = this;
+
+		layer.open({
+			type: 1,
+			area: ["900px","600px"],
+			title: '优惠券列表',
+			skin: 'select-coupon-layer',
+			content: $("#couponList").html()
+		});
+
+		couponTable = new Table({
+			elem: "#coupon_list",
+			url: ns.url("platformcoupon://admin/platformcoupon/lists"),
+			where: {'status': 1},
+			cols: [
+				[{
+					title: '优惠券名称',
+					unresize: 'false',
+					width: '20%',
+					templet: '#couponName'
+				}, {
+					title: '优惠内容',
+					unresize: 'false',
+					width: '20%',
+					templet: function(data){
+						return data.at_least > 0 ? '满' +data.at_least+ '减' +data.money : '无门槛，减' +data.money
+					}
+				},  {
+					field: 'gift_state',
+					title: '有效期限',
+					unresize: 'false',
+					width: '30%',
+					templet: function (res) {
+						if(res.validity_type == 0){
+							return "有效时间至" + ns.time_to_date(res.end_time);
+						}else{
+							return "有效时间" + res.fixed_term + "天";
+						}
+					}
+				}, {
+					title: '操作',
+					toolbar: '#couponOperation',
+					unresize: 'false',
+					align: 'center',
+					width: '10%'
+				}]
+			]
+		});
+
+		couponTable.tool(function(obj) {
+			var data = obj.data;
+			switch (obj.event) {
+				case "add":
+					addcoupon(data);
+					break;
+			}
+		});
+
+		function addcoupon(data){
+			var template = `<tr data-coupon="{{ d.platformcoupon_type_id }}">
+				<td>{{ d.platformcoupon_name }}</td>
+				{{# if(d.at_least > 0){  }}
+					<td>满{{ d.at_least }}{{ '减' + d.money }}</td>
+				{{# } else { }}
+					<td>无门槛，{{'减' + d.money }}</td>
+				{{# } }}
+				<td style="text-align:center;"><a href="javascript:;" onclick="deleteCoupon(this)" class="ns-text-color">删除</a></td>
+			</tr>`;
+			laytpl(template).render(data, function(string){
+				$(event).parents('.discount-cont').find('.layui-table tbody').append(string);
+				layer.closeAll();
+			});
+			getCoupon();
+		}
+	})
+
+	// 删除优惠券
+	function deleteCoupon(e){
+		$(e).parents('tr').remove();
+		getCoupon();
+	}
+	getCoupon();
+	//获取已选中优惠券
+	function getCoupon() {
+		var coupon = [];
+		if ($('.coupon').find('[value="coupon"]').is(':checked')) {
+			$('.coupon').find('tr[data-coupon]').each(function (i, e) {
+				coupon.push($(e).attr('data-coupon'));
+			})
+		}
+		coupon_list = coupon.toString();
+	}
+
+	function back() {
+		location.href = ns.url("admin/promotion/member")
+	}
+</script>
+{/block}

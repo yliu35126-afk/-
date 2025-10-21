@@ -1,0 +1,97 @@
+.withdrawal {
+	padding: 1px 0;
+	.withdrawal_item {
+		margin: 0 $margin-both;
+		.withdrawal_title {
+			display: flex;
+
+			align-items: center;
+			margin-top: 40rpx;
+			.withdrawal_title_info {
+				font-size: $font-size-toolbar;
+				font-weight: bold;
+				flex: 1;
+				.total {
+					color: #ff6a00;
+				}
+				.line {
+					display: inline-block;
+					height: 28rpx;
+					width: 4rpx;
+					border-radius: 4rpx;
+				}
+			}
+			.select {
+				border: 1px solid $color-disabled;
+				height: 46rpx;
+				line-height: 46rpx;
+				border-radius: 46rpx;
+				min-width: 160rpx;
+				text-align: center;
+				font-size: $font-size-tag;
+
+				text {
+					vertical-align: middle;
+				}
+			}
+		}
+		.withdrawal_content {
+			background-color: #fff;
+			border-radius: $border-radius;
+			// padding:$padding 30rpx;
+			&.margin-top {
+				margin-top: $margin-both !important;
+			}
+			.flex_two {
+				display: flex;
+				flex-wrap: wrap;
+				.flex_two-item {
+					padding: 28rpx 30rpx;
+					width: calc(50% - 60rpx - 1px);
+					border-bottom: 1px solid $color-line;
+					&:nth-child(2n + 1) {
+						border-right: 1px solid $color-line;
+					}
+					&.border_none {
+						border-bottom: 0;
+					}
+					.num {
+						font-size: 30rpx;
+						font-weight: 500;
+					}
+					.tip {
+						color: $color-tip;
+						font-size: $font-size-tag;
+					}
+				}
+				.flex_three-item {
+					padding: 28rpx 30rpx;
+					flex:1;
+					&:nth-child(2n + 1) {
+						border-right: 1px solid $color-line;
+					}
+					.num {
+						font-size: 30rpx;
+						font-weight: 500;
+					}
+					.tip {
+						color: $color-tip;
+						font-size: $font-size-tag;
+					}
+				}
+				.overhidden{
+					overflow:hidden; //超出的文本隐藏
+					text-overflow:ellipsis; //溢出用省略号显示
+					white-space:nowrap; //溢出不换行
+				}
+			}
+			.charts {
+				padding: $margin-both;
+			}
+		}
+	}
+}
+.safe-area{
+	padding-bottom: calc(constant(safe-area-inset-bottom) + 40rpx);
+	padding-bottom: calc(env(safe-area-inset-bottom) + 40rpx);
+}

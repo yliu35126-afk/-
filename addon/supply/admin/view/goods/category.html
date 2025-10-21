@@ -1,0 +1,155 @@
+{extend name="app/admin/view/base.html"/}
+{block name="resources"}
+<style>
+	.goods-category-list .layui-table td {
+		border-left: 0;
+		border-right: 0;
+	}
+	.goods-category-list .layui-table .switch {
+		font-size: 16px;
+		cursor: pointer;
+		width: 12px;
+		line-height: 1;
+		display: inline-block;
+		text-align: center;
+		vertical-align: middle;
+	}
+	.goods-category-list .layui-table img {width: 40px;}
+</style>
+{/block}
+{block name="main"}
+<div class="layui-collapse ns-tips">
+	<div class="layui-colla-item">
+		<h2 class="layui-colla-title">操作提示</h2>
+		<ul class="layui-colla-content layui-show">
+			<li>点击商品分类名前“+”符号，显示当前商品分类的下级分类。</li>
+			<li>商品分类关联类型是前台搜索分类查询商品之后可以通过商品类型的属性进行进一步搜索。</li>
+			<li>商品分类的供应商佣金比率是供应商商品销售之后，平台获取佣金，具体佣金金额按照商品分类进行计算。</li>
+		</ul>
+	</div>
+</div>
+
+<div class="goods-category-list">
+	<table class="layui-table ns-pithy-table">
+		<colgroup>
+			<col width="3%">
+			<col width="30%">
+			<col width="30%">
+			<col width="10%">
+			<col width="19%">
+			<col width="12%">
+		</colgroup>
+		<thead>
+			<tr>
+				<th></th>
+				<th>分类名称</th>
+				<th>简称</th>
+				<th>图片</th>
+				<th>平台抽成比率(供应商)</th>
+				<th>操作</th>
+			</tr>
+		</thead>
+		<tbody>
+			{if condition="$list"}
+			{foreach name="$list" item="vo"}
+			<tr>
+				<td>
+					{notempty name="$vo['child_list']"}
+					<span class="switch ns-text-color js-switch" data-category-id="{$vo['category_id']}" data-level="{$vo['level']}" data-open="0">+</span>
+					{/notempty}
+				</td>
+				<td>{$vo['category_name']}</td>
+				<td>{$vo['short_name']}</td>
+				<td>
+					{notempty name="$vo['image']"}
+					<div class="ns-img-box">
+						<img layer-src src="{:img($vo['image'])}"/>
+					</div>
+					{/notempty}
+				</td>
+				<td>{$vo['supply_commission_rate']}%</td>
+				<td>
+					<div class="ns-table-btn">
+						<a class="layui-btn" href="{:addon_url('supply://admin/goods/editcategory',['category_id'=>$vo['category_id']])}">编辑</a>
+					</div>
+				</td>
+			</tr>
+				{notempty name="$vo['child_list']"}
+					{foreach name="$vo['child_list']" item="second"}
+					<tr data-category-id-1="{$second['category_id_1']}" style="display:none;">
+						<td></td>
+						<td style="padding-left: 20px;">
+							<span class="switch ns-text-color js-switch" data-category-id="{$second['category_id']}" data-level="{$second['level']}" data-open="1" style="padding-right: 20px;">-</span>
+							<span>{$second['category_name']}</span>
+						</td>
+						<td>{$second['short_name']}</td>
+						<td>
+							{notempty name="$second['image']"}
+							<img layer-src src="{:img($second['image'])}"/>
+							{/notempty}
+						</td>
+						<td>{$second['supply_commission_rate']}%</td>
+						<td>
+							<div class="ns-table-btn">
+								<a class="layui-btn" href="{:addon_url('supply://admin/goods/editcategory',['category_id'=>$second['category_id']])}">编辑</a>
+							</div>
+						</td>
+					</tr>
+						{notempty name="$second['child_list']"}
+							{foreach name="$second['child_list']" item="third"}
+							<tr data-category-id-1="{$third['category_id_1']}" data-category-id-2="{$third['category_id_2']}" style="display:none;">
+								<td></td>
+								<td style="padding-left: 80px;">
+									<span>{$third['category_name']}</span>
+								</td>
+								<td>{$third['short_name']}</td>
+								<td>
+									{notempty name="$third['image']"}
+									<img layer-src src="{:img($third['image'])}"/>
+									{/notempty}
+								</td>
+								<td>{$third['supply_commission_rate']}%</td>
+								<td>
+									<div class="ns-table-btn">
+										<a class="layui-btn" href="{:addon_url('supply://admin/goods/editcategory',['category_id'=>$third['category_id']])}">编辑</a>
+									</div>
+								</td>
+							</tr>
+							{/foreach}
+						{/notempty}
+					{/foreach}
+				{/notempty}
+			{/foreach}
+			{else/}
+			<tr>
+				<td colspan="6" style="text-align: center">无数据</td>
+			</tr>
+			{/if}
+		</tbody>
+	</table>
+</div>
+{/block}
+{block name="script"}
+<script>
+$(function () {
+	loadImgMagnify();  //图片放大
+	
+	//展开收齐点击事件
+	$(".js-switch").click(function () {
+		var category_id = $(this).attr("data-category-id");
+		var level = $(this).attr("data-level");
+		var open = parseInt($(this).attr("data-open").toString());
+		
+		if(open){
+			$(".goods-category-list .layui-table tr[data-category-id-"+ level+"='" + category_id + "']").hide();
+			$(this).text("+");
+		}else{
+			$(".goods-category-list .layui-table tr[data-category-id-"+ level+"='" + category_id + "']").show();
+			$(this).text("-");
+		}
+		$(this).attr("data-open", (open ? 0 : 1));
+		
+	});
+});
+</script>
+{/block}

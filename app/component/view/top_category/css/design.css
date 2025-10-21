@@ -1,0 +1,32 @@
+@CHARSET "UTF-8";
+
+.draggable-element .top-categorty{
+	display: block;
+}
+.draggable-element .top-category .preview-draggable{padding: 0}
+.topCategorty{
+	position: relative;
+	height: 35px;
+	box-sizing: border-box;
+	display: flex;
+	align-items: center;
+}
+.topCategorty .top-categorty-item{
+	display: inline-block;
+	padding: 3px 0;
+	font-size: 14px;
+	margin-right: 20px;
+}
+.topCategorty .top-categorty-item.active{
+	position: relative;
+	font-weight: bold;
+}
+.topCategorty .line-border{
+	position: absolute;
+    bottom: 4px;
+    left: 20px;
+    width: 12px;
+    height: 2px;
+    background-color: #fff;
+    border-radius: 2px;
+}

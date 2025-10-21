@@ -1,0 +1,60 @@
+{extend name="base"/}
+{block name="resources"}
+<style>
+	.ns-single-filter-box {
+		background-color: transparent;
+	}
+	.layui-tab-content{
+		padding:15px;
+	}
+</style>
+{/block}
+{block name="body"}
+
+<div class="layui-tab ns-table-tab" lay-filter="solution_tab">
+
+	<div class="layui-tab-content">
+		<table id="solution_list" lay-filter="solution_list"></table>
+	</div>
+</div>
+
+{/block}
+
+{block name="script"}
+<script>
+	var table, form, element, repeat_flag = false;// 防重复标识
+	layui.use(['form', 'element'], function () {
+		form = layui.form;
+		element = layui.element;
+		form.render();
+
+		table = new Table({
+			elem: '#solution_list',
+			url: ns.url("shop/orderdelivery/orderdeliverylog"),
+			where:{
+			  batch_id:{$batch_id}
+			},
+			cols: [
+				[{
+					field: 'order_no',
+					title: '订单编号',
+					unresize: 'false',
+					width:'15%'
+				}, {
+                    field: 'order_name',
+					title: '订单内容',
+                    unresize: 'false'
+				}, {
+                    field:'reason',
+                    title: '失败原因',
+                    unresize: 'false',
+                    width:'15%'
+                }]
+			]
+
+		});
+
+	});
+
+</script>
+{/block}

@@ -1,0 +1,2500 @@
+{extend name="addon/servicer/servicer/view/base.html"/}
+{block name="resources"}
+<link rel="stylesheet" type="text/css" href="SERVICER_CSS/iconfont.css" />
+{/block}
+{block name="main"}
+<style>
+	.layui-layout-admin .layui-body div.ns-body-content{width:100%;height:100%;min-height:0;min-width:0;box-sizing:border-box;padding:0}
+	.servicer-chat-base{box-sizing: border-box;}
+	.chat-index-box{width: 100%;display: flex;position: relative;}
+	.chat-index-box .sunblind{height: 25px;background: rgba(0,0,0,.1);position: absolute;left: 50%;transform: translateX(-50%); top: 15px;padding: 0 20px;box-sizing: border-box;line-height: 25px;z-index: 99;color: #666;font-size: 12px;border-radius: 25px;}
+	.chat-index-box .chat-content-left{width: 320px;min-width: 320px; box-sizing: border-box;border-right: 1px solid #eee;overflow-x: hidden;display: none;}
+	.chat-index-box .chat-content-left::-webkit-scrollbar{display: none;}
+	.chat-index-box .chat-content-left.active{display: block;}
+	.chat-content-left .left-content{margin-top: 50px;}
+	.chat-content-left .left-content .content-item{width: 320px;position: relative;}
+	.chat-content-left .left-content .content-item .item-title{width: 100%;height: 53px;background: #f3f3f3;padding: 0 10px;box-sizing: border-box;line-height: 53px;border-bottom: 1px solid #e5e5e5;}
+	.chat-content-left .left-content .content-item .item-title .layui-nav-more{content: '';width: 0;height: 0;border-style: solid dashed dashed;border-color: #fff transparent transparent;overflow: hidden;cursor: pointer;transition: all .2s;-webkit-transition: all .2s;position: absolute;top: 27px;right: 20px;margin-top: -3px;border-width: 6px;border-top-color: #000000;}
+	.chat-content-left .left-content .content-item .item-title .layui-nav-more.layui-nav-mored{margin-top: -9px;border-style: dashed dashed solid;right: 20px;border-bottom-color: #000000;border-top-color: transparent;}
+	.chat-content-left .left-content .content-item .content-people{width: 100%;height: 76px;display: flex;justify-content: space-between;align-items: center;padding-left: 24px;box-sizing: border-box;cursor: pointer;position: relative;}
+	.chat-content-left .left-content .content-item .content-people .online-type{ position: absolute;top: 50px;left: 55px;background-color: #b2b2b2;width: 10px;height: 10px;border-radius: 50%; }
+	.chat-content-left .left-content .content-item .content-people .online-type.active{ background-color: #70ed3a; }
+	.chat-content-left .left-content .content-item .content-people.active{border-left: 6px solid #FF6A00;background-color: #f1f1f1;}
+	.content-item .content-people img{width: 44px;height: 44px;border-radius: 50%;}
+	.content-item .content-people .people-info{width: calc(100% - 40px);height: 100%;display: flex;flex-direction: column;justify-content: center;box-sizing: border-box;}
+	.content-item .content-people .people-info .name{width: 100%;display: flex;justify-content: space-between;align-items: center;box-sizing: border-box;}
+	.content-item .content-people .people-info .top-name{width: 100%;display: flex;justify-content: space-between;align-items: center;padding: 0 30px 0 10px;box-sizing: border-box;height: 16px;}
+	.content-item .content-people .people-info .top-name .left{font-size: 16px;color: #333;display: flex;align-items: center;}
+	.content-item .content-people .people-info .top-name .left p{display: inline-block; font-size: 14px;max-width: 80px;overflow: hidden;text-overflow: ellipsis;white-space: nowrap;}
+	.content-item .content-people .people-info .top-name .left span{padding:2px 5px;border-radius: 3px; font-size: 12px;margin-left: 5px;}
+	.content-item .content-people .people-info .top-name .right{font-size: 12px;color: #999;}
+	.content-item .content-people .people-info .name .left{font-size: 14px;height: 18px;line-height: 18px;max-width: calc(100% - 30px);overflow: hidden;text-overflow: ellipsis;white-space: nowrap;color: #999;padding-left: 10px;padding-top: 5px;}
+	.content-item .content-people .people-info .name .left img{width: 14px !important;height: 14px !important;}
+	.content-item .content-people .people-info .name .right{font-size: 12px;color: #ffffff;padding: 1px 5px; border-radius: 15px;background: red; text-align: center;line-height: 14px;margin-right: 30px;}
+	.content-item .content-people .people-info .message{width: calc(100% - 10px);font-size: 12px;color: #838383;overflow: hidden;text-overflow: ellipsis;white-space: nowrap;margin-top: 5px;}
+	.chat-content-center{width: calc(100% - 220px)}
+	.chat-content-center-top{width: 310px;height: 50px;background: #ffffff;display: flex;align-items: flex-end;padding: 0 10px;box-sizing: border-box;overflow-x: auto;position: fixed; z-index: 10;}
+	.chat-content-center-top .chat-people{display: inline-block;padding: 6px 12px;background: #F3F3F3;border: 1px solid #E5E5E5;box-sizing: border-box;position: relative;cursor: pointer;margin-right: 5px;}
+	.chat-content-center-top .chat-people .chat-people-box{width: 100%;height: 100%;display: flex;align-items: center;}
+	.chat-content-center-top .chat-people.active{background: #ffffff;border-bottom: 1px solid #ffffff;}
+	.chat-content-center-top .chat-people .name{width: 70px;overflow: hidden;text-overflow: ellipsis;white-space: nowrap;}
+	.chat-content-center-top .chat-people .close{background: #f5f5f5;border-radius: 50%;padding: 3px;color: red;margin-left: 6px;}
+	.chat-content-center-bottom-box{width: 100%;display: flex;}
+	/* .chat-content-center-bottom-left.active{width: calc(100% - 600px);min-width:600px;} */
+	.chat-content-center-bottom-left{width: 100%;min-width:600px;max-width:600px;height: 100%;overflow: hidden;border-right: 1px solid #E5E5E5;border-bottom: 1px solid #E5E5E5;box-sizing: border-box;}
+	.chat-content-center-bottom{height: calc(100% - 250px);padding: 0 30px 0 15px;box-sizing: border-box;overflow-y: scroll;}
+	.chat-content-center-bottom::-webkit-scrollbar{display: none;}
+	.chat-content-center-bottom .chat-massage-box{width: 100%;background: #ffffff;display: flex;align-items: flex-start;margin-top: 20px;}
+	.chat-content-center-bottom .chat-massage-box.active{width: 100%;background: #ffffff;display: flex;align-items: flex-start;margin-top: 20px;flex-direction: row-reverse;}
+	.chat-content-center-bottom .chat-massage-box.active .name{text-align: right;}
+	.chat-content-center-bottom .chat-massage-box:last-child{margin-bottom: 20px;}
+	.chat-content-center-bottom .chat-massage-box img{width: 40px;height: 40px;}
+	.chat-content-center-bottom .chat-massage-box .message-info{width: 80%;padding-left: 10px;box-sizing: border-box;}
+	.chat-content-center-bottom .chat-massage-box.active .message-info{padding-right: 10px;text-align: right;}
+	.chat-content-center-bottom .chat-massage-box .message-info .name{color: #ccc;font-size: 14px;margin-bottom: 10px;}
+	.chat-content-center-bottom .chat-massage-box .message-info .name.active{color: #3DB272;}
+	.chat-content-center-bottom .chat-massage-box .message-info .message{font-size: 14px;display: inline-block;;}
+	.chat-content-center-bottom .chat-massage-box.active .message-info .message{font-size: 14px;}
+	.chat-content-center-bottom .chat-massage-box.active .message-info .message .stringMessage{display: inline-block;padding: 3px 7px;border-radius: 3px;background-color: rgba(255,245,237,0.8);max-width:400px;word-wrap:break-word;text-align: left;}
+	.chat-content-center-bottom .chat-massage-box .message-info .message .stringMessage{background-color: #eee;padding: 3px 7px;border-radius: 3px;}
+	.chat-content-center-bottom .chat-massage-box .message-info .message .stringMessage img{display: inline-block;width: 20px;height: 20px;}
+	.chat-message-box{width: 100%;height: 200px;display: flex;flex-direction: column;position: relative;}
+	.chat-message-box.active{flex-direction: column-reverse;}
+	.chat-message-box .chat-top{width: 100%;height: 50px;border-top: 1px solid #E5E5E5;display: flex;align-items: center;padding-left: 10px;}
+	.chat-message-box .chat-top div{ cursor: pointer; } 
+	.chat-message-box .chat-top .layui-btn{background: #ffffff;height: auto;line-height: inherit;padding: 0;}
+	.chat-message-box .chat-top .iconfont{padding: 10px;font-size: 20px;color: #A9A7A8;}
+	.chat-message-box .text-area{padding: 10px;width: 96%;height: 100px;border: none;resize: none;outline: none;overflow-y: scroll;}
+	.chat-message-box .send-box{width: 100%;height: 50px;display: flex;flex-direction: column;align-items: flex-end;cursor: pointer;}
+	.chat-message-box .send-box .send{display: inline-block;padding: 0 10px;font-size: 14px;height: 28px;background: #ccc;border-radius: 4px;margin-right: 20px;line-height: 28px;text-align: center;color: #ffffff;margin-top: 11px;}
+	.chat-message-box .send-box .send.active{background: red;}
+
+	.chat-content-center-bottom-right.active{width: 0;}
+	.chat-content-center-bottom-right{width: 280px;min-width:280px;height: 100%;display: flex;flex-direction: column;align-items: center;}
+	
+	.order-details-back{padding: 20px 0 10px 10px; color: #FF6A00;width: 100%;box-sizing: border-box;border-bottom: 1px solid #eee;cursor: pointer;}
+	
+	.order-details-top{border-bottom: 1px solid #eee;}
+	.order-details-top .top{display: flex;padding: 20px 0 0 15px;box-sizing: border-box;}
+	.order-details-top .top img{height: 60px;width: 60px;border-radius: 2px;}
+	.order-details-top .top div{margin-left: 10px;}
+	.order-details-top .top div p{padding-bottom: 8px;}
+	.order-details-top .top div p:nth-of-type(1){ width: 170px;overflow: hidden;text-overflow:ellipsis;white-space: nowrap;color: #333;font-weight: 400;}
+	.order-details-top .top div p:nth-of-type(2){color: #999999;font-weight: 400;font-size: 12px;}
+	.order-details-top .top div p:nth-of-type(3){color: #999999;font-weight: 400;font-size: 12px;}
+	.order-details-top .top div p:nth-of-type(3) span{ color: #FF4544 }
+	.order-details-top .bottom{padding:0 10px 20px 10px;text-align: right;}
+	
+	.order-dei-top-con {border-bottom: 1px solid #eee;font-size: 12px;color: #333;font-weight: 400;}
+	.order-dei-top-con p {padding: 20px 0 0 15px;}
+	.order-dei-top-con div{ display: flex; padding-bottom: 15px; } 
+	.order-dei-top-con div p:nth-of-type(1){display: block;width: 38px;}
+	.order-dei-top-con div p:nth-of-type(2){padding: 20px 0 0 0;width: 200px;}
+	
+	.order-dei-bottom-con {border-bottom: 1px solid #eee;padding: 15px 0;font-size: 12px; color: #333;font-weight: 400;}
+	.order-dei-bottom-con div{display: flex;justify-content: space-between;box-sizing: border-box;padding: 0 10px 0 15px;align-items: center;}
+	.order-dei-bottom-con div span{padding: 4px 13px;border-radius: 10px;border: 1px solid #f1f1f1;font-size: 12px;height: 12px;line-height: 12px;cursor: pointer;}
+	.order-dei-bottom-con > p{padding: 20px 0 0 15px;}
+	
+	.order-dei-bottom p{padding: 20px 0 0 15px;color: #333;font-size: 12px;font-weight: 500;}
+	.order-dei-bottom p span{color: #FF4544;}
+	
+	/* .shop-details{width: 250px;margin: 15px auto;background-color: #F5F5F5;} */
+	.shop-details .img-box{width: 280px;height: 200px;display: flex;align-items: center;justify-content: center;}
+	.shop-details img{max-width: 280px;max-height: 200px;text-align: center;}
+	.shop-details .top{padding: 10px;}
+	.shop-details .price{font-size: 16px;color: #ff4544;}
+	.shop-details .title{width: 230px;overflow: hidden;text-overflow:ellipsis;display: -webkit-box;-webkit-box-orient: vertical;-webkit-line-clamp:2;font-size: 14px;color: #333;padding-top: 5px;}
+	.shop-details .details-box{display: flex;}
+	.shop-details .details-box p{color: #999;font-size: 12px;padding-top: 5px;width: 30%;}
+	.shop-details .goodsContent{ border-top: 10px solid #f5f5f5; }
+	.shop-details .goodsContent > p{ text-align: center;padding: 10px ; }
+	.shop-details .goodsContent div > p {padding: 5px 15px;}
+	.shop-details .goodsContent div > img{width: 100%;height: auto;}
+	
+	.chat-history-top{padding: 10px 15px 5px;border-bottom: 1px solid #eee;width: 250px;position: absolute;background-color: #fff;top: 5px;}
+	.chat-history-top-nav{display: flex;position: absolute;top: 40px;background-color: #fff;width: 280px;}
+	.chat-history-top-nav div{padding: 8px 0;margin-left: 15px ;cursor: pointer;}
+	.chat-history-top-nav div.active{border-bottom: 2px solid #FF6A00;}
+	.marginTop{ height: 130px; }
+	.chat-history-input{width: 280px;text-align: center;height: 50px;line-height: 50px;position: absolute;top: 77px;background-color: #fff;}
+	.chat-history-input input{width: 260px;height: 30px;border-radius: 25px;border: 1px solid #eee;padding-left: 15px;box-sizing: border-box;}
+	.chat-history-input .input-close{ position: absolute;right: 20px;cursor: pointer;display: none;top: 0; }
+	.chat-history-input .input-close.active{ display: block; }
+	.chat-history-shop{  }
+	.memberAuActive{display: flex;justify-content: flex-end;}
+	.chat-history-shop > p{ padding: 5px 15px;font-size: 12px; }
+	.chat-history-shop .ch-shop-con{display: flex;padding: 10px;margin-left: 15px;background-color: #F5F5F5;box-sizing: border-box;width: 255px;text-align: left;}
+	.chat-history-shop .ch-shop-con img{width: 55px;height: 55px;padding-right: 10px;}
+	.chat-history-shop .ch-shop-rightcon > p{width: 170px;overflow: hidden;text-overflow: ellipsis;white-space: nowrap; font-size: 12px;padding-bottom: 5px;}
+	.chat-history-shop .ch-shop-rightcon div{display: flex;font-size: 12px;padding-bottpm: 5px;justify-content: space-between;}
+	.chat-history-shop .ch-shop-rightcon div p:nth-of-type(1){color: #FF4544;}
+	.chat-history-shop .ch-shop-rightcon div p:nth-of-type(2){color: #FF6A00; cursor: pointer;}
+	.chat-history-order > p{ padding: 5px 15px;font-size: 12px;color: #FF6A00; }
+	.chat-history-order { background-color: #F5F5F5;padding-top: 1px;margin-top: 10px; }
+	.chat-history-order .ch-shop-con { background-color: #fff; display: flex;padding: 10px;margin: 10px;box-sizing: border-box;width: 255px;text-align: left;}
+	.chat-history-order .ch-shop-con img{width: 55px;height: 55px;padding-right: 10px;}
+	.chat-history-order .ch-shop-rightcon > p:nth-of-type(1){width: 170px;overflow: hidden;text-overflow: ellipsis;white-space: nowrap; font-size: 12px;padding-bottom: 5px;font-weight: 700;}
+	.chat-history-order .ch-shop-rightcon > p:nth-of-type(2){color: #666;font-size: 12px;padding-bottom: 5px;}
+	.chat-history-order .ch-shop-rightcon div{display: flex;font-size: 12px;padding-bottpm: 5px;justify-content: space-between;color: #666; }
+	.chat-history-order .ch-shop-botcon{display: flex;justify-content: space-between;padding: 10px;font-size: 12px; color: #666;padding-top: 0;}
+	.chat-history-order .ch-shop-botcon p:nth-of-type(2){color: #FF6A00;cursor: pointer;}
+	
+	.history_chat_img > p{ padding: 5px 15px;font-size: 12px; }
+	.history_chat_img > img{ padding: 5px 15px;max-width:200px ;max-height: 150px; }
+	
+	.ch-order-cont{background-color: #F5F5F5;margin: 15px;padding-top: 1px;}
+	.ch-order-cont > div:first-child{display: flex;margin: 10px;background-color: #fff;padding: 10px;}
+	.ch-order-cont > div:first-child img{height: 55px;width: 55px;padding-right: 10px;}
+	.ch-order-cont > div:last-child{display: flex;justify-content: space-between;padding-left: 15px;}
+	.ch-order-cont > div:last-child p{font-size: 12px;font-size: 12px;padding-bottom: 10px;}
+	.ch-order-cont > div:last-child p:first-child{color: #999;}
+	.ch-order-cont > div:last-child p:last-child{color: #FF6A00;padding-right: 10px;}
+	.ch-order-details p{width: 150px;overflow: hidden;text-overflow: ellipsis;white-space: nowrap; font-size: 12px;padding-bottom: 5px;}
+	.ch-order-details p:nth-of-type(2),.ch-order-details p:nth-of-type(3){font-size: 12px; color: #999999;} 
+	.chat-history-member > p{color: #FF6A00; padding: 10px 15px 5px 15px; font-size: 12px;}
+	.chat-history-member div{color: #333; padding: 0 15px; font-size: 14px;font-weight: 400;}
+	.chat-history-member div p{padding-left: 0;}
+	.chat-history-aut > p{color: #FF4544; padding: 10px 15px 5px 15px; font-size: 12px;}
+	.chat-history-aut div{color: #333; padding: 0 15px; font-size: 14px;font-weight: 400px;word-wrap: break-word;}
+	.chat-history-member div p{padding-left: 0;}
+	
+	.chat-content-center-bottom-right .member-box > img {margin-top: 70%;margin-left: 15%;}
+	.chat-content-center-bottom-right .member-box{height: calc(100% - 10px);width: 100%;overflow-y: scroll;}
+	.chat-content-center-bottom-right .member-box::-webkit-scrollbar { display: none;}
+	.chat-content-center-bottom-right .member-box .noMoreOrder{ padding: 10px 15px; text-align: center;}
+	.chat-content-center-bottom-right .member-info{display: flex;min-width:280px;height: 100px;align-items: center;padding-left: 30px; border-bottom: 1px solid #eee;box-sizing: border-box;}
+	.chat-content-center-bottom-right .member-info img{width: 44px;height: 44px;border-radius: 50%;}
+	.chat-content-center-bottom-right .member-info p{padding-left: 10px;font-size: 16px;color: #333;font-weight: 400;display: inline-block;max-width: 100px;overflow: hidden;text-overflow: ellipsis;white-space: nowrap;}
+	.chat-content-center-bottom-right .member-info span{font-size: 12px;font-weight: 400;margin-left: 10px;padding: 2px 5px; border-radius: 3px;}
+	.chat-content-center-bottom-right .member-info-xx p{padding: 20px 0 0 30px;font-size: 12px; color: #333;font-weight: 400;}
+	.chat-content-center-bottom-right .goods-box{}
+	.chat-content-center-bottom-right .order-top-nav{display: flex;width: 280px;border-bottom: 1px solid #eee ;position: fixed;background-color: #fff;}
+	.chat-content-center-bottom-right .order-top-nav div{flex: 1;text-align: center;padding: 15px 0;cursor: pointer;}
+	.chat-content-center-bottom-right .order-top-nav div.active{border-bottom: 1px solid #FF6A00;}
+	.chat-content-center-bottom-right .shop-top-nav{display: flex;width: 280px;justify-content: space-around;border-bottom: 1px solid #eee ;position: fixed;background-color: #fff;}
+	.chat-content-center-bottom-right .shop-top-nav div{text-align: center;padding: 15px 0;cursor: pointer;}
+	.chat-content-center-bottom-right .shop-top-nav div.active{border-bottom: 1px solid #FF6A00;}
+	.chat-content-center-bottom-right .height100{height: 100px;}
+	.chat-content-center-bottom-right .order-input{width: 280px;text-align: center;height: 50px;line-height: 50px;margin-top: 50px;position: absolute;background-color: #fff;}
+	.chat-content-center-bottom-right .order-input input{width: 260px;height: 30px;border-radius: 25px;border: 1px solid #eee;padding-left: 15px;box-sizing: border-box;}
+	.chat-content-center-bottom-right .order-input .input-close{ position: absolute;right: 20px;cursor: pointer;display: none;top: 0; }
+	 .chat-content-center-bottom-right .order-input .active{ display: block; }
+	.chat-content-center-bottom-right .order-info{width: 260px;margin:10px 10px;}
+	.chat-content-center-bottom-right .order-info .order-info-title{box-sizing: border-box;width: 100%;padding: 10px; color: #FF6A00;background-color: #eee;}
+	.order-noinfo-details{ color: #333; padding: 10px 15px; text-align:center; }
+	.order-info-details{display: flex;margin: 20px 0;cursor: pointer;}
+	/* .order-info-details::first-child{ margin-top: 100px; background-color: #000000;} */
+	.order-info-details img{width: 45px;height: 45px;margin-left: 10px;}
+	.order-info-details .details-con{padding-left: 20px;box-sizing: border-box;}
+	.order-info-details .details-con .details-con-tit{ width: 170px;overflow: hidden;text-overflow:ellipsis;white-space: nowrap;color: #333;}
+	.order-info-details .details-con .details-con-gg{font-size: 12px;height: 16px;line-height: 16px;color: #aaa;}
+	.order-info-details .details-con .details-con-ts{display: flex;justify-content: space-between;}
+	.order-info-details .details-con .details-con-tsmoy{color: red;}
+	.order-info-details .details-con .details-con-tsts{color: #FF6A00;}
+	.order-info-details .details-con .details-con-tsgg{font-size: 14px;height: 24px;line-height: 24px;color: #aaa;}
+	.order-info-else div{display: flex; margin-bottom: 10px;color: #555;}
+	.order-info-else div p:nth-of-type(1){width: 65px;text-align: right;}
+	.order-info-else div p:nth-of-type(2){padding-left: 15px;}
+	.order-info-button span{display: inline-block; padding: 6px 15px;margin-left: 5px;border: 1px solid #FF6A00; color: #FF6A00;border-radius: 5px;}
+	.chat-content-center-bottom-right .goods-info-title{width: 100%;line-height: 50px;font-size: 14px;text-align: center;}
+	.chat-content-center-bottom-right .goods-info-box{display: flex;flex-direction: column;align-items: center;border: 1px solid #E5E5E5;box-sizing: border-box;padding: 10px 15px;border-radius: 10px;}
+	.chat-content-center-bottom-right .goods-info-box img{width: 200px;height: 200px;}
+	.chat-content-center-bottom-right .goods-info-box .goods-price{width: 200px;line-height: 35px;color: red;font-size: 16px;}
+	.chat-content-center-bottom-right .goods-info-box .goods-name{width: 200px;font-size: 14px;font-weight: 600;text-overflow: -o-ellipsis-lastline;overflow: hidden;text-overflow: ellipsis;display: -webkit-box;-webkit-line-clamp: 2;line-clamp: 2;-webkit-box-orient: vertical;}
+	.chat-content-center-bottom-right .goods-info-box .goods-desc{width: 200px;font-size: 12px;margin-top: 5px;color: #838383;text-overflow: -o-ellipsis-lastline;overflow: hidden;text-overflow: ellipsis;display: -webkit-box;-webkit-line-clamp: 3;line-clamp: 3;-webkit-box-orient: vertical;}
+	
+	.chat-content-center-bottom-right .order-info-box{display: flex;align-items: center;border: 1px solid #E5E5E5;box-sizing: border-box;padding: 10px 15px;border-radius: 10px;}
+	.chat-content-center-bottom-right .order-info-box img{width: 90px;height: 90px;}
+	.chat-content-center-bottom-right .order-info-box .order-info{width: 200px;margin-left: 10px;height: 90px;display: flex;flex-direction: column;justify-content: space-between}
+	.chat-content-center-bottom-right .order-info-box .follow-color{color: red;}
+	.message .goods-info-box{width: 250px;float: left;text-align: left;}
+	/* .active .message .goods-info-box{width: 250px;float: right;text-align: left;} */
+	.active .message .goods-info-box{width: 250px;height: 320px;}
+	.message .goods-info-box img{width: 200px;height: 200px;}
+	.goods-info-box{display: flex;flex-direction: column;align-items: center;border: 1px solid #E5E5E5;box-sizing: border-box;padding: 10px 15px;border-radius: 10px;}
+	.goods-info-box img{width: 200px;height: 200px;}
+	.goods-info-box .goods-price{width: 200px;line-height: 35px;color: red;font-size: 16px;}
+	.goods-info-box .goods-name{width: 200px;font-size: 14px;font-weight: 600;text-overflow: -o-ellipsis-lastline;overflow: hidden;text-overflow: ellipsis;display: -webkit-box;-webkit-line-clamp: 2;line-clamp: 2;-webkit-box-orient: vertical;}
+	.goods-info-box .goods-desc{width: 200px;font-size: 12px;margin-top: 5px;color: #838383;text-overflow: -o-ellipsis-lastline;overflow: hidden;text-overflow: ellipsis;display: -webkit-box;-webkit-line-clamp: 3;line-clamp: 3;-webkit-box-orient: vertical;}
+	.message .order-info-box{width: 300px;display: flex;align-items: center;border: 1px solid #E5E5E5;box-sizing: border-box;padding: 10px 15px;border-radius: 10px;margin-top: 10px;}
+	.message .order-info-box img{width: 90px;height: 90px;}
+	.message .order-info-box .order-info{width: 200px;margin-left: 10px;height: 90px;display: flex;flex-direction: column;justify-content: space-between}
+	.message .order-info-box .follow-color{color: red;}
+	.content-people-box{width: 100%;position: relative;}
+	.content-people-box.scroll{position: relative;overflow-y: scroll}
+	.content-people-box:hover::-webkit-scrollbar-thumb,#scroll:hover::-webkit-scrollbar-thumb{background-color: rgba(0, 0, 0, .2);}
+	.content-people-box::-webkit-scrollbar,#scroll::-webkit-scrollbar{background-color: transparent;width: 8px;transition: all .3s;}
+	.content-people-box::-webkit-scrollbar-track,#scroll::-webkit-scrollbar-track{background-color: transparent;width: 8px;}
+	.content-people-box::-webkit-scrollbar-thumb,#scroll::-webkit-scrollbar-thumb{border-radius: 20px;background-color: transparent;}
+	.chat-content-center-bottom-content{position: relative;min-height: calc(100% + 10px);}
+	.chat-content-center-bottom-content .no-servicer {position: absolute;top: 50%;left: 50%;transform: translate(-50%, -50%);}
+	.chat-content-center-bottom-content .no-servicer img{max-width: 100%;}
+
+	.chat-message-box .emojy-box{width:301px;border-top-right-radius:10px;height:100%;background:#fff;position:absolute;left:0;top:-200px;border-top:1px solid #e5e5e5;border-right:1px solid #e5e5e5;padding:10px;box-sizing:border-box;overflow-y:scroll;box-sizing:border-box}
+	.chat-message-box .emojy-box::-webkit-scrollbar{display:none}
+	.chat-message-box .message-box{width:301px;border-top-left-radius:10px;height:100%;background:#fff;position:absolute;right:0;top:-200px;border:1px solid #fff0e5;padding:10px;box-sizing:border-box;overflow-y:scroll;box-sizing:border-box}
+	.chat-message-box .message-box div{padding: 5px 10px;cursor: pointer;width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;color: #666;font-size: 14px;font-weight: bold; border-bottom: 1px solid #eee;}
+	.chat-message-box .message-box::-webkit-scrollbar{display:none}
+	.chat-message-box .emojy-item{width:35px;height:35px;font-size:24px;text-align:center;line-height:35px;display:inline-block}
+	.chat_img{display:inline-block;width:150px;max-height:200px;min-height:50px;text-align:left;border-radius:5px}
+	.chat_img img{width:auto!important;height:auto!important;max-width:150px;max-height:200px}
+	.chat-content-center-bottom-content .active .chat_img{text-align:right}
+	.history-message-list{ padding-bottom: 20px; }
+	.marginLeft420{margin-left: 420px;}
+	
+	.noMemberList{width: 320px;margin-top: 70%;}
+	.noMemberList img{width: 70%;padding-left: 15%;}
+	
+	.order-details-active{position: absolute;background-color: #fff;width: 280px !important;z-index: 10;}
+	.shop-details-active{position: absolute;background-color: #fff;width: 280px !important;z-index: 10;}
+	
+	.login-type-wechat{color: #23C134;background-color: #d3f5d7;}
+	.login-type-h5{  color:#1d6cfe;background-color: #d9e6fd; }
+	.login-type-pc{color: #ff6d33;background-color: #ffe5da;}
+	.login-type-weapp{color: #009688;background-color: #d4fffc;}
+	.login-type-app{color: #ff339d;background-color: #ffdaed;}
+	
+	[v-cloak] {display: none;}
+</style>
+<div class="chat-index-box" id="chatIndexBox" v-cloak>
+	<div class="sunblind" v-if="text">
+		{{text}}
+	</div>
+	<div class="chat-content-left active" >
+		<div class="chat-content-center-top" v-if="onlineMembers.length > 0">
+			<ul class="layui-nav layui-layout-left">
+				<li class="layui-nav-item">
+					<span>在线聊天</span>
+				</li>
+			</ul>
+		</div>
+		<div class="left-content" v-if="onlineMembers.length > 0">
+			<div class="content-item">
+				<div class="content-people" :class="{active:memberActive == item.member_id}" v-for="(item,index) in onlineMembers" :key="index"
+				 @click="openChat(item.member_id, index)">
+					<img :src="item.headimg || default_headimg" onerror=src="SERVICER_IMG/default_headimg.png">
+					<div class="online-type" :class="{active: item.online == 1}"></div>
+					<div class="people-info">
+						<div class='top-name'>
+							<div class="left">
+								<p>{{item.member_name}} </p>
+								<span v-if="item.login_type == 'wechat' && item.login_type_name" class="login-type-wechat">{{item.login_type_name}}</span>
+								<span v-if="item.login_type == 'h5' && item.login_type_name" class="login-type-h5">{{item.login_type_name}}</span>
+								<span v-if="item.login_type == 'pc' && item.login_type_name " class="login-type-pc">{{item.login_type_name}}</span>
+								<span v-if="item.login_type == 'weapp' && item.login_type_name" class="login-type-weapp">{{item.login_type_name}}</span>
+								<span v-if="item.login_type == 'app' && item.login_type_name" class="login-type-app">{{item.login_type_name}}</span>
+							</div>
+							<div class="right">{{item.add_time}}</div>
+						</div>
+						<div class='name'>
+							<div class="left" v-if="item.content_type == 0" v-html="dealmessage(item.content)"></div>
+							<div class="left" v-else >{{item.consumer_say}}</div>
+							<div class="right" v-if="item.unread > 0 && item.unread<=99">
+								{{item.unread}}
+							</div>
+							<div class="right" v-if="item.unread>99">
+								99+
+							</div>
+						</div>
+
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="noMemberList" v-if="onlineMembers.length == 0">
+			<img src="SERVICER_IMG/no_member.png" alt="">
+		</div>
+	</div>
+	<div class="chat-content-center">
+		<div class="chat-content-center-bottom-box">
+			<div class="chat-content-center-bottom-left" :class="{active : !showInfo}">
+				<div class="chat-content-center-bottom" id="scroll" @click="chatBoxState=false;messageBoxState=false">
+					<div class="chat-content-center-bottom-content">
+						<div class="chat-massage-box" :class="item.type==1?'active':''" v-for="(item,index) in chatMessageList" :key="index">
+							<img :src="item.avatar || servicer_avatar " v-if="item.type==1" onerror=src="SERVICER_IMG/default_shop.png">
+							<img :src="item.headimg || default_headimg" v-else onerror=src="SERVICER_IMG/default_headimg.png">
+							<div class="message-info">
+								<div class='name'>
+									<span>{{item.type == 0 ? item.nickname : ''}}</span>
+									<span>{{item.type == 0 ? item.add_time : ''}}</span>
+								</div>
+
+								<div class="message">
+									<chat-goods :class="{memberAuActive: item.type == 1}" @change="toGoodsDetails" v-if="item.goods_sku_id" :sku-id="item.goods_sku_id"></chat-goods>
+									<chat-order :class="{memberAuActive: item.type == 1}" @change="toOrderDetails" v-else-if="item.order_id" :order-id="item.order_id"> </chat-order>
+
+									<div class="chat_img" v-else-if="item.content_type == 3" @click="piewImg(item.type==1?item.servicer_say:item.consumer_say)">
+										<img :src="item.type==1?item.servicer_say:item.consumer_say" />
+									</div>
+
+									<div class="stringMessage" v-else v-html="item.type==1?dealmessage(item.servicer_say):dealmessage(item.consumer_say)">
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="no-servicer" v-if="isFirstLoad">
+							<img src="SERVICER_IMG/no_servicer.png" alt="">
+						</div>
+					</div>
+				</div>
+				<div class="chat-message-box">
+					<div class="chat-top">
+						<div @click="openChatBox" class="iconfont iconbiaoqing-xue"></div>
+						<button type="button" class="layui-btn" id="test1">
+							<div class="iconfont icontupian1"></div>
+						</button>
+						<div @click="openCChatBox(true)" class="iconfont iconxiaoxi1"></div>
+						<div @click="openMessageBox" class="iconfont iconkuaijiehuifu marginLeft420"></div>
+					</div>
+					<div class="text-area" @input="inputMessage" ref="inputMessage" id="text_area"  contenteditable="true" @click="messageBoxState=false" spellcheck="false" @keydown.enter="send"></div>
+					<div class="send-box " @click="send">
+						<div class="send active" id="send">发送[enter]</div>
+					</div>
+					<div class="emojy-box" v-if="chatBoxState">
+						<div class="emojy-item" v-for="(item,index) in emjoyList" :key="index" @click="addEmojy(item, index)">
+							<img :src="item">
+						</div>
+					</div>
+					<div class="message-box" v-if="messageBoxState">
+						<div v-for="item in configFastlist" @click="addMessage(item.content)">{{item.content}}</div>
+					</div>
+				</div>
+			</div>
+			<div class="chat-content-center-bottom-right" :class="{active: !showInfo}">
+				<!-- <div class="goods-box" v-if="showInfo&&showInfo.sku_id">
+					<div class="goods-info-title">当前咨询的商品</div>
+					<chat-goods :sku-id="showInfo.sku_id"></chat-goods>
+				</div>
+				<div class="order-box" v-if="showInfo&&showInfo.order_id">
+					<div class="order-info-title">当前咨询的订单</div>
+					<chat-order :order-id="showInfo.order_id"> </chat-order>
+				</div> -->
+				<div class="member-box" v-if="activeMemberId == 0">
+					<img src=" SERVICER_IMG/noGOMinfo.png " alt="">
+				</div>
+				<div class="member-box" v-if="moveActive == '001' && memberInfo && !historyActive">
+					<div class="member-info">
+						<img :src="memberInfo.headimg || default_headimg" alt="" onerror=src="SERVICER_IMG/default_headimg.png">
+						<p>{{memberInfo.nickname}}</p>
+							<span v-if="memberInfo.login_type == 'wechat' && memberInfo.login_type_name" class="login-type-wechat">{{memberInfo.login_type_name}}</span>
+							<span v-if="memberInfo.login_type == 'h5' && memberInfo.login_type_name" class="login-type-h5">{{memberInfo.login_type_name}}</span>
+							<span v-if="memberInfo.login_type == 'pc' && memberInfo.login_type_name" class="login-type-pc">{{memberInfo.login_type_name}}</span>
+							<span v-if="memberInfo.login_type == 'weapp' && memberInfo.login_type_name" class="login-type-weapp">{{memberInfo.login_type_name}}</span>
+							<span v-if="memberInfo.login_type == 'app' && memberInfo.login_type_name" class="login-type-app">{{memberInfo.login_type_name}}</span>
+					</div>
+					<div class="member-info-xx">
+						<p>手机号:{{memberInfo.mobile}}</p>
+						<p>会员等级:{{memberInfo.member_level_name}}</p>
+						<p>用户来源:{{memberInfo.login_type_name}}</p>
+						<p>余额:￥{{memberInfo.total_balance}}</p>
+					</div>
+				</div>
+				<div class="member-box" id="otnScroll" v-if="moveActive == '002' && !historyActive">
+					<div class="order-top-nav">
+						<div :class="{active: orderActive == 0}" @click="setOrderActive(0)">全部</div>
+						<div :class="{active: orderActive == 1}" @click="setOrderActive(1)">待支付</div>
+						<div :class="{active: orderActive == 2}" @click="setOrderActive(2)">待发货</div>
+						<div :class="{active: orderActive == 3}" @click="setOrderActive(3)">退款中</div>
+					</div>
+					<div class="order-input">
+						<input type="text" placeholder="搜索下单的商品名称" v-model="orderSousuoValue" @keyup.enter="setOrderActive(orderActive)" @input="setOrderActive(orderActive)" @focus="orderInputFours">
+						<div class=" input-close iconfont iconclose " :class="{active:orderInputCloseActive}" @click="orderInputBlur"></div>
+					</div>
+					<div class="height100"></div>
+					<div class="order-info-bbox">
+						<div class="order-info" v-for="(item, index) in orderList" v-if="orderList.length != 0" @click="toHistoryOrderDetails( item.order_id )">
+							<div class="order-info-title">{{item.order_status_name}}</div>
+							<div class="order-info-details">
+								<img :src="item.order_goods[0].sku_image" alt="" onerror=src="SERVICER_IMG/default_headimg.png">
+								<div class="details-con">
+									<p class="details-con-tit">{{item.order_goods[0].goods_name}}</p>
+									<p class="details-con-gg">{{item.order_goods[0].sku_name}}</p>
+									<p class="details-con-moy">￥{{item.order_goods[0].price}} X {{item.order_goods[0].num}}</p>
+								</div>
+							</div>
+							<div class="order-info-else">
+								<div>
+									<P>订单编号:</P>
+									<P>{{item.order_no}}</P>
+								</div>
+								<div v-if="item.pay_time > 0">
+									<P>付款时间:</P>
+									<P>{{ item.pay_time }}</P>
+								</div>
+								<div>
+									<P>邮费:</P>
+									<P>￥{{item.delivery_money}}</P>
+								</div>
+								<div>
+									<P>实收款:</P>
+									<P>￥{{item.order_money}}</P>
+								</div>
+							</div>
+							<!-- <div class="order-info-button">
+								<span>退款</span><span @click="toOrderDetails">备注</span>
+							</div> -->
+						</div>
+						<div class="noMoreOrder" v-if="orderList == 0">
+							<p>暂无更多订单~</p>
+						</div>
+					</div>
+				</div>
+				<div class="member-box" v-if="moveActive == '003' && !historyActive">
+					<div class="shop-top-nav">
+						<div :class="{active: shopActive == 0}" @click="setShopActive('0')">购买</div>
+						<div :class="{active: shopActive == 1}" @click="setShopActive('1')">足迹</div>
+						<div :class="{active: shopActive == 2}" @click="setShopActive('2')">热销</div>
+					</div>
+					<div class="order-input active">
+						<input type="text" placeholder="搜索商品名称/ID" v-model="shopSousuoValue" @keyup.enter="shopSousuo" @input="shopSousuo" @focus="inputFours" @blur="">
+						<div class="input-close iconfont iconclose" :class="{active:inputCloseActive}" @click="inputBlur"></div>
+					</div>
+					<div style="height: 100px;"></div>
+					<!-- @click="toDoodDetails(item)" -->
+					<div class="order-info-details" v-if="shopActiveList != 0" v-for="(item, index) in shopActiveList" :key="index" @click="toHistoryShopDetails( item.sku_id )">
+						<img :src="item.sku_image || item.goods_image" alt="" onerror=src="SERVICER_IMG/default_headimg.png">
+						<div class="details-con">
+							<p class="details-con-tit">{{item.sku_name || item.goods_name}}</p>
+							<p class="details-con-tsgg">库存: {{item.stock || item.goods_stock}} 销量:{{item.sale_num}}</p>
+							<div class="details-con-ts">
+								<p class="details-con-tsmoy">￥{{item.price}}</p>
+								<p class="details-con-tsts" @click.stop="sendShopInfo(item.sku_id)">推送</p>
+							</div>
+						</div>
+					</div>
+					<div class="order-noinfo-details" v-if="shopActiveList == 0">
+						暂时没有商品~
+					</div>
+				</div>
+				<div class="member-box order-details-active" v-if="orderInfoDetailsActive">
+					<div class="order-details-back" @click="changeOrderActive">
+						返回
+					</div>
+					<div class="order-details-top" v-for="(item, index) in orderInfoDetails" :key="index">
+						<div class="top">
+							<img :src="item.sku_image" alt="" onerror=src="SERVICER_IMG/default_headimg.png">
+							<div>
+								<p>{{item.sku_name}}</p>
+								<p>数量: {{item.num}}</p>
+								<p>价格: <span>￥{{item.price}}</span> </p>
+							</div>
+						</div>
+						<div class="bottom">共{{item.num}}件商品，合计￥{{item.goods_money}}</div>
+					</div>
+					<div class="order-dei-top-con">
+						<p>姓名：{{orderDetails.nickname}}</p>
+						<p>电话：{{orderDetails.mobile}}</p>
+						<div>
+							<p>地址：</p>
+							<p>{{orderDetails.full_address}}{{orderDetails.address}}</p>
+						</div>
+					</div>
+					<div class="order-dei-bottom-con">
+						<div>
+							<p>订单编号: {{orderDetails.order_no}}</p>
+							<span @click="javascriptCopy( orderDetails.order_no )">复制</span>
+						</div>
+						<p>订单交易号: {{orderDetails.out_trade_no}}</p>
+						<p>创建时间: {{orderDetails.create_time}}</p>
+						<p v-if="orderDetails.order_type != 4">配送方式: {{orderDetails.order_type}}</p>
+					</div>
+					<div class="order-dei-bottom">
+						<p>商品金额:￥{{orderDetails.goods_money}}</p>
+						<p>运费:<span>￥{{orderDetails.delivery_money}}</span></p>
+						<!-- <p>会员卡:<span>￥{{orderDetails.nickname}}</span></p> -->
+						<p>实付金额:<span>￥{{orderDetails.order_money}}</span></p>
+					</div>
+				</div>
+				<div class="member-box" id="hmlscroll" v-if="historyActive">
+					<div class="chat-history-top">
+						<p>消息记录</p>
+						<div>  </div>
+					</div>
+					<div class="chat-history-top-nav">
+						<div :class="{active: chatActive == 99}" @click="setChatActive('99')">全部</div>
+						<div :class="{active: chatActive == 0}" @click="setChatActive('0')">文本</div>
+						<div :class="{active: chatActive == 3}" @click="setChatActive('3')">图片</div>
+						<div :class="{active: chatActive == 2}" @click="setChatActive('2')">订单</div>
+						<div :class="{active: chatActive == 1}" @click="setChatActive('1')">商品</div>
+					</div>
+					<div class="chat-history-input" v-if="chatActive != 3">
+						<input type="text" :placeholder="histroyInputMessage" v-model="historySousuoValue" @keyup.enter="getSearchText" @input="getSearchText" @focus="historyInputFours">
+						<div class=" input-close iconfont iconclose " :class="{active:historyInputCloseActive}" @click="historyInputBlur"></div>
+					</div>
+					<div class="marginTop"></div>
+					<div class="history-message-list" >
+						<div v-for="(item, index) in avtiveMemberMessageList" :key="index">
+							<div class="chat-history-shop" v-if="item.goods_sku_id">
+								<p v-if="item.type == 1" style="color: #FF4544;">我 {{item.add_time}}</p>
+								<p v-else style="color: #FF6A00;">{{item.nickname}} {{item.add_time}}</p>
+								<!-- <chat-goods @change="toGoodsDetails" :sku-id="item.goods_sku_id"></chat-goods> -->
+								<div class="chat-history-shop">
+									<div class="ch-shop-con">
+										<img :src="item.sku_image">
+										<div class="ch-shop-rightcon">
+											<p>{{item.sku_name}}</p>
+											<p>库存: {{item.stock}} 销量: {{item.sale_num}}</p>
+											<div>
+												<p>￥{{item.price}}</p>
+												<p @click="toHistoryShopDetails( item.goods_sku_id )">查看商品</p>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div class="chat-history-order" v-else-if="item.order_id">
+								<p>{{item.nickname}} {{item.add_time}}</p>
+								<!-- <chat-order  @change="toOrderDetails" :order-id="item.order_id"> </chat-order> -->
+								<div class="chat-history-order" v-for="(_item, _index) in item.order_goods_list" :key="_index">
+									<div class="ch-shop-con">
+										<img :src="_item.sku_image">
+										<div class="ch-shop-rightcon">
+											<p>{{_item.sku_name}}</p>
+											<p>数量: {{_item.num}} 价格: {{_item.price}}</p>
+											<div>
+												<p>共{{_item.num}}件商品，合计￥{{_item.price * _item.num}}</p>
+											</div>
+										</div>
+									</div>
+									<div class="ch-shop-botcon">
+										<p>订单号：{{item.order_no}}</p>
+										<p @click="toHistoryOrderDetails(item.order_id)">查看订单</p>
+									</div>
+								</div>
+							</div>
+							<div class="history_chat_img" v-else-if="item.content_type == 3" @click="piewImg(item.type==1?item.servicer_say:item.consumer_say)">
+								<p v-if="item.type == 1" style="color: #FF4544;">我 {{item.add_time}}</p>
+								<p v-else style="color: #FF6A00;">{{item.nickname}} {{item.add_time}}</p>
+								<img :src="item.type==1?item.servicer_say:item.consumer_say" />
+							</div>
+							<div class="chat-history-member" v-else-if="item.content_type == 0 && item.type ==0">
+								<p>{{item.nickname}} {{item.add_time}}</p>
+								<div v-html="dealmessage(item.consumer_say) "></div>
+							</div>
+							<div class="chat-history-aut" v-else-if="item.content_type == 0 && item.type ==1">
+								<p>我 {{item.add_time}}</p>
+								<div v-html="dealmessage(item.servicer_say)" ></div>
+							</div>
+						</div>
+					</div>
+					
+				</div>
+				<div class="member-box shop-details-active" v-if="shopInfoDetailsActive">
+					<div class="order-details-back" @click="changeShopActive">
+						返回
+					</div>
+					<div class="shop-details">
+						<div class="img-box">
+							<img :src="goodDetails.sku_image" alt="" onerror=src="SERVICER_IMG/default_headimg.png">
+						</div>
+						<div class="top">
+							<div class="price">￥{{goodDetails.price}}</div>
+							<p class="title">{{goodDetails.sku_name}}</p>
+							<div class="details-box">
+								<p>库存: {{goodDetails.stock}}</p>
+								<p>销量: {{goodDetails.sale_num}}</p>
+							</div>
+						</div>
+						<div class="goodsContent" v-if="goodDetails.goods_content">
+							<p>商品介绍</p>
+							<div v-html="goodDetails.goods_content"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+	</div>
+</div>
+
+<script type="text/javascript">
+	$(document).ready(function() {
+		let height = $('.ns-body-content').height();
+		$('.chat-index-box .chat-content-left').css('height', height);
+		$('.chat-index-box .chat-content-left .content-people-box.scroll').css('height', (height - 110));
+		$('.chat-index-box .chat-content-center').css('height', height);
+		$('.chat-index-box .chat-content-center-bottom-box').css('height', (height - 0));
+	});
+	
+	var goodsTemplate = ` 
+		<div class="chat-history-shop">
+			<div class="ch-shop-con">
+				<img :src="goodsInfo.sku_image">
+				<div class="ch-shop-rightcon">
+					<p>{{goodsInfo.sku_name}}</p>
+					<p>库存: {{goodsInfo.stock}} 销量: {{goodsInfo.sale_num}}</p>
+					<div>
+						<p>￥{{goodsInfo.price}}</p>
+						<p @click="toGoodsDetails()">查看商品</p>
+					</div>
+				</div>
+			</div>
+		</div>
+	 `
+
+	// var goodsTemplate = '<div class="goods-info-box">';
+	// goodsTemplate += '<img :src="goodsInfo.sku_image">';
+	// goodsTemplate += '<div class="goods-price">￥{{goodsInfo.price}}</div>';
+	// goodsTemplate += '<div class="goods-name">{{goodsInfo.sku_name}}</div>';
+	// goodsTemplate += '<div class="goods-desc">{{goodsInfo.introduction}}</div>';
+	// goodsTemplate += '</div>';
+
+	Vue.component('chat-goods', {
+		props: {
+			skuId: {
+				type: [Number, String]
+			}
+		},
+		data: function() {
+			return {
+				goodsInfo: {}
+			}
+		},
+		mounted: function() {
+			let that = this;
+			$.ajax({
+				url: ns.url("servicer://servicer/chat/goodSkuDetial"),
+				data: {
+					sku_id: that.skuId
+				},
+				dataType: 'JSON',
+				type: 'POST',
+				success: function(res) {
+					console.log(res,'servicer://servicer/chat/goodSkuDetial')
+					that.goodsInfo = res.data;
+					that.goodsInfo.sku_image = ns.img(that.goodsInfo.sku_image);
+				}
+			});
+		},
+		methods:{
+			toGoodsDetails() {
+				this.$emit('change',{goodsInfo: this.goodsInfo})
+			}
+		},
+		template: goodsTemplate
+	});
+	var orderTemplate = `
+		<div class="chat-history-order">
+			<div class="ch-shop-con">
+				<img :src="orderInfoDetails[0].sku_image">
+				<div class="ch-shop-rightcon">
+					<p>{{orderInfoDetails[0].sku_name}}</p>
+					<p>数量: {{orderInfoDetails[0].num}} 价格: {{orderInfoDetails[0].price}}</p>
+					<div>
+						<p>共{{orderInfoDetails[0].num}}件商品，合计￥{{orderInfoDetails[0].goods_money}}</p>
+					</div>
+				</div>
+			</div>
+			<div class="ch-shop-botcon">
+				<p>订单号：{{orderInfoDetails[0].order_no}}</p>
+				<p @click="toOrderDetails">查看订单</p>
+			</div>
+		</div>
+	 `
+	// var orderTemplate = '<div class="order-info-box">';
+	// orderTemplate += '<img :src="orderInfo.sku_image">';
+	// orderTemplate += '<div class="order-info">';
+	// orderTemplate += '<div class="order-No">订单号：<span>{{orderInfo.order_no}}</span></div>';
+	// orderTemplate += '<div class="order-price">订单金额：<span class="follow-color">￥{{orderInfo.order_money}}</span></div>';
+	// orderTemplate += '<div class="order-status">';
+	// orderTemplate += '<span class="follow-color">{{orderInfo.order_status_name}}</span>';
+	// orderTemplate += '</div>';
+	// orderTemplate += '</div>';
+	// orderTemplate += '</div>';
+
+	Vue.component('chat-order', {
+		props: {
+			orderId: {
+				type: [Number, String]
+			}
+		},
+		data: function() {
+			return {
+				orderInfo: {},
+				orderInfoDetails: ''
+			}
+		},
+		mounted: function() {
+			let that = this;
+			$.ajax({
+				url: ns.url("servicer://servicer/chat/orderDetail"),
+				data: {
+					order_id: that.orderId
+				},
+				dataType: 'JSON',
+				type: 'POST',
+				success: function(res) {
+					console.log(res,'servicer://servicer/chat/orderDetail')
+					if (res.code == 0) {
+						that.orderInfo = res.data;
+						that.orderInfoDetails = res.data.order_goods;
+						that.orderInfoDetails.forEach( (item, index) => {
+							that.orderInfoDetails[index].sku_image = ns.img(that.orderInfoDetails[index].sku_image)
+						} )
+					}
+
+				}
+			});
+		},
+		methods: {
+			toOrderDetails(){
+				this.$emit('change',{orderInfo: this.orderInfo,orderInfoDetails: this.orderInfoDetails})
+			}
+		},
+		template: orderTemplate
+	});
+
+	var vue = new Vue({
+		el: "#chatIndexBox",
+		data: {
+			shopInfo: {},
+			websocket: null, //socket实例
+			maxNum: 5, //最大重连次数
+			connectTime: 10000, //重连时间间隔
+			text: "", //连接错误提示
+			message: '', //发送文本
+			goMessage: '',
+			message_img: '', //發送的
+			image: '',
+			count: 0,
+
+			servicer_id: 0, //绑定id
+
+			showHistory: true,
+			showCurrent: true,
+			onlineMembers: [], //在线人数
+
+			selectMemberList: [], //正在聊天列表
+			liuyanMenbers: [],
+
+			otherlist: [], //用户的商品或订单信息
+
+			chatMessageList: [], //聊天信息列表
+
+			page: 1,
+			hmlPage: 1,
+			otnPage: 1,
+			isAll: false,
+			hmlIsAll: false,
+			otnIsAll: false,
+
+			userPage: {
+				currentPage: 1,
+				countPage: 1,
+				repeat_flag: false
+			},
+			selectMember: {},
+			tab_repeat_flag: false,
+
+			numberTotal: 0,
+
+			chatBoxState: false,
+			messageBoxState: false,
+			sendState: false,
+
+			/*----------------------------心跳检测相关参数--------------------------------------------------*/
+			timeout: 20000, //20s发一次心跳
+			timeoutObj: null,
+			serverTimeoutObj: null,
+
+			emjoyList: null,
+
+			contentType: 0,
+			moveActive: '001',
+			orderActive: 0,
+			shopActive: 0,
+			shopActiveList: [],
+			chatActive: '99',
+			setShopActivePage: 1,
+			setShopActiveSortPage: 1,
+			memberActive: 0,
+			memberInfo: '',
+			activeMemberId: 0,
+			orderList: ['1','2'],
+			goodDetails:'',
+			orderDetails:'',
+			orderInfoDetails:'',
+			sendGoodsId:'',
+			wwsHostname: `wss://${window.location.hostname }/wss`,
+			loading:'',
+			// inputSousuoValur: '',
+			shopSousuoValue: '',
+			orderSousuoValue: '',
+			historySousuoValue: '',
+			inputCloseActive: false,
+			orderInputCloseActive: false,
+			historyInputCloseActive: false,
+			configFastlist: [],
+			isFirstLoad: true,
+			avtiveMemberMessageList: [],
+			historyActive: false,
+			histroyInputMessage: '搜索消息记录',
+			orderInfoDetailsActive: false,
+			shopInfoDetailsActive: false,
+
+			// 客服头像
+			servicer_avatar: ns.img('{$servicer_info.avatar}'),
+			
+			// 会员默认头像
+			default_headimg: ns.img('{$default_img.default_headimg}'),
+		},
+		watch: {
+			showHistory: function(newVal, oldVal) {
+				if (newVal) {
+					this.$nextTick(function() {
+						let height = $('.ns-body-content').height();
+						$('.chat-index-box .chat-content-left').css('height', height);
+						$('.chat-index-box .chat-content-left .content-people-box.scroll').css('height', (height - 110));
+						$('.chat-index-box .chat-content-center').css('height', height);
+						$('.chat-index-box .chat-content-center-bottom-box').css('height', (height - 0));
+					})
+				}
+			},
+			shopActiveList: function(n, o) {
+				var that = this
+				if (n) {
+					console.log(n, o, 'n')
+					$(".member-box").on('scroll', function() {
+						var scroH = $(".member-box").scrollTop(); //滚动高度
+						var viewH = $(".chat-content-center-bottom-right").height(); //可见高度 
+						var contentH = (n.length) * 82; //内容高度
+
+						console.log(scroH, viewH, contentH)
+						if (scroH + viewH - contentH  == 130) { //距离底部高度小于100px
+							console.log('加载下一页')
+							var tast = setTimeout(function() {
+								console.log(that)
+								that.setShopActive(that.shopActive, 'false')
+							}, 500);
+						}
+					});
+				}
+			},
+			moveActive: function(n, o) {
+				var that = this;
+				if (n) {
+					if (n == '002') {
+						that.getOrderList()
+					}
+					if (n == '003') {
+						that.setShopActive('0')
+					}
+					if (n == '001') {
+						that.getMemberInfo()
+					}
+				}
+			},
+			// inputSousuoValur: function(n, o){
+			// 	if(n) {
+			// 		console.log(n)
+			// 		this.userPageData(0, n)
+			// 	}
+			// }
+		},
+		computed: {
+
+			//右侧要展示的商品或订单
+			showInfo: function() {
+				let obj = {};
+				let list = this.otherlist;
+				let that = this;
+				if (that.selectMember.member_id) {
+					let arr = list.filter(function(v) {
+						return v.member_id == that.selectMember.member_id
+					});
+					if (arr) {
+						obj = arr[0]
+					}
+					return obj
+				}
+			},
+			MessageList: function() {
+				return this.chatMessageList.length;
+			}
+		},
+		mounted: function() {
+			let list = emjoyList;
+			var keys = Object.keys(list);
+			for (var i = 0; i < keys.length; i++) {
+				emjoyList[keys[i]] = ns.img(emjoyList[keys[i]])
+			}
+			this.emjoyList = list;
+			this.userPageData();
+			// this.notesData();
+			this.findShopInfo();
+			this.socketConnect();
+			this.listenerFunction();
+			// this.listenerHistory()
+			this.requestUserPageData();
+			this.refreshPage(); //刷新页面
+			this.addImg();
+			this.setLocationHostname()
+			this.getConfigFastlist()
+			console.log(this.default_headimg)
+		},
+		methods: {
+			javascriptCopy(value) {
+				var oInput = document.createElement('input'); //创建一个隐藏input（重要！）
+				oInput.value = value; //赋值
+				document.body.appendChild(oInput);
+				oInput.select(); // 选择对象
+				document.execCommand("Copy"); // 执行浏览器复制命令
+				oInput.className = 'oInput';
+				oInput.style.display = 'none';
+				layer.msg('复制成功');
+			},
+			getConfigFastlist() {
+				var that = this
+				$.ajax({
+					url: ns.url("servicer://servicer/config/fastlist"),
+					data: {},
+					dataType: 'JSON',
+					type: 'POST',
+					success: function(res) {
+						console.log(res, 'servicer://servicer/config/fastlist')
+						that.configFastlist = res.data
+					}
+				});
+			},
+			inputFours() {
+				this.inputCloseActive = true
+			},
+			orderInputFours() {
+				this.orderInputCloseActive = true
+			},
+			historyInputFours() {
+				this.historyInputCloseActive = true
+			},
+			inputBlur() {
+				this.shopSousuoValue = ''
+				this.inputCloseActive = false
+				this.setShopActive( this.shopActive )
+			},
+			orderInputBlur() {
+				this.orderSousuoValue = ''
+				this.orderInputCloseActive = false
+				this.setOrderActive( this.orderActive )
+			},
+			getSearchText() {
+				this.hmlPage = 0;
+				this.avtiveMemberMessageList = []
+				this.openCChatBox( false )
+			},
+			historyInputBlur() {
+				this.historySousuoValue = ''
+				this.historyInputCloseActive = false
+				this.avtiveMemberMessageList = []
+				this.openCChatBox( false )
+			},
+			shopSousuo() {
+				if( this.shopActive == 0 ){
+					this.shopActiveList = []
+					let page_size = 10
+					let that = this
+					$.ajax({
+						url: ns.url("servicer://servicer/order/memberOrderGoodsList"),
+						data: {
+							page: that.setShopActivePage,
+							page_size,
+							member_id: that.activeMemberId,
+							search_text: that.shopSousuoValue
+						},
+						dataType: 'JSON',
+						type: 'POST',
+						success: function(res) {
+							console.log(res, 'servicer://servicer/order/memberOrderGoodsList')
+							if (res.code == 0) {
+								res.data.list.forEach((item, index, array) => {
+									item.sku_image = ns.img(item.sku_image.split(',')[0])
+									that.shopActiveList.push( item )
+									that.setShopActiveSortPage = res.data.page_count
+								})
+							} else {
+								layer.msg(res.msg);
+							}
+									
+						}
+									
+					});
+				}
+				if( this.shopActive == 1 ) {
+					this.shopActiveList = []
+					let page_size = 10
+					let that = this
+					$.ajax({
+						url: ns.url("servicer://servicer/goods/memberGoodsBrowse"),
+						data: {
+							page: that.setShopActivePage,
+							page_size,
+							member_id: that.activeMemberId,
+							search_text: that.shopSousuoValue
+						},
+						dataType: 'JSON',
+						type: 'POST',
+						success: function(res) {
+							console.log(res, 'servicer://servicer/goods/memberGoodsBrowse')
+							if (res.code == 0) {
+								res.data.list.forEach((item, index, array) => {
+									item.sku_image = ns.img(item.sku_image.split(',')[0])
+									that.shopActiveList.push( item )
+									that.setShopActiveSortPage = res.data.page_count
+								})
+								
+							}  else {
+								layer.msg(res.msg);
+							}
+									
+						}
+									
+					});
+				}
+				if( this.shopActive == 2 ) {
+					this.shopActiveList = []
+					let page_size = 10
+					let that = this
+					$.ajax({
+						url: ns.url("servicer://servicer/goods/lists"),
+						data: {
+							page: this.setShopActivePage,
+							page_size,
+							search_text: that.shopSousuoValue
+						},
+						dataType: 'JSON',
+						type: 'POST',
+						success: function(res) {
+							console.log(res, 'servicer://servicer/goods/lists')
+							if (res.code == 0) {
+								res.data.list.forEach((item, index, array) => {
+									item.goods_image = ns.img(item.goods_image.split(',')[0])
+									that.shopActiveList.push(item)
+									that.setShopActiveSortPage = res.data.page_count
+								})
+							} else {
+								layer.msg(res.msg);
+							}
+					
+						}
+					
+					});
+				}
+			},
+			setLocationHostname(){
+				let that = this;
+				if(window.location.hostname != '127.0.0.1'){
+					$.ajax({
+						url: ns.url("servicer://servicer/config/config"),
+						data: {
+						},
+						dataType: 'JSON',
+						type: 'POST',
+						success: function(res) {
+							that.wwsHostname = res.data.value.socket_url
+							console.log(res, 'servicer://servicer/config/config')
+						},
+						error: (err) => {
+							console.log(err, 'servicer://servicer/config/config')
+						}
+					
+					});
+				}
+			},
+			sendShopInfo(id) {
+				this.sendGoodsId = id
+				this.contentType = 1
+				this.send()
+			},
+			toDoodDetails(item) {
+				this.goodDetails = item
+				this.moveActive = '006'
+			},
+			toGoodsDetails(event) {
+				console.log(event,'event')
+				this.goodDetails = event.goodsInfo
+				// this.historyActive = false
+				// this.moveActive = '006'
+				this.orderInfoDetailsActive = false
+				this.shopInfoDetailsActive = true
+			},
+			toOrderDetails(event) {
+				console.log(event,'event')
+				this.orderDetails = event.orderInfo
+				this.orderInfoDetails = event.orderInfoDetails
+				this.orderInfoDetailsActive = true
+				this.shopInfoDetailsActive = false
+				// this.historyActive = false
+				// this.moveActive = '004'
+			},
+			setChatActive(item) {
+				this.chatActive = item
+				switch( item ){
+					case '0':
+					case '99':
+						this.histroyInputMessage = '搜索消息记录'
+						break;
+					case '1':
+						this.histroyInputMessage = '搜索商品记录'
+						break;
+					case '2':
+						this.histroyInputMessage = '搜索订单记录'
+						break;
+					default:
+						console.log('^v^')
+				}
+				this.hmlPage = 0;
+				this.avtiveMemberMessageList = []
+				this.openCChatBox()
+			},
+			listenerHistory() {
+				let that = this;
+				$("#hmlscroll").scroll(function() {
+					var scroH = $("#hmlscroll").scrollTop(); //滚动高度
+					console.log('scroH', scroH)
+					if (scroH == 1 && !that.hmlIsAll) {
+						that.openCChatBox(false);
+					}
+				})
+			},
+			openCChatBox(ttype) {
+				if( !this.activeMemberId ) {
+					layer.msg('未选择在线用户！');
+					return false
+				}
+				if( ttype ) {
+					this.hmlPage = 0
+					if(this.historyActive) {
+						this.historyActive = !this.historyActive
+						this.chatActive = '99'
+						return false
+					}
+				} 
+				
+				
+				let historyHeight = $(".history-message-list").height();
+				console.log(historyHeight, 'historyHeight')
+				var page_size = 25
+				var that = this
+				$.ajax({
+					url: ns.url("servicer://servicer/message/lists"),
+					data: {
+						page: that.hmlPage,
+						page_size,
+						member_id: that.activeMemberId ,
+						content_type: that.chatActive == '99' ? '' : that.chatActive ,
+						search_text: that.historySousuoValue
+					},
+					dataType: 'JSON',
+					type: 'POST',
+					success: function(res) {
+						console.log(res, 'servicer://servicer/message/lists')
+						if (res.code == 0) {
+							that.historyActive = true
+							
+							if (res.data.list) {
+								that.hmlPage += 1;
+							}
+							if (res.data.list < 25) {
+								that.hmlIsAll = true;
+							}
+							
+							if( ttype ) {
+								that.avtiveMemberMessageList = []
+							}
+							
+							res.data.list = res.data.list.reverse();
+							
+							that.avtiveMemberMessageList = res.data.list.concat(that.avtiveMemberMessageList ? that.avtiveMemberMessageList : [])
+							for (var index in that.avtiveMemberMessageList) {
+								if (that.avtiveMemberMessageList[index].content_type == 3) { 
+									that.avtiveMemberMessageList[index].servicer_say = ns.img(that.avtiveMemberMessageList[index].servicer_say)
+									that.avtiveMemberMessageList[index].consumer_say = ns.img(that.avtiveMemberMessageList[index].consumer_say)
+								}
+								// that.avtiveMemberMessageList[index].headimg = ns.img(that.avtiveMemberMessageList[index].headimg)
+								// that.avtiveMemberMessageList[index].avatar = ns.img(that.avtiveMemberMessageList[index].avatar)
+								if( that.avtiveMemberMessageList[index].goods_sku_id ){
+									that.avtiveMemberMessageList[index].sku_image = ns.img( that.avtiveMemberMessageList[index].sku_image )
+								}
+								if( that.avtiveMemberMessageList[index].order_id ){
+									that.avtiveMemberMessageList[index].order_goods_list.forEach( (_item, _index ) => {
+										that.avtiveMemberMessageList[index].order_goods_list[_index].sku_image = ns.img( that.avtiveMemberMessageList[index].order_goods_list[_index].sku_image  )
+									})
+								}
+								if(that.avtiveMemberMessageList[index].add_time > 0) that.avtiveMemberMessageList[index].add_time = ns.time_to_date(that.avtiveMemberMessageList[index].add_time)
+							}
+							
+							
+							if( ttype ){
+								that.$nextTick(() => {
+									let height = $(".history-message-list").height();
+									console.log(height , '.history-message-list')
+									$("#hmlscroll").scrollTop(height)
+									that.listenerHistory()
+								})
+							} else {
+								that.$nextTick(() => {
+									let height = $(".history-message-list").height();
+									console.log(height , '.history-message-list')
+									$("#hmlscroll").scrollTop(height - historyHeight)
+								})
+							}
+							
+							// that.$nextTick(() => {
+							// })
+							
+							
+						} else {
+							layer.msg(res.msg);
+						}
+				
+					}
+				
+				});
+			},
+			changeOrderActive() {
+				this.orderInfoDetailsActive = false
+			},
+			changeShopActive() {
+				this.shopInfoDetailsActive = false
+			},
+			toHistoryOrderDetails(id) {
+				
+				var that = this
+				that.orderInfoDetailsActive = true
+				$.ajax({
+					url: ns.url("servicer://servicer/chat/orderDetail"),
+					data: {
+						order_id: id
+					},
+					dataType: 'JSON',
+					type: 'POST',
+					success: function(res) {
+						console.log(res,'servicer://servicer/chat/orderDetail')
+						if (res.code == 0) {
+							that.orderDetails = res.data;
+							that.orderInfoDetails = res.data.order_goods;
+							that.orderInfoDetails.forEach((item, index) => {
+								that.orderInfoDetails[index].sku_image = ns.img(that.orderInfoDetails[index].sku_image)
+							})
+							// that.historyActive = false
+							// that.moveActive = '004'
+						}
+				
+					}
+				});
+				console.log(id,'toHistoryOrderDetails')
+				
+			},
+			toHistoryShopDetails( id ) {
+				var that = this
+				that.shopInfoDetailsActive = true
+				$.ajax({
+					url: ns.url("servicer://servicer/chat/goodSkuDetial"),
+					data: {
+						sku_id: id
+					},
+					dataType: 'JSON',
+					type: 'POST',
+					success: function(res) {
+						console.log(res,'servicer://servicer/chat/goodSkuDetial')
+						that.goodDetails = res.data;
+						that.goodDetails.sku_image = ns.img(that.goodDetails.sku_image);
+					}
+				});
+			},
+			// toOrderDetails( item ) {
+			// 	console.log('123',item, 'item')
+			// 	this.moveActive = '004'
+			// 	this.orderDetails = item
+			// },
+			setShopActive(item, active = 'true', sec) {
+				console.log(item, active)
+				this.shopActive = item
+				let that = this
+				var page_size = 10;
+				if (item == 2) {
+					if (active == 'true') {
+						this.setShopActivePage = 1
+					} else {
+						this.setShopActivePage += 1
+					}
+					console.log(this.setShopActiveSortPage, this.setShopActivePage, this.setShopActiveSortPage < this.setShopActivePage,
+						'this.setShopActiveSortPage < this.setShopActivePage')
+					if (this.setShopActiveSortPage < this.setShopActivePage) {
+						return false
+					}
+					console.log('热销')
+					$.ajax({
+						url: ns.url("servicer://servicer/goods/lists"),
+						data: {
+							page: this.setShopActivePage,
+							page_size
+						},
+						dataType: 'JSON',
+						type: 'POST',
+						success: function(res) {
+							console.log(res, 'servicer://servicer/goods/lists')
+							if (res.code == 0) {
+								if(active == 'true') that.shopActiveList = []
+								res.data.list.forEach((item, index, array) => {
+									item.goods_image = ns.img(item.goods_image.split(',')[0])
+									that.shopActiveList.push(item)
+									that.setShopActiveSortPage = res.data.page_count
+								})
+							} else {
+								layer.msg(res.msg);
+							}
+
+						}
+
+					});
+
+				}
+				if (item == 0) {
+					if (active == 'true') {
+						this.setShopActivePage = 1
+					} else {
+						this.setShopActivePage += 1
+					}
+					console.log(this.setShopActiveSortPage, this.setShopActivePage, this.setShopActiveSortPage < this.setShopActivePage,
+						'this.setShopActiveSortPage < this.setShopActivePage')
+					if (this.setShopActiveSortPage < this.setShopActivePage) {
+						return false
+					}
+					$.ajax({
+						url: ns.url("servicer://servicer/order/memberOrderGoodsList"),
+						data: {
+							page: this.setShopActivePage,
+							page_size,
+							member_id: this.activeMemberId,
+							search_text: sec
+						},
+						dataType: 'JSON',
+						type: 'POST',
+						success: function(res) {
+							console.log(res, 'servicer://servicer/order/memberOrderGoodsList')
+							if (res.code == 0) {
+								if(active == 'true') that.shopActiveList = []
+								res.data.list.forEach((item, index, array) => {
+									item.sku_image = ns.img(item.sku_image.split(',')[0])
+									that.shopActiveList.push(item)
+									that.setShopActiveSortPage = res.data.page_count
+								})
+							} else {
+								layer.msg(res.msg);
+							}
+				
+						}
+				
+					});
+				
+				}
+				if (item == 1) {
+					if (active == 'true') {
+						this.setShopActivePage = 1
+					} else {
+						this.setShopActivePage += 1
+					}
+					console.log(this.setShopActiveSortPage, this.setShopActivePage, this.setShopActiveSortPage < this.setShopActivePage,
+						'this.setShopActiveSortPage < this.setShopActivePage')
+					if (this.setShopActiveSortPage < this.setShopActivePage) {
+						return false
+					}
+					$.ajax({
+						url: ns.url("servicer://servicer/goods/memberGoodsBrowse"),
+						data: {
+							page: this.setShopActivePage,
+							page_size,
+							member_id: this.activeMemberId
+						},
+						dataType: 'JSON',
+						type: 'POST',
+						success: function(res) {
+							console.log(res, 'servicer://servicer/goods/memberGoodsBrowse')
+							if (res.code == 0) {
+								if(active == 'true') that.shopActiveList = []
+								res.data.list.forEach((item, index, array) => {
+									item.sku_image = ns.img(item.sku_image.split(',')[0])
+									that.shopActiveList.push(item)
+									that.setShopActiveSortPage = res.data.page_count
+								})
+							} else {
+								layer.msg(res.msg);
+							}
+				
+						}
+				
+					});
+				
+				}
+
+			},
+
+			//获取历史聊天列表
+			userPageData: function(id, val = '') {
+				let that = this;
+				$.ajax({
+					url: ns.url("servicer://servicer/index/memberList"),
+					data: {
+						member_name: val
+					},
+					dataType: 'JSON',
+					type: 'POST',
+					success: function(res) {
+						console.log(res, 'servicer://servicer/index/memberList')
+						if (res.code == 0) {
+							// that.onlineMembers = []
+							that.onlineMembers = res.data.member_list.list
+							
+							if( id && id > 0 ) {
+								that.onlineMembers.forEach(item => {
+									if(item.member_id == id) item.unread = 0
+								})
+								that.activeMemberId = id
+								that.memberActive = id
+								that.openChat()
+								that.getMemberInfo()
+							} else {
+								that.onlineMembers.forEach(item => {
+									if(item.member_id == that.activeMemberId) item.unread = 0
+								})
+							}
+							that.onlineMembers.forEach(v => {
+								if(v.headimg){
+									v.headimg = ns.img(v.headimg);
+								}
+								if(v.content_type == 1) v.consumer_say = '您收到了一条商品消息';
+								if(v.content_type == 2) v.consumer_say = '您收到了一条订单消息';
+								if(v.content_type == 3) v.consumer_say = '您收到了一条图片消息';
+								v.add_time = ns.time_to_date(v.add_time).split(' ')[1]
+							})
+						} else {
+							layer.msg(res.msg);
+						}
+					}
+				});
+			},
+			getMemberInfo() {
+				var that = this
+				$.ajax({
+					url: ns.url("servicer://servicer/member/info"),
+					data: {
+						member_id: that.activeMemberId
+					},
+					dataType: 'JSON',
+					type: 'POST',
+					success: function(res) {
+						console.log(res, 'servicer://servicer/member/info')
+						if (res.code == 0) {
+							that.memberInfo = res.data
+							if(that.memberInfo.headimg ) that.memberInfo.headimg = ns.img(that.memberInfo.headimg)
+							var aInput=document.getElementsByClassName('ns-nav-more-span');
+							for (var i = 0; i < aInput.length; i++) {
+								aInput[i].index = i;
+								aInput[i].className = 'ns-nav-more-span';
+								aInput[0].className = 'ns-nav-more-span active';
+								
+							}
+						} else {
+							layer.msg(res.msg);
+						}
+					}
+				});
+			},
+			setOrderActive(item) {
+				this.orderActive = item
+				switch (item) {
+					case 0:
+						this.getOrderList()
+						break;
+					case 1:
+						this.getOrderList('0')
+						break;
+					case 2:
+						this.getOrderList('1')
+						break;
+					case 3:
+						this.getOrderList('refunding')
+						break;
+					default: 
+						console.log('^v^')
+				}
+			},
+			getOrderList(id = '', type = true) {
+				var that = this
+				page_size = 10
+				if(type) that.otnPage = 1
+				$.ajax({
+					url: ns.url("servicer://servicer/order/lists"),
+					data: {
+						member_id: that.activeMemberId,
+						order_status: id,
+						page: that.otnPage,
+						page_size,
+						search_type: 'order_name',
+						search_text: that.orderSousuoValue
+					},
+					dataType: 'JSON',
+					type: 'POST',
+					success: function(res) {
+						console.log(res, 'servicer://servicer/order/lists')
+						if (res.code == 0) {
+							if (res.data.list) {
+								that.otnPage += 1;
+							}
+							if (res.data.list < 10) {
+								that.otnIsAll = true;
+							}
+							if(type) that.orderList = []
+							res.data.list.forEach((item, index) => {
+								item.order_goods[0].sku_image = ns.img(item.order_goods[0].sku_image)
+								item.order_goods[0].sku_name = item.order_goods[0].sku_name.split(`${item.order_goods[0].goods_name}`)[1]
+								item.pay_time = ns.time_to_date(item.pay_time)
+								that.orderList.push(item)
+							})
+							that.$nextTick(() => {
+								if( type ) 	that.listenerOrder()
+							})
+						} else {
+							layer.msg(res.msg);
+						}
+					} 
+				});
+			},
+			listenerOrder() {
+				let that = this;
+				$("#otnScroll").scroll(function() {
+					var scroH = $("#otnScroll").scrollTop(); //滚动高度
+					var scroHeight = $("#otnScroll").height(); //滚动高度
+					var _scroH = $(".order-info-bbox").height();
+					console.log(_scroH - scroH - scroHeight )
+					if ( ( scroH + scroHeight - _scroH ) > 120 && !that.otnIsAll) {
+						// console.log(that.orderActive)
+						// return false
+						switch (that.orderActive) {
+							case 0:
+								that.getOrderList('', false);
+								break;
+							case 1:
+								this.getOrderList('0', false)
+								break;
+							case 2:
+								this.getOrderList('1', false)
+								break;
+							// case 3:
+								this.getOrderList('refunding', false)
+								break;
+							default: 
+								console.log('^v^')
+						}
+						// that.getOrderList(that.orderActive, false);
+					}
+				})
+			},
+			//获取留言列表
+			// notesData: function(page) {
+			// 	let that = this;
+			// 	$.ajax({
+			// 		url: ns.url("servicer://servicer/index/unreadMembers"),
+			// 		dataType: 'JSON',
+			// 		type: 'POST',
+			// 		success: function(res) {
+			// 			console.log(res,'servicer://servicer/index/unreadMembers')
+			// 			if (res.code == 0) {
+			// 				if (res.data.unread_member.list) {
+			// 					res.data.unread_member.list.forEach(function(v) {
+			// 						// //查找重复数据
+			// 						// that.offlineMembers.forEach(function(v_c,index_c){
+			// 						// 	if(v.member_id == v_c.member_id){
+			// 						// 		that.offlineMembers.splice(index_c,1)
+			// 						// 	}
+			// 						// });
+			// 						// if(v.unread>0){
+			// 						// 	v.headimg = ns.img(v.headimg);
+			// 						// 	v.nsSeeMessage = v.unread;
+			// 						// 	that.liuyanMenbers.push(v);
+			// 						// 	that.onlineMembers.push(v);
+			// 						// }
+			// 					})
+			// 				}
+			// 			} else {
+			// 				layer.msg(res.msg);
+			// 			}
+			// 		}
+			// 	});
+			// },
+			//获取当前选中用户的member_id
+			edit: function() {
+				let arr = this.selectMemberList;
+				let newArr = [];
+				if (arr.length) {
+					newArr = arr.filter(function(v) {
+						return v.select == true;
+					})
+				}
+				if (newArr.length) {
+					this.selectMember = newArr[0];
+				} else {
+					this.selectMember = {};
+				}
+				if (this.selectMember && this.selectMember.headimg) {
+					this.selectMember.headimg = ns.img(this.selectMember.headimg);
+				}
+			},
+			listenerFunction: function(e) {
+				let that = this;
+				$("#scroll").scroll(function() {
+					var scroH = $("#scroll").scrollTop(); //滚动高度
+					if (scroH == 0 && !that.isAll) {
+						that.findChatList(false);
+					}
+				})
+			},
+			//监听回车事件
+			textareaKeydown(event) {
+				if (event.keyCode === 13) {
+					this.chatBoxState = false;
+					this.messageBoxState = false
+					if (this.message) {
+						this.send();
+					}
+					event.preventDefault(); // 阻止浏览器默认换行操作
+					return false;
+				}
+			},
+			requestUserPageData: function() {
+				var that = this;
+				$(".left-content .content-item:eq(1) .content-people-box").scroll(function(e) {
+					var currentHeight = $(this).height(),
+						subTopHeight = $(this).find(".content-people:last-of-type").position().top,
+						subOneselfHeight = $(this).find(".content-people:last-of-type").outerHeight(),
+						subHeight = subTopHeight + subOneselfHeight;
+					if (subHeight == currentHeight && !that.userPage.repeat_flag) {
+						that.userPage.repeat_flag = true;
+						that.userPage.currentPage += 1;
+						if (that.userPage.currentPage > that.userPage.countPage) {
+							return
+						}
+						that.userPageData(that.userPage.currentPage);
+					}
+				})
+			},
+			//查询店铺信息
+			findShopInfo: function() {
+				let that = this;
+				$.ajax({
+					url: ns.url("servicer://servicer/chat/siteInfo"),
+					data: {},
+					dataType: 'JSON',
+					type: 'POST',
+					success: function(res) {
+						console.log(res,'servicer://servicer/chat/siteInfo')
+						if (res.code == 0) {
+							res.data.data.logo = ns.img(res.data.data.logo);
+							that.shopInfo = res.data.data;
+						}
+					}
+				});
+			},
+			// 设置已读
+			chengeReadType: function() {
+				$.ajax({
+					url: ns.url("servicer://servicer/message/setRead"),
+					data: {member_id: this.activeMemberId },
+					dataType: "JSON",
+					type: 'POST',
+					success: res => {
+						console.log(res,'servicer://servicer/message/setRead')
+					}
+				})
+			},
+			//查询聊天记录
+			findChatList: function(isAutoScroll) {
+				let that = this;
+				if (that.isAll) return;
+				let loadHeight = $(".chat-content-center-bottom-content").height();
+				if (that.selectMember) {
+					$.ajax({
+						url: ns.url("servicer://servicer/message/lists"),
+						data: {
+							member_id: that.activeMemberId,
+							page: that.page
+						},
+						dataType: 'JSON',
+						type: 'POST',
+						success: function(res) {
+							console.log(res,'servicer://servicer/message/lists')
+							that.tab_repeat_flag = false;
+							console.log({
+								'请求完成': that.tab_repeat_flag
+							});
+							if (res.code == 0) {
+								
+								that.getMemberInfo()
+								that.chengeReadType()
+								// layer.close(that.loading);
+								
+								if (res.data.list) {
+									that.page += 1;
+								}
+								if (res.data.list < 10) {
+									that.isAll = true;
+								}
+								res.data.list = res.data.list.reverse();
+
+								that.chatMessageList = res.data.list.concat(that.chatMessageList ? that.chatMessageList : [])
+								for (var index in that.chatMessageList) {
+									if (that.chatMessageList[index].content_type == 3) {
+										that.chatMessageList[index].servicer_say = ns.img(that.chatMessageList[index].servicer_say)
+										that.chatMessageList[index].consumer_say = ns.img(that.chatMessageList[index].consumer_say)
+									}
+									if(that.chatMessageList[index].headimg){
+										that.chatMessageList[index].headimg = ns.img(that.chatMessageList[index].headimg)
+									}
+									if(that.chatMessageList[index].avatar){
+										that.chatMessageList[index].avatar = ns.img(that.chatMessageList[index].avatar)
+									}
+									if(that.chatMessageList[index].add_time > 0) {
+										that.chatMessageList[index].add_time = ns.time_to_date(that.chatMessageList[index].add_time)
+									} 
+								}
+
+								if (isAutoScroll) {
+									that.$nextTick(() => {
+										let height = $(".chat-content-center-bottom-content").height();
+										console.log(height, '.chat-content-center-bottom-content')
+										if(height <= 608){
+											$("#scroll").scrollTop(0)
+										}else{
+											$("#scroll").scrollTop(height)
+										}
+									})
+								}else {
+									that.$nextTick(() => {
+										let height = $(".chat-content-center-bottom-content").height();
+										$("#scroll").scrollTop(height - loadHeight )
+									})
+								}
+							}
+						},
+						fail: function() {
+							that.tab_repeat_flag = false;
+						}
+					});
+				}
+			},
+			//点击选中聊天
+			openChat: function(e, i) {
+				// this.loading = layer.load(2, {shade: true});
+				this.isFirstLoad = false
+				this.chatBoxState = false
+				this.messageBoxState = false
+				
+				this.orderInfoDetailsActive = false
+				this.shopInfoDetailsActive = false
+				this.historyActive = false
+				this.chatActive = '99'
+				
+				this.memberActive = e || this.activeMemberId;
+				// this.onlineMembers[i].unread = 0
+				var aInput=document.getElementsByClassName('ns-nav-more-span');
+				for(var i=0;i<aInput.length;i++){
+					aInput[i].className='ns-nav-more-span';
+					aInput[0].className='ns-nav-more-span active';
+				}
+				// this.chengeReadType()
+				this.activeMemberId = e || this.activeMemberId
+				this.moveActive = '001'
+				let that = this;
+				that.memberInfo = ''
+				// let obj = that.onlineMembers.filter((v) => {
+				// 	return v.member_id == e
+				// });
+				// obj.unread = 0
+				// obj.select = true;
+				let arr = that.selectMemberList ? that.selectMemberList : [];
+				// if (arr.length) {
+				// 	let hasItem = false;
+				// 	arr.forEach(function(v) {
+				// 		if (v.member_id == obj.member_id) {
+				// 			hasItem = true;
+				// 			v.select = true;
+				// 		} else {
+				// 			v.select = false;
+				// 		}
+				// 	});
+				// 	if (!hasItem) {
+				// 		arr.push(obj);
+				// 	}
+				// } else {
+				// 	arr.push(obj);
+				// }
+				// console.log(obj,' obj的问题 ')
+				$.ajax({
+					url: ns.url("servicer://servicer/chat/bindMember"),
+					data: {
+						member_id: e,
+					},
+					dataType: 'JSON',
+					type: 'POST',
+					success: function(res) {
+						console.log(res,'servicer://servicer/chat/bindMember');
+						return false
+					}
+				});
+				that.onlineMembers.forEach(item => {
+					if(item.member_id == e) item.unread = 0
+				})
+				// let hasmember = that.onlineMembers.filter((v) => {
+				// 	return v.member_id == obj.member_id
+				// });
+				// if (!hasmember.length) {
+				// 	that.onlineMembers.unshift(obj);
+				// }
+				that.selectMemberList = arr;
+				that.edit();
+				that.chatMessageList = [];
+				that.page = 1;
+				that.isAll = false;
+				that.findChatList(true);
+			},
+			// 删除该聊天
+			closeChat: function(e, index) {
+				this.chatBoxState = false;
+				this.messageBoxState = false
+				if (this.tab_repeat_flag) return false;
+				this.tab_repeat_flag = true;
+				let arr = this.selectMemberList;
+				if (!e.select) {
+					this.selectMemberList = arr.filter(function(v) {
+						return v.member_id != e.member_id
+					});
+					this.tab_repeat_flag = false;
+				} else {
+					this.selectMemberList = arr.filter(function(v) {
+						return v.member_id != e.member_id
+					});
+					if (this.selectMemberList.length > 0 && index <= this.selectMemberList.length - 1) {
+						this.selectMemberList[index].select = true;
+					} else if (this.selectMemberList.length > 0 && index > this.selectMemberList.length - 1) {
+						this.selectMemberList[this.selectMemberList.length - 1].select = true;
+					}
+					this.chatMessageList = [];
+					this.page = 1;
+					this.isAll = false;
+					this.edit();
+					if (this.selectMemberList.length != 0) {
+						this.findChatList(true);
+					} else {
+						this.tab_repeat_flag = true;
+					}
+				}
+
+			},
+			//切换聊天页面
+			// selectTab: function(item) {
+			// 	console.log(item,'item')
+			// 	this.chatBoxState = false;
+			// 	if (this.tab_repeat_flag) return false;
+			// 	this.tab_repeat_flag = true;
+			// 	for (var i = 0; i < this.selectMemberList.length; i++) {
+			// 		if (this.selectMemberList[i].id == item.id) {
+			// 			this.selectMember = this.selectMemberList[i];
+			// 			this.$set(this.selectMemberList[i], 'select', true)
+			// 		} else
+			// 			this.$set(this.selectMemberList[i], 'select', false)
+			// 	}
+			// 	this.$forceUpdate();
+
+			// 	this.chatMessageList = [];
+			// 	this.page = 1;
+			// 	this.isAll = false;
+			// 	this.findChatList(true);
+			// },
+			socketConnect: function() {
+				let that = this;
+
+				// var wsurl = `ws://127.0.0.1:8283`;
+				var wsurl = `${that.wwsHostname}`;
+				
+				// var wsurl = 'wss://'+ window.location.hostname +'/wss';
+				if (that.websocket) {
+					that.websocket.close()
+				}
+
+				if (window.WebSocket) {
+					that.websocket = new WebSocket(wsurl);
+
+					that.websocket.onmessage = function(event) {
+						//onmessage事件，接收消息，显示在页面上
+						that.getMessage(event.data)
+					};
+
+					that.websocket.onclose = function(event) {
+						clearInterval(that.timeoutObj);
+						that.text = "网络连接中...";
+						if (that.maxNum > 0) {
+							setTimeout(function() {
+								that.maxNum -= 1;
+								that.socketConnect()
+							}, that.connectTime)
+						} else {
+							that.text = "连接失败，请刷新页面，重新连接";
+							clearInterval(that.timeoutObj);
+						}
+					}
+				}
+			},
+			getMessage: function(event) {
+				let that = this;
+				var msg = JSON.parse(event);
+				console.log(msg,'msg')
+				if( msg.type != 'init' && msg.type != 'connect' && msg.type != 'disconnect'  ){
+					if(that.memberActive == 0) this.userPageData( msg.data.member_id )
+					else this.userPageData(  )
+					this.chengeReadType()
+				}
+				// 初始化绑定
+				if (msg.type == 'init') {
+					let data = {
+						client_id: msg.data.client_id,
+					};
+					$.ajax({
+						url: ns.url("servicer://servicer/chat/bind"),
+						data: data,
+						dataType: 'JSON',
+						type: 'POST',
+						success: function(res) {
+							if (res.code >= 0) {
+								that.servicer_id = res.data.servicer_id;
+							} else {
+								layer.msg(res.message);
+							}
+						}
+					});
+					// 连接
+				} else if (msg.type == 'connect') {
+					// let arr = [];
+					// msg.data.headimg = ns.img(msg.data.headimg);
+					// msg.data.nsSeeMessage = 0;
+					// arr.push(msg.data);
+
+					// let oldArr = that.onlineMembers ? that.onlineMembers : [];
+					// if (that.onlineMembers) {
+					// 	oldArr = that.onlineMembers.filter(function(v) {
+					// 		return v.member_id != msg.data.member_id
+					// 	})
+					// }
+					// that.onlineMembers = arr.concat(oldArr);
+
+					//高度处理
+					if ($(".content-item:eq(1) .content-people-box .content-people").length <= 10 && $(
+							".content-item:eq(1) .content-people-box .content-people").length)
+						$(".content-item:eq(1) .content-people-box").height($(".content-people-box .content-people").outerHeight() * $(
+							".content-item:eq(1) .content-people-box .content-people").length - 10);
+									// 下线
+				} else if (msg.type == 'disconnect') {
+					// let menber = that.onlineMembers.filter(function(v) {
+					// 	return v.member_id == msg.data.member_id
+					// });
+
+					// let oldArr = that.onlineMembers;
+
+					// oldArr = that.onlineMembers.filter(function(v) {
+					// 	return v.member_id != msg.data.member_id || v.nsSeeMessage > 0
+					// });
+					// // console.log(oldArr,'我是旧的在线数据');
+
+					// // let oldArr = that.onlineMembers;
+					// // oldArr = that.onlineMembers.filter(function(v) {
+					// // 	return v.member_id != msg.data.member_id
+					// // })
+					// that.onlineMembers = oldArr;
+
+					// that.offlineMembers = menber.concat(that.offlineMembers ? that.offlineMembers : []);
+					// 商品
+				} else if (msg.type == 'goodssku') {
+					let obj = {};
+					obj.member_id = msg.data.member_id;
+					obj.order_id = msg.data.order_id;
+					obj.sku_id = msg.data.goods_sku_id;
+					if (that.otherlist.length == 0) {
+						that.otherlist.push(obj)
+					} else {
+						let hasMember = false;
+						that.otherlist.forEach(function(v) {
+							if (v.member_id == obj.member_id) {
+								v.sku_id = obj.sku_id;
+								hasMember = true;
+							}
+							if (hasMember) return;
+							that.otherlist.push(obj)
+
+						})
+					}
+					if (msg.data.member_id == that.activeMemberId) {
+						var date = new Date();
+						var year = date.getFullYear();
+						var month = date.getMonth() + 1;
+						var day = date.getDate();
+						var hour = date.getHours();
+						var minute = date.getMinutes();
+						var second = date.getSeconds();
+						let objdata = {
+							consumer_say: "",
+							content_type: 1,
+							create_day: '' + year + '-' + month + '-' + day,
+							create_time: '' + hour + ':' + minute + ':' + second,
+							goods_money: null,
+							goods_name: null,
+							goods_sku_id: msg.data.goods_sku_id,
+							is_platform: null,
+							order_id: 0,
+							order_money: null,
+							order_no: null,
+							order_status: null,
+							order_status_name: null,
+							price: null,
+							read: 1,
+							servicer_say: null,
+							sku_image: null,
+							sku_name: null,
+							type: 0,
+							headimg: that.memberInfo.headimg,
+							nickname: that.memberInfo.nickname,
+							add_time: ns.time_to_date(msg.data.add_time)
+						};
+						that.chatMessageList.push(objdata)
+					} else {
+						let arr = that.onlineMembers;
+						arr.forEach(function(v) {
+							if (v.member_id == msg.data.member_id) v.nsSeeMessage += 1;
+						});
+						that.onlineMembers = arr;
+						that.$forceUpdate()
+					}
+					// 订单
+				} else if (msg.type == 'order') {
+					let obj = {};
+					obj.member_id = msg.data.member_id;
+					obj.order_id = msg.data.order_id;
+					obj.sku_id = msg.data.goods_sku_id;
+					if (that.otherlist.length == 0) {
+						that.otherlist.push(obj)
+					} else {
+						let hasMember = false;
+						that.otherlist.forEach(function(v) {
+							if (v.member_id == obj.member_id) {
+								v.sku_id = obj.sku_id;
+								hasMember = true;
+							}
+							if (hasMember) return;
+							that.otherlist.push(obj)
+						})
+					}
+
+					if (msg.data.member_id == that.activeMemberId) {
+						var date = new Date();
+						var year = date.getFullYear();
+						var month = date.getMonth() + 1;
+						var day = date.getDate();
+						var hour = date.getHours();
+						var minute = date.getMinutes();
+						var second = date.getSeconds();
+						let objdata = {
+							consumer_say: "",
+							content_type: 1,
+							create_day: '' + year + '-' + month + '-' + day,
+							create_time: '' + hour + ':' + minute + ':' + second,
+							goods_money: null,
+							goods_name: null,
+							goods_sku_id: null,
+							is_platform: null,
+							order_id: msg.data.order_id,
+							order_money: null,
+							order_no: null,
+							order_status: null,
+							order_status_name: null,
+							price: null,
+							read: 1,
+							servicer_say: null,
+							sku_image: null,
+							sku_name: null,
+							type: 0,
+							headimg: that.memberInfo.headimg,
+							nickname: that.memberInfo.nickname,
+							add_time: ns.time_to_date(msg.data.add_time)
+						};
+						that.chatMessageList.push(objdata)
+					} else {
+						let arr = that.onlineMembers;
+						arr.forEach(function(v) {
+							if (v.member_id == msg.data.member_id)
+								v.nsSeeMessage += 1;
+						});
+						that.onlineMembers = arr;
+						that.$forceUpdate()
+					}
+					// 文本
+				} else if (msg.type == 'string') {
+					console.log(msg.data.add_time,'文本')
+					console.log(that.memberInfo.headimg, that.memberInfo.nickname)
+					if (that.activeMemberId && msg.data.member_id == that.activeMemberId) {
+						var date = new Date();
+						var year = date.getFullYear();
+						var month = date.getMonth() + 1;
+						var day = date.getDate();
+						var hour = date.getHours();
+						var minute = date.getMinutes();
+						var second = date.getSeconds();
+						let objdata = {
+							consumer_say: msg.data.consumer_say,
+							content_type: 1,
+							create_day: '' + year + '-' + month + '-' + day,
+							create_time: '' + hour + ':' + minute + ':' + second,
+							goods_money: null,
+							goods_name: null,
+							goods_sku_id: null,
+							is_platform: null,
+							order_id: null,
+							order_money: null,
+							order_no: null,
+							order_status: null,
+							order_status_name: null,
+							price: null,
+							read: 1,
+							servicer_say: null,
+							sku_image: null,
+							sku_name: null,
+							type: 0,
+							headimg: that.memberInfo.headimg,
+							nickname: that.memberInfo.nickname,
+							add_time: ns.time_to_date(msg.data.add_time)
+						};
+						that.chatMessageList.push(objdata)
+					} else {
+						let arr = that.onlineMembers;
+						arr.forEach(function(v) {
+							if (v.member_id == msg.data.member_id) v.nsSeeMessage += 1;
+						});
+						that.onlineMembers = arr;
+						this.$forceUpdate()
+					}
+					// 快捷回复
+				} else if (msg.type == 'keyword_reply') {
+					console.log(msg.data.add_time,'文本')
+					console.log(that.memberInfo.headimg, that.memberInfo.nickname)
+					if (that.activeMemberId && msg.data.member_id == that.activeMemberId) {
+						var date = new Date();
+						var year = date.getFullYear();
+						var month = date.getMonth() + 1;
+						var day = date.getDate();
+						var hour = date.getHours();
+						var minute = date.getMinutes();
+						var second = date.getSeconds();
+						let objdata = {
+							content_type: 1,
+							create_day: '' + year + '-' + month + '-' + day,
+							create_time: '' + hour + ':' + minute + ':' + second,
+							goods_money: null,
+							goods_name: null,
+							goods_sku_id: null,
+							is_platform: null,
+							order_id: null,
+							order_money: null,
+							order_no: null,
+							order_status: null,
+							order_status_name: null,
+							price: null,
+							read: 1,
+							servicer_say: msg.data.servicer_say,
+							sku_image: null,
+							sku_name: null,
+							type: 1,
+							avatar: that.servicer_avatar || that.shopInfo.logo,
+						};
+						that.chatMessageList.push(objdata)
+					} else {
+						let arr = that.onlineMembers;
+						arr.forEach(function(v) {
+							if (v.member_id == msg.data.member_id) v.nsSeeMessage += 1;
+						});
+						that.onlineMembers = arr;
+						this.$forceUpdate()
+					}
+					// image
+				}  else if (msg.type == 'image') {
+					if (that.activeMemberId && msg.data.member_id == that.activeMemberId) {
+						var date = new Date();
+						var year = date.getFullYear();
+						var month = date.getMonth() + 1;
+						var day = date.getDate();
+						var hour = date.getHours();
+						var minute = date.getMinutes();
+						var second = date.getSeconds();
+						let objdata = {
+							consumer_say: ns.img(msg.data.consumer_say),
+							content_type: 3,
+							create_day: '' + year + '-' + month + '-' + day,
+							create_time: '' + hour + ':' + minute + ':' + second,
+							goods_money: null,
+							goods_name: null,
+							goods_sku_id: null,
+							is_platform: null,
+							order_id: null,
+							order_money: null,
+							order_no: null,
+							order_status: null,
+							order_status_name: null,
+							price: null,
+							read: 1,
+							servicer_say: ns.img(msg.data.servicer_say),
+							sku_image: null,
+							sku_name: null,
+							type: 0,
+							headimg: that.memberInfo.headimg,
+							nickname: that.memberInfo.nickname,
+							add_time: ns.time_to_date(msg.data.add_time)
+						};
+						that.chatMessageList.push(objdata)
+					} else {
+						let arr = that.onlineMembers;
+						arr.forEach(function(v) {
+							if (v.member_id == msg.data.member_id) v.nsSeeMessage += 1;
+						});
+						that.onlineMembers = arr;
+						this.$forceUpdate()
+					}
+				} else if (msg.type == 'force_offline') {
+					layer.msg("账号在其他地方登录", {}, function() {
+						$(window).unbind("beforeunload");
+						location.href = ns.url('servicer://servicer/login/logout');
+					});
+				}
+				setTimeout(function() {
+					$("#scroll").scrollTop($(".chat-content-center-bottom-content").height())
+				}, 200);
+				that.text = "";
+				that.reset()
+			},
+			send: function() {
+				this.chatBoxState = false;
+				this.messageBoxState = false
+				let that = this;
+				let onlineMember = that.onlineMembers.filter(function(v) {
+					return v.member_id == that.activeMemberId
+				});
+				if (that.sendState) {
+					return false
+				}
+				that.sendState = true;
+				if (!onlineMember) {
+					layer.msg('当前用户已离线');
+					that.sendState = false;
+					return;
+				}
+				if (!that.activeMemberId) {
+					layer.msg('请选择消息发送用户');
+					that.sendState = false;
+					return;
+				}
+				if (that.contentType == 3) {
+					var servicer_say = that.image
+				}
+				let _content = that.$refs.inputMessage.innerHTML
+				let _message = _content.replace(/<div>/g, '');
+				let _message2 = _message.replace(/<\/div>/g, '');
+				let _message3 = _message2.replace(/<br>/g, '');
+				that.message = _message3
+				if(that.contentType == 0){
+					if(that.message || that.goMessage) {
+						var servicer_say = that.message || that.goMessage
+					} else {
+						layer.msg( ' 不能发送空消息哦！ ' )
+						that.sendState = false;
+						return false
+					}
+				}
+				// if (that.contentType == 0 && that.message || that.contentType == 0 && that.goMessage){
+				// 	var servicer_say = that.message || that.goMessage
+				// } else {
+				// 	layer.msg( ' 不能发送空消息哦！ ' )
+				// 	that.sendState = false;
+				// 	return false
+				// }
+				if (that.contentType == 1) {
+					var goods_id = that.sendGoodsId
+				}
+				// console.log(servicer_say);
+				$.ajax({
+					url: ns.url("servicer://servicer/chat/answer"),
+					data: {
+						member_id: that.activeMemberId,
+						content_type: that.contentType,
+						servicer_say: servicer_say,
+						goods_id
+					},
+					dataType: 'JSON',
+					type: 'POST',
+					success: function(res) {
+						console.log(res,'servicer://servicer/chat/answer')
+						if (res.code >= 0) {
+							servicer_id = res.data.servicer_id;
+							that.$refs.inputMessage.innerHTML = ''
+							that.goMessage = ''
+
+							var date = new Date();
+							var year = date.getFullYear();
+							var month = date.getMonth() + 1;
+							var day = date.getDate();
+							var hour = date.getHours();
+							var minute = date.getMinutes();
+							var second = date.getSeconds();
+							let obj = {
+								consumer_say: "",
+								content_type: that.contentType,
+								create_day: '' + year + '-' + month + '-' + day,
+								create_time: '' + hour + ':' + minute + ':' + second,
+								goods_money: null,
+								goods_name: null,
+								goods_sku_id: 0,
+								is_platform: null,
+								order_id: 0,
+								order_money: null,
+								order_no: null,
+								order_status: null,
+								order_status_name: null,
+								price: null,
+								read: 1,
+								servicer_say: servicer_say,
+								sku_image: null,
+								sku_name: null,
+								type: 1,
+								avatar: that.servicer_avatar || that.shopInfo.logo,
+								// servicer_nickname: that.shopInfo.site_name,
+							};
+							if (that.contentType == 1) {
+								obj.goods_sku_id = that.sendGoodsId
+							}
+							//对图片进行处理
+							if (that.contentType == 3) {
+								obj.servicer_say = ns.img(obj.servicer_say)
+							}
+							// obj.add_time = ns.time_to_date(date/1000)
+							that.chatMessageList.push(obj);
+							that.contentType = 0;
+							that.image = '';
+							setTimeout(function() {
+								that.userPageData()
+								$("#scroll").scrollTop($(".chat-content-center-bottom-content").height())
+							}, 100);
+							that.message = "";
+						} else {
+							layer.msg(res.msg);
+						}
+						that.sendState = false
+					}
+				});
+				setTimeout(function() {
+					$("#scroll").scrollTop($(".chat-content-center-bottom-content").height())
+				}, 200)
+			},
+			//检测心跳
+			reset: function() {
+				clearInterval(this.timeoutObj);
+				this.start();
+			},
+			//刷新页面
+			refreshPage: function() {
+				$(window).bind('beforeunload', function() {
+					return '页面重置之后，链接将会断开。';
+				});
+			},
+			start: function() {
+				let that = this;
+				let i = 1;
+				that.timeoutObj = setInterval(function() {
+					i += 1;
+					//这里发送一个心跳，后端收到后，返回一个心跳消息，
+					//onmessage拿到返回的心跳就说明连接正常
+					that.websocket.send("ping", function(res) {});
+				}, that.timeout)
+			},
+			servicerIcon: function() {
+				layer.msg("正在开发中，敬请期待");
+			},
+			piewImg: function(v) {
+				var photos_json = {
+					"title": "", //相册标题
+					"id": 1, //相册id
+					"start": 0, //初始显示的图片序号，默认0
+					"data": [ //相册包含的图片，数组格式
+						{
+							"alt": "图片名",
+							"pid": 666, //图片id
+							"src": v, //原图地址
+							"thumb": v //缩略图地址
+						}
+					]
+				};
+				layui.use(['layer'], function() {
+					var layer = layui.layer,
+						repeat_flag = false; //防重复
+					layer.photos({
+						photos: photos_json,
+						tab: function(pic, layero) {
+							console.log(pic) //当前图片的一些信息
+						}
+					});
+				})
+			},
+			addImg: function(v) {
+				var that = this;
+				layui.use(['form', 'upload'], function() {
+					var form = layui.form,
+						upload = layui.upload;
+					var uploadInst = upload.render({
+						elem: '#test1',
+						url: ns.url("servicer://servicer/upload/upload"),
+						done: function(res) {
+							if (res.code >= 0) {
+								that.contentType = 3;
+								that.image = res.data.pic_path;
+								that.send()
+							}
+							// return layer.msg(res.message);
+						},
+						error: function(e) {
+							//请求异常回调
+						}
+					});
+				})
+			},
+			dealmessage: function(v) {
+				let html = stringToEmjoy(v);
+				return html
+			},
+			addEmojy(item, index) {
+				console.log(index, 'index')
+				console.log(item, 'item')
+				this.$refs.inputMessage.innerHTML += `<img src="${ item }" alt="" ></img>`
+			},
+			addMessage(value){
+				this.goMessage = value
+				this.send()
+			},
+			openChatBox() {
+				this.chatBoxState = !this.chatBoxState;
+			},
+			openMessageBox() {
+				this.messageBoxState = !this.messageBoxState;
+			},
+			inputMessage() {
+				this.chatBoxState = false;
+				this.messageBoxState = false
+			}
+		}
+	});
+</script>
+{/block}
+{block name="script"}
+{/block}

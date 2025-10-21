@@ -1,0 +1,63 @@
+<?php
+/**
+ * Niushop商城系统 - 团队十年电商经验汇集巨献!
+ * =========================================================
+ * Copy right 2019-2029 上海牛之云网络科技有限公司, 保留所有权利。
+ * ----------------------------------------------
+ * 官方网址: https://www.niushop.com
+ * 这不是一个自由软件！您只能在不用于商业目的的前提下对程序代码进行修改和使用。
+ * 任何企业和个人不允许对程序代码以任何形式任何目的再发布。
+ * =========================================================
+ */
+return [
+    'template' => [],
+    'util' => [
+        [
+            'name' => 'PRESALE_LIST',
+            'title' => '预售',
+            'type' => 'ADDON',
+            'controller' => 'Presale',
+            'value' => '{"sources" : "default", "categoryId" : 0, "goodsCount" : "6", "goodsId": [], "style": 1, "changeType": 1, "styleName": "风格一", "backgroundColor": "", "bgSelect": "blue", "marginTop": 0, "list": {"imageUrl": "public/static/img/diy_view/presale_style1_title.png", "title": "预售专区"}, "listMore": {"imageUrl": "","title": ""}, "titleTextColor": "#000", "defaultTitleTextColor": "#000", "moreTextColor": "#858585", "defaultMoreTextColor": "#858585"}',
+            'sort' => '12003',
+            'support_diy_view' => '',
+            'max_count' => 0,
+            'icon' => 'iconyushou1'
+        ]
+    ],
+    'link' => [
+        [
+            'name' => 'GOODS_BOOKING',
+            'title' => '商品预售',
+            'parent' => 'MARKETING_LINK',
+            'wap_url' => '',
+            'web_url' => '',
+            'sort' => 0,
+            'child_list' => [
+                [
+                    'name' => 'PRESALE_PREFECTURE',
+                    'title' => '预售专区',
+                    'parent' => '',
+                    'wap_url' => '/promotionpages/presale/list/list',
+                    'web_url' => '',
+                    'sort' => 1
+                ],
+                [
+                    'name' => 'MAPRESALE_PREFECTURE',
+                    'title' => '我的预售',
+                    'parent' => '',
+                    'wap_url' => '/promotionpages/presale/order_list/order_list',
+                    'web_url' => '',
+                    'sort' => 2
+                ]
+            ]
+        ],
+        [
+            'name' => 'PRESALE_GOODS',
+            'title' => '预售商品',
+            'parent' => 'COMMODITY',
+            'wap_url' => '',
+            'web_url' => '',
+            'child_list' => []
+        ]
+    ],
+];

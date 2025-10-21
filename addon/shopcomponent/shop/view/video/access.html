@@ -1,0 +1,236 @@
+{extend name="app/shop/view/base.html"/}
+
+{block name="resources"}
+<style type="text/css" xmlns="http://www.w3.org/1999/html">
+	.access{padding: 10px;}
+    .access h2{margin-bottom: 20px;}
+	.access-title {font-size: 18px;font-family: Microsoft YaHei;font-weight: 400;color: #333333;margin: 24px 0;}
+	.access-item{background-color: #F8F8F8;display: flex;flex-direction: column;justify-content: space-between;}
+	.item {display: flex;justify-content: space-between;margin: 20px 0 20px 10px;}
+	.item-datail {position: relative;}
+	.item-number {width: 30px;height: 30px;border-radius: 50%;border: 5px solid #eee;position: absolute;top: -5px;left: -45px;box-sizing: border-box;font-size: 10px;line-height: 20px;}
+	.item-number label{width: 20px;height: 20px;background: #ddd;border-radius: 50%; text-align: center;color: #FFFFFF !important;display: inline-block;font-size: 12px;}
+	.item-number.active {border: 5px solid rgba(255, 106, 0, 0.5);}
+	.item-number.active label {background: #FF6A00;}
+	.item-check{position: absolute;top: 5px; left: 20px;width: 25px;height: 25px;background: #CCCCCC;border-radius: 50%;display: flex;align-items: center;justify-content: center;}
+	.item-check i{border-radius: 50%;border: none;font-size: 14px;color: #fff}
+	.item-checked{background: rgba(255,106,0,0.5);border-radius: 50%;}
+	.item-checked i {color: #ff6a00}
+	.item-datail div {font-size: 14px;font-family: Microsoft YaHei;font-weight: 400;color: #333333;margin-bottom: 4px;}
+	.item-datail p {display: inline-block; font-size: 12px;font-family: Microsoft YaHei;font-weight: 400;color: #999999;}
+	.item-datail a {font-size: 12px;font-family: Microsoft YaHei;font-weight: 400;color: #FF6A00!important;}
+	.item button {width: 88px;height: 34px;background: #FF6A00;border-radius: 2px;border: 1px solid #FFFFFF;font-weight: 400;color: #FFFFFF;cursor: pointer;}
+	.item span {margin-right: 40px;margin-top: 10px;}
+	.layui-timeline-item:before{top: 27px;}
+    .layui-btn+.layui-btn {margin-left: 85px;}
+    .video{ margin-left: -90px;}
+    #ruzhu{ margin-left: -90px;}
+</style>
+{/block}
+
+{block name="main"}
+<div class="access">
+    <h2>完成以下4个步骤，开启您的视频号直播带货</h2>
+    <hr>
+    <h1>
+    <div class="access-title">微信视频号</div>
+    <ul class="layui-timeline">
+        <li class="layui-timeline-item">
+            <div class="layui-timeline-content layui-text">
+                <div class="item">
+                    <div class="item-datail">
+                        <div class="item-number active">
+                            <label>1</label>
+                        </div>
+                        <div class="">创建微信视频号</div>
+                        <p>在微信中创建视频号，如已有视频号可越过该步骤。</p>
+                    </div>
+                    <a href="https://jingyan.baidu.com/article/a3f121e412dc13bd9052bb87.html" target="_blank"><button type="button">开通教程</button></a>
+                </div>
+            </div>
+        </li>
+        <li class="layui-timeline-item">
+            <div class="layui-timeline-content layui-text">
+                <div class="item">
+                    <div class="item-datail">
+                        <div class="item-number {if $info.site_id ?? 0 >0}active{/if}">
+                            <label>2</label>
+                        </div>
+                        <div class="">填写视频号信息，快速入驻</div>
+                    </div>
+                    <button type="button" onclick="openText()">设置</button>
+                </div>
+                <div class="access-item">
+                    <div class="item">
+                        <div class="item-datail" id="ruzhu">
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">视频号名称：</label>
+                                <div class="layui-input-inline">
+                                    <span>{$info.name ?? '请设置视频号信息'}</span>
+                                </div>
+                            </div>
+                            <div class="layui-form-item">
+                                <label class="layui-form-label">管理员微信：</label>
+                                <div class="layui-input-inline">
+                                    <span>{$info.wx_username ?? '请设置视频号信息'}</span>
+                                    <br>
+                                    <p class="video">平台通过后，平台将管理员微信号添加到小程序的推广员，即可使用此微信号申请的视频号，进行直播带货</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </li>
+
+        <li class="layui-timeline-item">
+            <div class="layui-timeline-content layui-text">
+                <div class="item">
+                    <div class="item-datail">
+                        {if !empty($info)}
+                            <div class="item-number active">
+                        {else/}
+                            <div class="item-number">
+                        {/if}
+                            <label>3</label>
+                        </div>
+                        <div class="">视频号入驻状态</div>
+                    </div>
+                </div>
+                <div class="access-item">
+                    <div class="item">
+                        <div class="item-datail">
+                            {if !empty($info)}
+                            <div class="item-check {if $info.status == 1}item-checked{/if}">
+                            {else/}
+                            <div class="item-check">
+                            {/if}
+                            <i class="iconfont iconduihao"></i>
+                            </div>
+                            <div class="" style="margin-left: 60px;">
+                                {if !empty($info)}
+                                    {if $info.status  == 1}
+                                    <label>视频号审核成功</label>
+                                    <br>
+                                    <p>快去直播带货吧</p>
+                                    {elseif $info.status == '-1'}
+                                    <label>视频号审核失败</label>
+                                    <br>
+                                    <p style="color: red;">驳回原因：{$info.refuse}</p>
+                                    {else/}
+                                    <label>视频号待处理</label>
+                                    <br>
+                                    <p>官方审核团队将对接入资质进行审核，通过后可进行下一步操作。</p>
+                                    {/if}
+                                {else/}
+                                    <label>视频号待处理</label>
+                                    <br>
+                                    <p>官方审核团队将对接入资质进行审核，通过后可进行下一步操作。</p>
+                                {/if}
+
+                                <br>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </li>
+        <li class="layui-timeline-item">
+            <div class="layui-timeline-content layui-text">
+                <div class="item">
+                    <div class="item-datail">
+                        {if !empty($info)}
+                            <div class="item-number {if $info.status== 1 && $info.shopcompoent_goods_num > 0}active{/if}">
+                        {else/}
+                            <div class="item-number">
+                        {/if}
+                            <label>4</label>
+                        </div>
+                        <div class="">视频号直播带货</div>
+                 		<p>1、在视频号-商品管理中上架自己的商品,<a href="{:addon_url('shopcomponent://shop/goods/lists')}" target="_blank">去上架商品</a>。 </p>
+                        <br>
+                 		<p>2、视频号直播，可以在商品库中选择添加自己要带货的商品，即可开始直播带货，观众购买商品后，可在商城系统中查看。 </p>
+                    </div>
+                </div>
+            </div>
+        </li>
+    </ul>
+</div>
+{/block}
+
+{block name="script"}
+<!--视频号信息-->
+<script type="text/html" id="parameter_html">
+    <div class="parameter-html layui-form add-video-form">
+        <div class="layui-form-item">
+            <label class="layui-form-label"><span class="required">*</span>视频号名称：</label>
+            <div class="layui-input-inline">
+                <input name="name" id="name" type="text" lay-verify="required" class="layui-input" value="{$info.name ?? ''}">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label"><span class="required">*</span>管理员微信：</label>
+            <div class="layui-input-inline">
+                <input name="wx_username" id="wx_username" type="text" lay-verify="required" class="layui-input" value="{$info.wx_username ?? ''}">
+            </div>
+        </div>
+        <input name="id" id="id" type="hidden" class="layui-input" value="{$info.id ?? ''}">
+        <div class="layui-form-item">
+            <label class="layui-form-label"></label>
+           <span style="color: orange;">每次提交会对视频号信息进行重新审核</span>
+        </div>
+        <div class="ns-form-row">
+            <button type="reset" class="layui-btn layui-btn-primary layui-layer-close">取消</button>
+
+            <button class="layui-btn ns-bg-color" lay-submit lay-filter="save">提交审核</button>
+        </div>
+    </div>
+</script>
+<script>
+    var laytpl;
+
+    var start_time, end_time;
+    layui.use(['laydate', 'form', 'laytpl'], function () {
+            var form = layui.form,
+                repeat_flag = false;
+            laytpl = layui.laytpl;
+            form.render();
+
+        form.on('submit(save)', function (data) {
+            if (repeat_flag) return false;
+            repeat_flag = true;
+            $.ajax({
+                url: ns.url("shopcomponent://shop/video/operation"),
+                data: data.field,
+                dataType: 'json',
+                type: 'post',
+                success: function (res) {
+                    repeat_flag = false;
+                    if (res.code == 0) {
+                        layer.msg(res.message);
+                        location.href = ns.url("{:addon_url('shopcomponent://shop/video/access')}");
+                    }else{
+                        layer.msg(res.message);
+                    }
+                }
+            });
+        });
+
+        }
+    )
+
+    function openText() {
+        laytpl($("#parameter_html").html()).render([], function (html) {
+            layer.open({
+                title: '视频号基本消息',
+                type: 1,
+                area: ['600px', '250px'], //宽高
+                content: html,
+            });
+        });
+
+    };
+
+</script>
+{/block}

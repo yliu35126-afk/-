@@ -1,0 +1,136 @@
+{extend name="base"/}
+{block name="resources"}
+<style>
+    #container{ width: 650px; height: 500px; }
+    .empty-address{ display: none; }
+    .address-content {display: inline-block;vertical-align: top;}
+    .ns-form {margin-top: 0;}
+</style>
+{/block}
+{block name="main"}
+<div class="layui-form ns-form" lay-filter="editselffetch">
+    <div class="layui-form-item">
+        <label class="layui-form-label"><span class="required">*</span>联系人：</label>
+        <div class="layui-input-block">
+            <input type="text" name="contact_name" autocomplete="off" lay-verify="required" class="layui-input ns-len-long">
+        </div>
+        <div class="ns-word-aux">联系人</div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label"><span class="required">*</span>联系人手机号：</label>
+        <div class="layui-input-block">
+            <input type="text" name="mobile" autocomplete="off" lay-verify="phone" class="layui-input ns-len-long">
+        </div>
+        <div class="ns-word-aux">联系人手机号</div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label"><span class="required"></span>邮政编码：</label>
+        <div class="layui-input-block">
+            <input type="text" name="postcode" autocomplete="off" lay-verify="postcode" class="layui-input ns-len-long">
+        </div>
+        <div class="ns-word-aux">邮政编码</div>
+    </div>
+    <!--自提点地址-->
+    <div class="layui-form-item">
+        <label class="layui-form-label"><span class="required">*</span>门店地址：</label>
+        <div class="layui-input-inline ns-len-mid area-select">
+            <select name="province_id" lay-filter="province_id" lay-verify="required">
+                <option value="">请选择省份</option>
+                {foreach $province_list as $k => $v}
+                <option value="{$v.id}">{$v.name}</option>
+                {/foreach}
+            </select>
+        </div>
+
+        <div class="layui-input-inline ns-len-mid area-select">
+            <select name="city_id"  lay-filter="city_id" lay-verify="required">
+                <option value="">请选择城市</option>
+            </select>
+        </div>
+
+        <div class="layui-input-inline ns-len-mid area-select">
+            <select name="district_id"  lay-filter="district_id" lay-verify="required">
+                <option value="">请选择区/县</option>
+            </select>
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label"><span class="required">*</span>详细地址：</label>
+        <div class="layui-input-block">
+            <input type="text" name="address" autocomplete="off" lay-verify="required" class="layui-input ns-len-long">
+        </div>
+        <div class="ns-word-aux">详细地址</div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">地址类型：</label>
+        <div class="layui-input-block" id="work_week">
+            <input type="checkbox" name="is_return" value="1" title="退货地址" lay-skin="primary">
+            <input type="checkbox" name="is_delivery" value="2" title="发货地址" lay-skin="primary">
+        </div>
+    </div>
+    <div class="ns-form-row">
+        <button class="layui-btn ns-bg-color" lay-submit lay-filter="save">保存</button>
+        <button class="layui-btn layui-btn-primary" onclick="back()">返回</button>
+    </div>
+</div>
+{/block}
+{block name="script"}
+<script type="text/javascript" src="{:get_http_type()}://webapi.amap.com/maps?v=1.4.6&amp;key={if empty($map_key['gaode_map_key'])}2df5711d4e2fd9ecd1622b5a53fc6b1d{else/}{$map_key['gaode_map_key']}{/if}"></script>
+<script type="text/javascript" src="SHOP_JS/address.js"></script>
+<script type="text/javascript" src="STATIC_JS/map_address.js"></script>
+<script>
+    var form, repeat_flag;
+
+    layui.use(['form'], function() {
+        form = layui.form;
+        repeat_flag = false;//防重复标识
+
+        form.render();
+
+        /**
+         * 监听提交
+         */
+        form.on('submit(save)', function(data){
+
+            var full_address  = [];
+            full_address.push($("select[name=province_id] option:selected").text());
+            full_address.push($("select[name=city_id] option:selected").text());
+            full_address.push($("select[name=district_id] option:selected").text());
+
+            data.field.full_address = full_address.toString();
+            if(repeat_flag) return;
+            repeat_flag = true;
+
+            $.ajax({
+                type : "POST",
+                dataType: 'JSON',
+                url : ns.url("shop/shopaddress/addAddress"),
+                async : true,
+                data : data.field,
+                success : function(res) {
+                    repeat_flag = false;
+
+                    if (res.code == 0) {
+                        layer.confirm('添加成功', {
+                            title: '操作提示',
+                            btn: ['返回列表', '继续添加'],
+                            yes: function() {
+                                location.href = ns.url("shop/shopaddress/lists")
+                            },
+                            btn2: function() {
+                                location.href = ns.url("shop/shopaddress/addAddress");
+                            }
+                        });
+                    } else {
+                        layer.msg(res.message);
+                    }
+                }
+            })
+        });
+    });
+
+    function back() {
+        location.href = ns.url("shop/shopaddress/lists");
+    }
+</script>
+{/block}

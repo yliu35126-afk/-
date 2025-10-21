@@ -1,0 +1,64 @@
+<nc-component v-bind:data="data[index]" class="shop-info">
+
+	<!-- 预览 -->
+	<template slot="preview">
+		<div class="shop_base_info">
+			<div>
+				<div class="img-wrap">
+					<img src="STATIC_EXT/diyview/img/crack_figure.png"/>
+				</div>
+				<div class="info-wrap">
+					<div class="name" v-bind:style="{ color : nc.color }">
+						店铺名称
+						<img src="{$resource_path}/shop_info/img/icon_more.png">
+					</div>
+					<div class="score">
+						<span>
+							<img src="{$resource_path}/shop_info/img/shop_collect_select.png">
+							4.8分
+						</span>
+						<span>综合评分：5&nbsp;|&nbsp;粉丝数：996</span>
+					</div>
+				</div>
+
+				<div class="operation">
+					<img src="{$resource_path}/shop_info/img/shop_collect.png">
+					关注
+				</div>
+			</div>
+			<div class="shop-bottom">
+				<div>
+					<img src="STATIC_IMG/shop/replacement.png">
+					<span>7天退换</span>
+				</div>
+				<div>
+					<img src="STATIC_IMG/shop/quality_goods.png">
+					<span>正品保障</span>
+				</div>
+				<div>
+					<img src="STATIC_IMG/shop/return_goods.png">
+					<span>退货承诺</span>
+				</div>
+				<div>
+					<img src="STATIC_IMG/shop/ensure;.png">
+					<span>消协保证</span>
+				</div>
+
+			</div>
+		</div>
+	</template>
+
+	<!-- 编辑 -->
+	<template slot="edit">
+		<color v-bind:data="{ field : 'color' }"></color>
+	</template>
+
+	<!-- 资源 -->
+	<template slot="resource">
+
+		<css src="{$resource_path}/shop_info/css/design.css"></css>
+		<js src="{$resource_path}/shop_info/js/design.js"></js>
+
+	</template>
+
+</nc-component>

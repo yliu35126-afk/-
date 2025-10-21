@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 冲刺模式的超强发光背景 -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:type="radial"
+                android:centerX="0.5"
+                android:centerY="0.42"
+                android:gradientRadius="90%"
+                android:startColor="#FFFFFF"
+                android:centerColor="#FFFFEA6B"
+                android:endColor="#FFFF7800" />
+            <corners android:radius="14dp" />
+        </shape>
+    </item>
+    
+    <!-- 冲刺模式的多层box-shadow效果 -->
+    <item android:top="1dp" android:bottom="1dp" android:left="1dp" android:right="1dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#AAFFEA6B" />
+            <corners android:radius="13dp" />
+        </shape>
+    </item>
+    
+    <item android:top="3dp" android:bottom="3dp" android:left="3dp" android:right="3dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#88FF7800" />
+            <corners android:radius="11dp" />
+            <stroke
+                android:width="5dp"
+                android:color="#FFD700" />
+        </shape>
+    </item>
+</layer-list>

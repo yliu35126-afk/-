@@ -1,0 +1,249 @@
+{extend name="app/shop/view/base.html"/}
+{block name="resources"}
+<style>
+	.ns-len-input{width: 100%;max-width: 120px;}
+	.layui-table-view{margin-top: 0;}
+	.layui-form-item .layui-input-inline.end-time{float: none;}
+	.desc{margin-bottom: 15px;border:1px dashed #ff8143;padding: 5px 10px;background: #fff0e9;color: #ff8143;width: 65%;}
+	.forbidden{cursor:not-allowed;background-color: #eee;}
+	.layui-table-body{max-height: 480px !important;}
+	.goods-title{display: flex;align-items: center;}
+	.goods-title .goods-img{display: flex;align-items: center;justify-content: center;width: 55px;height: 55px;margin-right: 5px;}
+	.goods-title .goods-img img{max-height: 100%;max-width: 100%;}
+	.goods-title .goods-name{flex: 1;line-height: 1.6;}
+</style>
+{/block}
+{block name="main"}
+<div class="layui-form ns-form">
+	<div class="layui-form-item">
+		<label class="layui-form-label"><span class="required">*</span>活动时间：</label>
+		<div class="layui-inline">
+			<div class="layui-input-inline ns-len-mid">
+				<input type="text" id="start_time" name="start_time" value="{:date('Y-m-d H:i:s', $present_info.start_time)}" lay-verify="required" class="layui-input" autocomplete="off" readonly>
+				<i class="ns-calendar"></i>
+			</div>
+			<span class="layui-form-mid">-</span>
+			<div class="layui-input-inline ns-len-mid end-time">
+				<input type="text" id="end_time" name="end_time" value="{:date('Y-m-d H:i:s', $present_info.end_time)}" lay-verify="required|time" class="layui-input" autocomplete="off" readonly>
+				<i class="ns-calendar"></i>
+			</div>
+		</div>
+	</div>
+
+	<div class="layui-form-item goods_list">
+		<label class="layui-form-label">活动商品：</label>
+		<div class="layui-input-block">
+			<table id="selected_goods_list" lay-filter="selected_goods_list"></table>
+		</div>
+	</div>
+
+	<div class="ns-form-row">
+		<button class="layui-btn ns-bg-color" lay-submit lay-filter="save">保存</button>
+		<button class="layui-btn layui-btn-primary" onclick="back()">返回</button>
+	</div>
+
+	<input type="hidden" name="present_id" value="{$present_info.present_id}" />
+</div>
+{/block}
+{block name="script"}
+
+<script>
+	var sku_list = [];
+	sku_list = {:json_encode($present_info.sku_list, JSON_UNESCAPED_UNICODE)};
+
+	layui.use(['form', 'laydate'], function() {
+		var form = layui.form,
+				laydate = layui.laydate,
+				repeat_flag = false,
+				startDate = '{$present_info.start_time}',
+				endDate = '{$present_info.end_time}',
+				minDate = "";
+		form.render();
+
+		renderTable(sku_list); // 初始化表格
+
+		//开始时间
+		laydate.render({
+			elem: '#start_time', //指定元素
+			type: 'datetime',
+			value: ns.time_to_date(startDate),
+			done: function(value) {
+				minDate = value;
+				reRender();
+			}
+		});
+
+		//结束时间
+		laydate.render({
+			elem: '#end_time', //指定元素
+			type: 'datetime',
+			value: ns.time_to_date(endDate)
+		});
+
+		/**
+		 * 重新渲染结束时间
+		 * */
+		function reRender() {
+			$("#end_time").remove();
+			$(".end-time").html('<input type="text" id="end_time" name="end_time" placeholder="请输入结束时间" lay-verify="required|time" class = "layui-input ns-len-mid" autocomplete="off"> ');
+			laydate.render({
+				elem: '#end_time',
+				type: 'datetime',
+				min: minDate
+			});
+		}
+
+		/**
+		 * 表单验证
+		 */
+		form.verify({
+			time: function(value) {
+				var now_time = (new Date()).getTime();
+				var start_time = (new Date($("#start_time").val())).getTime();
+				var end_time = (new Date(value)).getTime();
+				if (now_time > end_time) {
+					return '结束时间不能小于当前时间!'
+				}
+				if (start_time > end_time) {
+					return '结束时间不能小于开始时间!';
+				}
+			},
+		});
+
+		form.on('submit(save)', function(data){
+
+			data.field.sku_ids = [];
+			data.field.goods_id = sku_list[0].goods_id;
+			sku_list.forEach(function (item,index) {
+				if (item.is_delete == 2) return false;
+				data.field.sku_ids.push(item.sku_id);
+			});
+
+			if (data.field.sku_ids.length == 0) {
+				layer.msg("请选择参与活动商品！", {icon: 5, anim: 6});
+				return;
+			}
+
+
+			var skuLisArr = [];
+			sku_list.forEach(function(item,index) {
+				var sku_detail = {};
+				sku_detail.sku_id = item.sku_id;
+				sku_detail.goods_id = item.goods_id;
+				sku_detail.is_delete = item.is_delete || 1;
+				skuLisArr.push(sku_detail);
+			});
+			data.field.sku_list = skuLisArr;
+
+			if(repeat_flag) return;
+			repeat_flag = true;
+
+			$.ajax({
+				type: 'POST',
+				dataType: 'JSON',
+				url: ns.url("present://shop/present/edit"),
+				data: data.field,
+				async: false,
+				success: function(res){
+					repeat_flag = false;
+
+					if (res.code == 0) {
+						layer.confirm('编辑成功', {
+							title:'操作提示',
+							btn: ['返回列表', '继续编辑'],
+							yes: function(){
+								location.href = ns.url("present://shop/present/lists");
+							},
+							btn2: function() {
+								location.reload();
+							}
+						});
+					}else{
+						layer.msg(res.message);
+					}
+				}
+			})
+		});
+	});
+
+	// 表格渲染
+	function renderTable(sku_list) {
+		//展示已知数据
+		table = new Table({
+			elem: '#selected_goods_list',
+			page: false,
+			limit: Number.MAX_VALUE,
+			cols: [
+				[{
+					title: '商品名称',
+					width: '23%',
+					unresize: 'false',
+					templet: function(data) {
+						var html = '';
+						html += `
+							<div class="goods-title">
+								<div class="goods-img">
+									<img layer-src src="${data.sku_image ? ns.img(data.sku_image) : ''}" alt="">
+								</div>
+								<p class="ns-multi-line-hiding goods-name" data-goods_id="${data.goods_id}" data-sku_id="${data.sku_id}" title="${data.sku_name}">${data.sku_name}</p>
+							</div>
+						`;
+						return html;
+					}
+				}, {
+					field: 'price',
+					title: '商品价格',
+					unresize: 'false',
+					width: '15%',
+					templet: function(data) {
+						return '<p class="ns-line-hiding" title="'+ data.price +'">￥<span class="present-price">' + data.price +'</span></p>';
+					}
+				}, {
+					field: 'stock',
+					title: '库存',
+					unresize: 'false',
+					width: '10%',
+					templet: function(data) {
+						return '<p class="stock">' + data.stock +'</p>';
+					}
+				}, {
+					title: '操作',
+					toolbar: '#operation',
+					width: '10%',
+					unresize: 'false'
+				}]
+			],
+			data: sku_list,
+		});
+
+	}
+
+	function back() {
+		location.href = ns.url("present://shop/present/lists");
+	}
+
+	$("body").on("click",".no-participation",function(){
+		$(this).text("设置参与");
+		$(this).removeClass('no-participation');
+		$(this).addClass('participation');
+		sku_list[$(this).parents("tr").attr("data-index")].is_delete = 2;
+	});
+
+	$("body").on("click",".participation",function(){
+		$(this).text("设置不参与");
+		$(this).removeClass('participation');
+		$(this).addClass('no-participation');
+		sku_list[$(this).parents("tr").attr("data-index")].is_delete = 1;
+	});
+</script>
+
+<script type="text/html" id="operation">
+	<div class="ns-table-btn">
+		{{# if(d.is_delete == 2){ }}
+		<a class="layui-btn participation">设置参与</a>
+		{{# }else{ }}
+		<a class="layui-btn no-participation">设置不参与</a>
+		{{# } }}
+	</div>
+</script>
+{/block}

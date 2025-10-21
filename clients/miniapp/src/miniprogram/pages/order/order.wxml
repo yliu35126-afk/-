@@ -1,0 +1,307 @@
+<!-- order.wxml -->
+<navigation-bar title="订单记录" back="{{true}}" color="black" background="white"></navigation-bar>
+
+<view class="order-container">
+  
+  <!-- 未登录状态 -->
+  <view class="login-required" wx:if="{{needLogin}}">
+    <view class="login-icon">🔐</view>
+    <view class="login-title">请先登录</view>
+    <view class="login-desc">登录后即可查看您的订单记录</view>
+    <view class="login-buttons">
+      <button class="login-btn primary" bindtap="handleLogin">立即登录</button>
+    </view>
+  </view>
+
+  <!-- 已登录状态 - 显示订单内容 -->
+  <view wx:else>
+    <!-- 筛选标签栏 -->
+    <view class="filter-tabs">
+      <view 
+        class="filter-tab {{currentFilter === item.key ? 'active' : ''}}"
+        wx:for="{{filterOptions}}" 
+        wx:key="key"
+        wx:for-item="item"
+        data-filter="{{item.key}}"
+        bindtap="switchFilter">
+        <text class="tab-name">{{item.name}}</text>
+        <text class="tab-count" wx:if="{{item.count > 0}}">({{item.count}})</text>
+      </view>
+    </view>
+
+  <!-- 订单列表 -->
+  <scroll-view 
+    class="order-list"
+    scroll-y="{{true}}"
+    enable-back-to-top="{{true}}">
+    
+    <!-- 空状态 -->
+    <view class="empty-wrapper" wx:if="{{isEmpty && !loading}}">
+      <view class="empty-icon">📋</view>
+      <view class="empty-text">暂无订单记录</view>
+      <view class="empty-tip">快去首页参与抽奖吧~</view>
+      <navigator url="/pages/index/index" open-type="switchTab">
+        <button class="go-lottery-btn">立即抽奖</button>
+      </navigator>
+    </view>
+
+    <!-- 订单列表项 -->
+    <view class="order-item" wx:for="{{orderList}}" wx:key="orderId" wx:for-item="orderItem" wx:for-index="index" data-index="{{index}}" bindtap="showOrderDetail">
+      <!-- 订单头部 -->
+      <view class="order-header">
+        <view class="order-info">
+          <text class="order-id">订单号: {{orderItem.orderId}}</text>
+          <text class="order-time">{{orderItem.createTime}}</text>
+        </view>
+        <view class="order-status status-{{orderItem.status}}">
+          {{orderItem.order_status === 4 ? '退款成功' :
+            (orderItem.order_status === 3 ? '已取消订单' :
+              (orderItem.pay_status === 'paid' ? 
+                (orderItem.order_status === 2 ? '已完成' : 
+                  (orderItem.order_status === 1 ? 
+                    (orderItem.lotteryResult === 'winner' ? '已中奖' : '待抽奖') : '已支付')) 
+                : '待支付'))}}
+        </view>
+      </view>
+
+      <!-- 订单内容 -->
+      <view class="order-content">
+        <view class="order-left">
+          <view class="lottery-icon">🎰</view>
+        </view>
+        <view class="order-middle">
+          <text class="product-name">抽奖机会</text>
+          <text class="product-desc">支付即可获得一次抽奖机会</text>
+          <view class="prize-result" wx:if="{{orderItem.pay_status === 'paid' && orderItem.lotteryResult === 'winner'}}">
+            <text class="result-text">
+              中奖：{{orderItem.prizeName}}
+            </text>
+          </view>
+          <!-- 设备与奖品标识信息 -->
+          <view class="order-meta">
+            <text class="meta-item" wx:if="{{orderItem.device_id}}">设备ID：{{orderItem.device_id}}</text>
+            <text class="meta-item" wx:if="{{orderItem.prize_id && orderItem.prize_id > 0}}">奖品ID：{{orderItem.prize_id}}</text>
+          </view>
+        </view>
+        <view class="order-right">
+          <text class="amount">¥{{orderItem.amount}}</text>
+        </view>
+      </view>
+
+      <!-- 订单操作按钮 -->
+      <view class="order-actions" catchtap="stopPropagation">
+        <!-- 已取消订单：只显示复制订单号按钮 -->
+        <view wx:if="{{orderItem.order_status === 3}}" class="action-buttons">
+          <view>
+            <button class="action-btn secondary" data-orderid="{{orderItem.orderId}}" bindtap="copyOrderId" size="mini">复制订单号</button>
+          </view>
+        </view>
+        
+        <!-- 已支付但未完成的状态操作（排除已取消状态） -->
+        <view wx:elif="{{orderItem.pay_status === 'paid' && orderItem.order_status !== 2 && orderItem.order_status !== 3}}" class="action-buttons">
+          <!-- 如果已支付且order_status为0或1，显示抽奖和退款按钮 -->
+          <view wx:if="{{orderItem.order_status === 0 || orderItem.order_status === 1}}" class="pending-actions">
+            <!-- 如果没有抽奖结果，显示立即抽奖按钮 -->
+            <button wx:if="{{!orderItem.lotteryResult || orderItem.lotteryResult === '' || orderItem.lotteryResult === null || orderItem.lotteryResult === undefined}}" class="action-btn primary" data-index="{{index}}" bindtap="goToLottery" size="mini">立即抽奖</button>
+            <!-- 如果已中奖，显示核销按钮 -->
+            <button wx:elif="{{orderItem.lotteryResult === 'winner' && orderItem.can_verify}}" class="action-btn primary" data-index="{{index}}" bindtap="verifyPrize" size="mini">核销奖品</button>
+            <button wx:elif="{{orderItem.lotteryResult === 'winner' && orderItem.can_verify}}" class="action-btn secondary" data-index="{{index}}" bindtap="scanVerify" size="mini">扫码核销</button>
+            <!-- 复制订单号按钮放在中间位置 -->
+            <button class="action-btn secondary" data-orderid="{{orderItem.orderId}}" bindtap="copyOrderId" size="mini">复制订单号</button>
+            <!-- 退款按钮放在最后（如果允许） -->
+            <button wx:if="{{orderItem.can_refund}}" class="action-btn secondary" data-index="{{index}}" bindtap="requestRefund" size="mini">申请退款</button>
+          </view>
+          <!-- 其他已支付状态的按钮 -->
+          <view wx:else>
+            <button wx:if="{{orderItem.can_refund}}" class="action-btn secondary" data-index="{{index}}" bindtap="requestRefund" size="mini">申请退款</button>
+            <button wx:if="{{orderItem.can_verify && orderItem.lotteryResult === 'winner'}}" class="action-btn primary" data-index="{{index}}" bindtap="verifyPrize" size="mini">核销奖品</button>
+            <button wx:if="{{orderItem.can_verify && orderItem.lotteryResult === 'winner'}}" class="action-btn secondary" data-index="{{index}}" bindtap="scanVerify" size="mini">扫码核销</button>
+            <!-- 复制订单号按钮 -->
+            <button class="action-btn secondary" data-orderid="{{orderItem.orderId}}" bindtap="copyOrderId" size="mini">复制订单号</button>
+          </view>
+        </view>
+        
+        <!-- 已完成状态的操作 -->
+        <view wx:elif="{{orderItem.pay_status === 'paid' && orderItem.order_status === 2}}" class="action-buttons">
+          <button class="action-btn secondary" data-orderid="{{orderItem.orderId}}" bindtap="copyOrderId" size="mini">复制订单号</button>
+          <button wx:if="{{orderItem.verification_code && orderItem.lotteryResult === 'winner'}}" class="action-btn primary" data-code="{{orderItem.verification_code}}" bindtap="copyVerificationCode" size="mini">复制核销码</button>
+          <button wx:if="{{orderItem.verification_code && orderItem.lotteryResult === 'winner'}}" class="action-btn secondary" data-code="{{orderItem.verification_code}}" bindtap="showVerificationQr" size="mini">核销二维码</button>
+        </view>
+        
+        <!-- 待支付状态的操作 -->
+        <view wx:else class="action-buttons">
+          <!-- 如果是待支付状态（order_status === 0），显示继续支付和取消订单按钮 -->
+          <view wx:if="{{orderItem.order_status === 0}}" class="pending-actions">
+            <button class="action-btn primary" data-index="{{index}}" bindtap="continuePay" size="mini">继续支付</button>
+            <button class="action-btn secondary" data-orderid="{{orderItem.orderId}}" bindtap="copyOrderId" size="mini">复制订单号</button>
+            <button class="action-btn secondary" data-index="{{index}}" bindtap="cancelOrder" size="mini">取消订单</button>
+          </view>
+          <!-- 其他状态只显示复制订单号 -->
+          <view wx:else>
+            <button class="action-btn secondary" data-orderid="{{orderItem.orderId}}" bindtap="copyOrderId" size="mini">复制订单号</button>
+          </view>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+</view>
+
+<!-- 订单详情弹窗 -->
+<view class="order-detail-mask" wx:if="{{showOrderDetail}}" bindtap="closeOrderDetail">
+  <view class="order-detail-popup" catchtap="stopPropagation">
+    <view class="detail-header">
+      <view class="back-btn" bindtap="closeOrderDetail">← 返回</view>
+      <text class="detail-title">订单详情</text>
+      <view class="close-btn" bindtap="closeOrderDetail">✕</view>
+    </view>
+    
+    <view class="detail-content" wx:if="{{currentOrder}}">
+      <!-- 订单基本信息 -->
+      <view class="detail-section">
+        <view class="info-row">
+          <text class="info-label">订单号</text>
+          <text class="info-value">{{currentOrder.orderId}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">订单金额</text>
+          <text class="info-value">¥{{currentOrder.amount}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">创建时间</text>
+          <text class="info-value">{{currentOrder.createTime}}</text>
+        </view>
+        <view class="info-row" wx:if="{{currentOrder.device_id}}">
+          <text class="info-label">设备ID</text>
+          <text class="info-value">{{currentOrder.device_id}}</text>
+        </view>
+        <view class="info-row" wx:if="{{currentOrder.prize_id && currentOrder.prize_id > 0}}">
+          <text class="info-label">奖品ID</text>
+          <text class="info-value">{{currentOrder.prize_id}}</text>
+        </view>
+      </view>
+
+      <!-- 抽奖结果 -->
+      <view class="detail-section" wx:if="{{currentOrder.pay_status === 'paid' && (currentOrder.lotteryResult === 'winner' || currentOrder.lotteryResult === 'no_prize' || currentOrder.prizeName || currentOrder.verification_code)}}">
+        <view class="section-title">抽奖结果</view>
+        
+        <!-- 中奖信息 -->
+        <view wx:if="{{currentOrder.lotteryResult === 'winner' || (currentOrder.prizeName && currentOrder.prizeName !== '')}}" class="winner-result-section">
+          <!-- 奖品图片 -->
+          <view class="detail-prize-image-section" wx:if="{{currentOrder.prizeImage && currentOrder.prizeImage !== '' && currentOrder.prizeImage !== null && currentOrder.prizeImage !== 'null'}}">
+            <image class="detail-prize-image" src="{{currentOrder.prizeImage}}" mode="aspectFit" binderror="handleImageError"></image>
+          </view>
+          
+          <view class="lottery-result-card">
+            <view class="result-icon">🎉</view>
+            <view class="result-content">
+              <text class="result-title">{{currentOrder.prizeName}}</text>
+              <text class="result-desc" wx:if="{{currentOrder.prizeDesc}}">{{currentOrder.prizeDesc}}</text>
+            </view>
+          </view>
+          
+          <!-- 核销码信息 -->
+          <view class="detail-verification-section" wx:if="{{currentOrder.verification_code}}">
+            <view class="verification-title">核销码</view>
+            <view class="verification-code-display">{{currentOrder.verification_code}}</view>
+            <button class="detail-copy-code-btn" data-code="{{currentOrder.verification_code}}" bindtap="copyVerificationCode" size="mini">复制核销码</button>
+            <button class="detail-copy-code-btn secondary" data-code="{{currentOrder.verification_code}}" bindtap="showVerificationQr" size="mini">显示二维码</button>
+          </view>
+        </view>
+        
+        <!-- 未中奖信息 -->
+        <view wx:elif="{{currentOrder.lotteryResult === 'no_prize'}}" class="lottery-result-card">
+          <view class="result-icon">🎯</view>
+          <view class="result-content">
+            <text class="result-title">{{currentOrder.prizeName || '很遗憾，未中奖'}}</text>
+            <text class="result-desc">{{currentOrder.prizeDesc || '谢谢参与，再接再厉'}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+    
+    <!-- 底部操作按钮 -->
+    <view class="detail-actions">
+      <button class="detail-action-btn secondary" data-orderid="{{currentOrder.orderId}}" bindtap="copyOrderId">复制订单号</button>
+      <!-- 只有已支付且非取消、非退款状态的中奖订单才显示复制核销码按钮 -->
+      <button wx:if="{{currentOrder.pay_status === 'paid' && currentOrder.order_status !== 3 && currentOrder.order_status !== 4 && currentOrder.verification_code && (currentOrder.lotteryResult === 'winner' || currentOrder.prizeName)}}" class="detail-action-btn primary" data-code="{{currentOrder.verification_code}}" bindtap="copyVerificationCode">复制核销码</button>
+      <button wx:if="{{currentOrder.pay_status === 'paid' && currentOrder.order_status !== 3 && currentOrder.order_status !== 4 && currentOrder.verification_code && (currentOrder.lotteryResult === 'winner' || currentOrder.prizeName)}}" class="detail-action-btn secondary" data-code="{{currentOrder.verification_code}}" bindtap="showVerificationQr">核销二维码</button>
+      <!--button class="detail-action-btn primary" bindtap="contactService">联系客服</button-->
+    </view>
+  </view>
+  
+  </view> <!-- 已登录状态结束 -->
+</view>
+
+<!-- 客服联系弹窗 -->
+<view class="service-modal-mask" wx:if="{{showServiceModal}}" bindtap="closeServiceModal">
+  <view class="service-modal-popup" catchtap="stopPropagation">
+    <view class="service-header">
+      <text class="service-title">联系客服</text>
+      <view class="close-btn" bindtap="closeServiceModal">✕</view>
+    </view>
+    
+    <view class="service-content">
+      <view class="service-section">
+        <view class="service-item" bindtap="copyWechatNumber">
+          <view class="service-icon wechat-icon">💚</view>
+          <view class="service-info">
+            <text class="service-name">微信客服</text>
+            <text class="service-number">service_wechat</text>
+          </view>
+          <view class="service-action">复制</view>
+        </view>
+      </view>
+    </view>
+  </view>
+</view>
+
+<!-- 奖品信息弹窗 -->
+<view class="prize-modal-mask" wx:if="{{showPrizeModal}}" bindtap="closePrizeModal">
+  <view class="prize-modal-popup" catchtap="stopPropagation">
+    <view class="prize-header">
+      <text class="prize-title">🎉 中奖信息</text>
+      <view class="close-btn" bindtap="closePrizeModal">✕</view>
+    </view>
+    
+    <view class="prize-content" wx:if="{{currentPrizeOrder}}">
+      <!-- 奖品图片 -->
+      <view class="prize-image-section" wx:if="{{currentPrizeOrder.prizeImage && currentPrizeOrder.prizeImage !== '' && currentPrizeOrder.prizeImage !== null && currentPrizeOrder.prizeImage !== 'null'}}">
+        <image class="prize-image" src="{{currentPrizeOrder.prizeImage}}" mode="aspectFit" binderror="handleImageError"></image>
+      </view>
+      
+      <!-- 奖品信息 -->
+      <view class="prize-info-section">
+        <view class="prize-name">{{currentPrizeOrder.prizeName}}</view>
+        <view class="prize-desc" wx:if="{{currentPrizeOrder.prizeDesc}}">{{currentPrizeOrder.prizeDesc}}</view>
+        
+        <!-- 核销码 -->
+        <view class="verification-section">
+          <view class="verification-label">核销码</view>
+          <view class="verification-code">{{currentPrizeOrder.verification_code}}</view>
+          <button class="copy-code-btn" data-code="{{currentPrizeOrder.verification_code}}" bindtap="copyVerificationCode" size="mini">复制</button>
+          <button class="copy-code-btn secondary" data-code="{{currentPrizeOrder.verification_code}}" bindtap="showVerificationQr" size="mini">二维码</button>
+        </view>
+      </view>
+    </view>
+    
+    <view class="prize-actions">
+      <button class="prize-action-btn" bindtap="closePrizeModal">关闭</button>
+    </view>
+  </view>
+</view>
+
+<!-- 二维码弹窗 -->
+<view class="qr-modal-mask" wx:if="{{showQrModal}}" bindtap="closeQrModal">
+  <view class="qr-modal-popup" catchtap="stopPropagation">
+    <view class="qr-header">
+      <text class="qr-title">核销码二维码</text>
+      <view class="close-btn" bindtap="closeQrModal">✕</view>
+    </view>
+    <view class="qr-content">
+      <view wx:if="{{qrLoading}}" class="qr-loading">正在生成...</view>
+      <image wx:elif="{{qrImageUrl}}" class="qr-image" src="{{qrImageUrl}}" mode="aspectFit" show-menu-by-longpress="true"></image>
+      <view wx:else class="qr-error">二维码生成失败</view>
+      <view class="qr-tip">长按二维码可保存或识别</view>
+    </view>
+  </view>
+</view>

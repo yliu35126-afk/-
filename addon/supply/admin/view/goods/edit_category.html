@@ -1,0 +1,103 @@
+{extend name="app/admin/view/base.html"/}
+{block name="resources"}
+<style>
+	.js-pid a{
+		margin-left: 20px;
+	}
+	.ns-form {
+		margin-top: 0;
+	}
+</style>
+{/block}
+{block name="main"}
+<form class="layui-form ns-form">
+	<div class="layui-form-item">
+		<label class="layui-form-label">分类名称：</label>
+		<div class="layui-input-block">
+			{$goods_category_info['category_name']}
+		</div>
+	</div>
+	
+	<div class="layui-form-item">
+		<label class="layui-form-label">平台抽成比率(供应商)：</label>
+		<div class="layui-input-block">
+			<div class="layui-input-inline">
+				<input name="supply_commission_rate" type="number" placeholder="请输入平台抽成比率" value="{$goods_category_info['supply_commission_rate']}" lay-verify="commission_rate" class="layui-input ns-len-short" autocomplete="off">
+			</div>
+			<span class="layui-form-mid">%</span>
+		</div>
+		<div class="ns-word-aux">
+			<p>必须为0-100的整数</p>
+			<p>对应分类的商品销售后，平台安照抽成比率收取费用</p>
+		</div>
+	</div>
+
+	<input type="hidden" name="category_id" value="{$goods_category_info['category_id']}">
+	
+	<div class="ns-form-row">
+		<button class="layui-btn ns-bg-color" lay-submit lay-filter="save">保存</button>
+		<button type="reset" class="layui-btn layui-btn-primary" onclick="back()">返回</button>
+	</div>
+</form>
+{/block}
+{block name="script"}
+<script>
+	var laytpl, form;
+
+	$(function () {
+
+
+		layui.use(['form', 'laytpl'], function () {
+			var repeat_flag = false;//防重复标识
+			laytpl = layui.laytpl;
+			form = layui.form;
+
+			/**
+			 * 表单验证
+			 */
+			form.verify({
+				commission_rate: function (value) {
+					var reg = /^\d{0,2}(.?\d{0,2})$/;
+					if (value.length > 0) {
+						if (isNaN(value)) {
+							return '佣金比率输入错误';
+						}
+						if (!reg.test(value) || value < 0 || value > 100) {
+							return '佣金比率范围:0~100%';
+						}
+					}
+				},
+			});
+
+			form.on('submit(save)', function (data) {
+
+				if (repeat_flag) return false;
+				repeat_flag = true;
+				var url = ns.url("supply://admin/goods/editCategory");
+
+				$.ajax({
+					url: url,
+					data: data.field,
+					dataType: 'json',
+					type: 'post',
+					success: function (data) {
+						layer.msg(data.message);
+						if (data.code == 0) {
+							location.href = ns.url("supply://admin/goods/category");
+						} else {
+							repeat_flag = false;
+						}
+					}
+				});
+				return false;
+			});
+
+		});
+
+	});
+
+	function back() {
+		location.href = ns.url("supply://admin/goods/category")
+	}
+</script>
+{/block}

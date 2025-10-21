@@ -1,0 +1,103 @@
+{extend name="base"/}
+{block name="resources"}
+<style>
+	.layui-input-inline input, .layui-input-block input, .layui-input-block textarea {outline: none; border: none;}
+	.upload-img-block {border: none; width: 100%;}
+	.upload-img-block .upload-img-box {display: inline-block; width: 80px; height: 80px;}
+	.ns-detail-form {display: inline-block; width: 49%; vertical-align: top;}
+	.ns-detail-form:first-child {border-right: 1px solid #EEEEEE;}
+	
+	.ns-title-content {color: #454545; display: flex; flex-wrap: wrap;}
+	.ns-title-content .layui-form-item {margin-bottom: 0; height: 30px; line-height: 30px;}
+	
+	.layui-card:first-child {margin-top: 0;}
+</style>
+{/block}
+{block name="main"}
+<div class="layui-card ns-card-common">
+	<div class="layui-card-header">
+		<span class="ns-card-title">基础信息</span>
+	</div>
+	<div class="layui-card-body">
+		<div class="ns-table-title">
+			<div class="ns-title-pic">
+				<img layer-src src="{:img($info.headimg)}" onerror="this.src = 'ADMIN_IMG/default_headimg.png'" />
+			</div>
+			<div class="ns-title-content">
+				<div class="layui-form-item">
+					<label class="layui-form-label sm">会员昵称：</label>
+					<div class="layui-input-block">
+						<div class="ns-len-mid">{$info.nickname}</div>
+					</div>
+				</div>
+				<div class="layui-form-item">
+					<label class="layui-form-label sm">手机电话：</label>
+					<div class="layui-input-block">
+						<div class="ns-len-mid">{notempty name='$info.mobile'}{$info.mobile}{else/}--{/notempty}</div>
+					</div>
+				</div>
+				<div class="layui-form-item">
+					<label class="layui-form-label sm">会员邮箱：</label>
+					<div class="layui-input-block">
+						<div class="ns-len-mid">{notempty name='$info.email'}{$info.email}{else/}--{/notempty}</div>
+					</div>
+				</div>
+				<div class="layui-form-item">
+					<label class="layui-form-label sm">关注状态：</label>
+					<div class="layui-input-block">
+						<div class="ns-len-mid">{eq name='$info.is_subscribe' value='1'}已关注{else/}未关注{/eq}</div>
+					</div>
+				</div>
+				<div class="layui-form-item">
+					<label class="layui-form-label sm">关注时间：</label>
+					<div class="layui-input-block">
+						<div class="ns-len-mid">{:time_to_date($info.subscribe_time)}</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<div class="fourstage-nav layui-tab layui-tab-brief" lay-filter="edit_user_tab">
+	<ul class="layui-tab-title">
+		<li class="layui-this" lay-id="basic_info">账户明细</li>
+		<li class="" lay-id="basic_info">订单管理</li>
+		<li class="" lay-id="basic_info">会员地址</li>
+		<li class="" lay-id="basic_info">收藏记录</li>
+		<li class="" lay-id="basic_info">浏览记录</li>
+		<li class="" lay-id="basic_info">优惠券</li>
+	</ul>
+	<div class="layui-tab-content">
+		<div class="layui-tab-item layui-show">
+			<iframe src="{:url('shop/member/accountList',array('member_id'=>$info.member_id))}" style="width:100%;height:100vh;border:0"></iframe>
+		</div>
+		<div class="layui-tab-item">
+			<iframe src="{:url('shop/member/order',array('member_id'=>$info.member_id))}" style="width:100%;height:100vh;border:0"></iframe>
+		</div>
+		<div class="layui-tab-item">
+			<iframe src="{:url('shop/member/addressdetail',array('member_id'=>$info.member_id))}" style="width:100%;height:100vh;border:0"></iframe>
+		</div>
+		<div class="layui-tab-item">
+			<iframe src="{:url('shop/goods/membergoodscollect',array('member_id'=>$info.member_id))}" style="width:100%;height:100vh;border:0"></iframe>
+		</div>
+		<div class="layui-tab-item">
+			<iframe src="{:url('shop/goods/membergoodsbrowse',array('member_id'=>$info.member_id))}" style="width:100%;height:100vh;border:0"></iframe>
+		</div>
+		<div class="layui-tab-item">
+			<iframe src="{:url('shop/member/membercoupon',array('member_id'=>$info.member_id))}" style="width:100%;height:100vh;border:0"></iframe>
+		</div>
+	</div>
+</div>
+
+{/block}
+{block name="script"}
+<script>
+	layui.use('form', function() {
+		var form = layui.form;
+		form.render();
+
+
+		
+	});
+</script>
+{/block}

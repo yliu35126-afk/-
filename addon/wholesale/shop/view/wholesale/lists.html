@@ -1,0 +1,310 @@
+{extend name="app/shop/view/base.html"/}
+{block name="resources"}
+<style>
+	.contraction span {
+		cursor: pointer;
+		display: inline-block;
+		width: 17px;
+		height: 17px;
+		text-align: center;
+		line-height: 14px;
+		user-select: none;
+	}
+	.sku-list {
+		overflow: hidden;
+		padding: 0 45px;
+	}
+	.sku-list li .img-wrap {
+		vertical-align: middle;
+		margin-right: 8px;
+		width: 120px;
+		height: 120px;
+		text-align: center;
+		line-height: 120px;
+	}
+	.sku-list li .img-wrap img {
+		max-width: 100%;
+		max-height: 100%;
+	}
+	.sku-list li .info-wrap span.sku-name {
+		-webkit-line-clamp: 2;
+		margin-bottom: 5px;
+	}
+	.sku-list li .info-wrap span {
+		display: -webkit-box;
+		margin-bottom: 5px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: normal;
+		word-break: break-all;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 1;
+	}
+	.sku-list li {
+		float: left;
+		display: flex;
+		padding: 10px;
+		margin-right: 10px;
+		margin-bottom: 10px;
+		border: 1px solid #EFEFEF;
+		width: 294px;
+		height: 110px;
+		align-items: center;
+	}
+</style>
+{/block}
+{block name="main"}
+<div class="layui-collapse ns-tips">
+	<div class="layui-colla-item">
+		<h2 class="layui-colla-title">操作提示</h2>
+		<ul class="layui-colla-content layui-show">
+			<li>批发活动列表展示商品的批发相关信息</li>
+		</ul>
+	</div>
+</div>
+
+<!-- 搜索框 -->
+<div class="ns-single-filter-box">
+	<button class="layui-btn ns-bg-color" onclick="add()">添加批发</button>
+	<div class="layui-form">
+		<div class="layui-input-inline">
+			<input type="text" name="goods_name" placeholder="请输入商品名称" class="layui-input" autocomplete="off">
+			<button type="button" class="layui-btn layui-btn-primary" lay-filter="search" lay-submit>
+			  <i class="layui-icon">&#xe615;</i>
+			</button>
+		</div>
+	</div>
+</div>
+
+<table id="wholesale_list" lay-filter="wholesale_list"></table>
+
+<!-- 商品 -->
+<script type="text/html" id="goods">
+	<div class="ns-table-title">
+
+		<div class="contraction" data-id="{{d.goods_id}}" data-open="0">
+			<span>+</span>
+		</div>
+
+		<div class="ns-title-pic">
+			{{#  if(d.goods_image){  }}
+			<img layer-src src="{{ns.img(d.goods_image.split(',')[0])}}"/>
+			{{#  }  }}
+		</div>
+		<div class="ns-title-content">
+			<a href="javascript:;" class="ns-multi-line-hiding ns-gn-color" title="{{d.goods_name}}">{{d.goods_name}}</a>
+		</div>
+	</div>
+</script>
+<!-- 商品状态 -->
+<script type="text/html" id="goods_status">
+	{{#  if(d.goods_state == 1){  }}
+		销售中
+	{{#  }else if(d.goods_state == 0){  }}
+		仓库中
+	{{#  }  }}
+</script>
+
+<!-- 操作 -->
+<script type="text/html" id="action">
+	<div class="ns-table-btn">
+		<a class="layui-btn" lay-event="edit">编辑</a>
+		<a class="layui-btn" lay-event="del">删除</a>
+	</div>
+</script>
+
+<!-- 商品sku -->
+<script type="text/html" id="skuList">
+	<tr class="js-list-{{d.index}}" id="sku_img_{{d.index}}">
+		<td colspan="9">
+			<ul class="sku-list">
+				{{# for(var i=0; i<d.list.length; i++){ }}
+				<li>
+					<div class="img-wrap">
+						<img layer-src src="{{ns.img(d.list[i].sku_image)}}">
+					</div>
+					<div class="info-wrap">
+						<span class="sku-name" title="{{d.list[i].sku_name}}">{{d.list[i].sku_name}}</span>
+						<span class="price">商品价格：￥{{d.list[i].price}}</span>
+						<span class="price">最低价：￥{{d.list[i].min_price}}</span>
+						<span class="price">最低购买数量：{{d.list[i].min_num}}</span>
+					</div>
+				</li>
+				{{# } }}
+			</ul>
+		</td>
+	</tr>
+</script>
+{/block}
+{block name="script"}
+<script>
+	var laytpl;
+	$(function () {
+		$("body").on("click", ".contraction", function () {
+
+			var goods_id = $(this).attr("data-id");
+			var open = $(this).attr("data-open");
+			var tr = $(this).parent().parent().parent().parent();
+			var index = tr.attr("data-index");
+			if (open == 1) {
+				$(this).children("span").text("+");
+				$(".js-list-" + index).remove();
+			} else {
+				$(this).children("span").text("-");
+				$.ajax({
+					url: ns.url("wholesale://shop/wholesale/getSkuList"),
+					data: {goods_id: goods_id},
+					dataType: 'JSON',
+					type: 'POST',
+					async: false,
+					success: function (res) {
+
+						var sku_list = $("#skuList").html();
+						var data = {
+							list: res.data,
+							index: index
+						};
+						laytpl(sku_list).render(data, function (html) {
+							tr.after(html);
+						});
+						layer.photos({
+							photos: '.img-wrap',
+							anim: 5
+						});
+					}
+				});
+			}
+			$(this).attr("data-open", (open == 0 ? 1 : 0));
+		});
+
+		layui.use(['form','laytpl'], function () {
+			laytpl = layui.laytpl;
+			var table,
+					form = layui.form; //防重复标识
+			form.render();
+
+			table = new Table({
+				elem: '#wholesale_list',
+				url: ns.url("wholesale://shop/wholesale/lists"),
+				cols: [
+					[{
+						title: '商品信息',
+						unresize: 'false',
+						width: '20%',
+						templet: '#goods'
+					}, {
+						field: 'price',
+						title: '商品原价',
+						unresize: 'false',
+						width: '8%',
+						templet: function (data) {
+							return '￥' + data.price;
+						}
+					}, {
+						field: 'goods_stock',
+						title: '商品库存',
+						unresize: 'false',
+						width: '8%',
+					}, {
+						field: 'price',
+						title: '商品状态',
+						unresize: 'false',
+						width: '10%',
+						templet: "#goods_status"
+					}, {
+						field: 'wholesale_price',
+						title: '批发价格区间',
+						unresize: 'false',
+						width: '15%',
+						templet: function (data) {
+							var html = '';
+							if (data.wholesale_goods_id > 0) {
+								if (data.min_price == data.max_price) {
+									html = '<span style="padding-right: 15px;">￥' + data.min_price + '</span>';
+								} else {
+									html = '<span style="padding-right: 15px;">￥' + data.min_price + '~' + data.max_price + '</span>';
+								}
+							}
+							return html;
+						}
+					}, {
+						field: 'min_num',
+						title: '起批量',
+						unresize: 'false',
+						width: '8%'
+					}, {
+						title: '操作',
+						toolbar: '#action',
+						unresize: 'false',
+						width: '12%'
+					}]
+				],
+
+			});
+
+			/**
+			 * 搜索功能
+			 */
+			form.on('submit(search)', function (data) {
+				table.reload({
+					page: {
+						curr: 1
+					},
+					where: data.field
+				});
+			});
+
+			/**
+			 * 监听工具栏操作
+			 */
+			table.tool(function (obj) {
+				var data = obj.data;
+				switch (obj.event) {
+					case 'edit': //编辑
+						location.href = ns.url("wholesale://shop/wholesale/edit", {"goods_id": data.goods_id});
+						break;
+					case 'del': //参与
+						del(data.goods_id);
+						break;
+				}
+			});
+
+			var del_flag = false;
+
+			/**
+			 * 删除
+			 */
+			function del(goods_id) {
+				layer.confirm('确定要删除批发商品吗?', function () {
+					if (del_flag) return;
+					del_flag = true;
+
+					$.ajax({
+						url: ns.url("wholesale://shop/wholesale/delete"),
+						data: {
+							goods_id: goods_id
+						},
+						dataType: 'JSON',
+						type: 'POST',
+						success: function (res) {
+							layer.msg(res.message);
+							del_flag = false;
+							if (res.code == 0) {
+								table.reload();
+							}
+						}
+					});
+				}, function () {
+					layer.close();
+					del_flag = false;
+				});
+			}
+
+		});
+	});
+	function add() {
+		location.href = ns.url("wholesale://shop/wholesale/add");
+	}
+
+</script>
+{/block}

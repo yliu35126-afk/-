@@ -1,0 +1,434 @@
+{extend name="app/admin/view/base.html"/}
+{block name="resources"}
+<style>
+	.cert-info-name { line-height: 34px; }
+</style>
+{/block}
+{block name="main"}
+<div class="layui-form">
+	<div class="layui-card ns-card-common ns-card-brief">
+		<div class="layui-card-header">
+			<span class="ns-card-title">认证类型</span>
+		</div>
+		
+		<div class="layui-card-body">
+			<div class="layui-form-item">
+				<label class="layui-form-label">认证类型：</label>
+				<div class="layui-input-block ns-len-mid">
+					<p class="cert-info-name">{$cert_info.cert_type == 1 ? '个人认证' : '企业认证'}</p>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<!-- 企业供货商独有 -->
+	{if condition="$cert_info.cert_type == 2"}
+	<!-- 公司信息 -->
+	<div class="layui-card ns-card-common ns-card-brief">
+		<div class="layui-card-header">
+			<span class="ns-card-title">企业信息</span>
+		</div>
+		
+		<div class="layui-card-body">
+			<div class="layui-form-item">
+				<label class="layui-form-label">公司名称：</label>
+				<div class="layui-input-block">
+					<input name="company_name" type="text" value="{$cert_info.company_name}" class="layui-input ns-len-long" autocomplete="off">
+				</div>
+			</div>
+			
+			<div class="layui-form-item" data-flag="area">
+				<label class="layui-form-label">公司地址：</label>
+				<div class="layui-input-inline ns-len-mid">
+					<select name="company_province_id" data-type="province" data-init="{$cert_info.company_province_id}" lay-filter="comProvince"></select>
+				</div>
+				<div class="layui-input-inline ns-len-mid">
+					<select name="company_city_id" data-type="city" data-init="{$cert_info.company_city_id}" lay-filter="comCity"></select>
+				</div>
+				<div class="layui-input-inline ns-len-mid">
+					<select name="company_district_id" data-type="district" data-init="{$cert_info.company_district_id}" lay-filter="comDistrict"></select>
+				</div>
+				<!-- <div class="layui-input-inline">
+					<input name="company_address" type="text" value="{$cert_info.company_address}" class="layui-input ns-len-long" autocomplete="off">
+				</div> -->
+			</div>
+			
+			<div class="layui-form-item">
+				<label class="layui-form-label"></label>
+				<div class="layui-input-inline">
+					<input name="company_address" type="text" value="{$cert_info.company_address}" class="layui-input ns-len-long" autocomplete="off">
+				</div>
+			</div>
+		</div>
+	</div>
+	{/if}
+
+	<!-- 公共部分 -->
+	<!-- 联系人手机号身份证 -->
+	<!-- 联系人信息 -->
+	<div class="layui-card ns-card-common ns-card-brief">
+		<div class="layui-card-header">
+			{if condition="$cert_info.cert_type == 1"}
+			<span class="ns-card-title">联系人信息</span>
+			{else/}
+			<span class="ns-card-title">法人代表信息</span>
+			{/if}
+		</div>
+		
+		<div class="layui-card-body">
+			<div class="layui-form-item">
+				{if condition="$cert_info.cert_type == 1"}
+				<label class="layui-form-label">联系人姓名：</label>
+				{else/}
+				<label class="layui-form-label">法人姓名：</label>
+				{/if}
+				<div class="layui-input-block">
+					<input name="contacts_name" type="text" value="{$cert_info.contacts_name}" class="layui-input ns-len-mid" autocomplete="off">
+				</div>
+			</div>
+			
+			<div class="layui-form-item">
+				{if condition="$cert_info.cert_type == 1"}
+				<label class="layui-form-label">联系人手机：</label>
+				{else/}
+				<label class="layui-form-label">法人联系电话：</label>
+				{/if}
+				<div class="layui-input-block">
+					<input name="contacts_mobile" type="text" lay-verify="mobile" value="{$cert_info.contacts_mobile}" class="layui-input ns-len-mid" autocomplete="off">
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<!-- 企业供货商独有 -->
+	{if condition="$cert_info.cert_type == 2"}
+	<div class="layui-card ns-card-common ns-card-brief">
+		<div class="layui-card-header">
+			<span class="ns-card-title">企业资质</span>
+		</div>
+		
+		<div class="layui-card-body">
+			<!-- 营业执照 税务 -->
+			<div class="layui-form-item">
+				<label class="layui-form-label">统一社会信用码：</label>
+				<div class="layui-input-block">
+					<input name="business_licence_number" type="text" value="{$cert_info.business_licence_number}" class="layui-input ns-len-long" autocomplete="off">
+				</div>
+			</div>
+			
+			<div class="layui-form-item">
+				<label class="layui-form-label img-upload-lable">营业执照电子版：</label>
+				<div class="layui-input-block">
+					<div class="upload-img-block img-upload">
+
+						<div class="upload-img-box {notempty name="$cert_info['business_licence_number_electronic']"}hover{/notempty}">
+							<div class="ns-upload-default" id="license">
+								{if condition="$cert_info.business_licence_number_electronic"}
+								<div id="preview_license" class="preview_img">
+									<img layer-src src="{:img($cert_info.business_licence_number_electronic)}" class="img_prev"/>
+								</div>
+								{else/}
+								<div class="upload">
+									<img src="ADMIN_IMG/upload_img.png"/>
+									<p>点击上传</p>
+								</div>
+								{/if}
+							</div>
+							<div class="operation">
+								<div>
+									<i title="图片预览" class="iconfont iconreview js-preview" style="margin-right: 20px;"></i>
+									<i title="删除图片" class="layui-icon layui-icon-delete js-delete"></i>
+								</div>
+								<div class="replace_img js-replace">点击替换</div>
+							</div>
+							<input type="hidden" name="business_licence_number_electronic" value="{$cert_info.business_licence_number_electronic}">
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="layui-form-item">
+				<label class="layui-form-label">法定经营范围：</label>
+				<div class="layui-input-inline ns-len-long">
+					<textarea name="business_sphere" class="layui-textarea">{$cert_info.business_sphere}</textarea>
+				</div>
+			</div>
+			
+			<!-- <div class="layui-form-item">
+				<label class="layui-form-label">税务登记证号：</label>
+				<div class="layui-input-block">
+					<input name="tax_registration_certificate" type="text" value="{$cert_info.tax_registration_certificate}" class="layui-input ns-len-long" autocomplete="off">
+				</div>
+			</div>
+			
+			<div class="layui-form-item">
+				<label class="layui-form-label img-upload-lable">税务登记证号电子版：</label>
+				<div class="layui-input-block img-upload">
+					<div class="upload-img-block icon">
+						<div class="upload-img-box" id="taxlicense">
+							{if condition="$cert_info.tax_registration_certificate_electronic"}
+								<img src="{:img($cert_info.tax_registration_certificate_electronic)}" />
+							{else/}
+								<div class="ns-upload-default">
+									<img src="ADMIN_IMG/upload_img.png" />
+									<p>点击上传</p>
+								</div>
+							{/if}
+						</div>
+					</div>
+				</div>
+			</div> -->
+		</div>
+	</div>
+	{/if}
+
+	<!-- 联系人身份证件 -->
+	<div class="layui-card ns-card-common ns-card-brief">
+		<div class="layui-card-header">
+			{if condition="$cert_info.cert_type == 1"}
+			<span class="ns-card-title">联系人身份证件</span>
+			{else/}
+			<span class="ns-card-title">法人身份证件</span>
+			{/if}
+		</div>
+		
+		<div class="layui-card-body">
+			<div class="layui-form-item">
+				{if condition="$cert_info.cert_type == 1"}
+				<label class="layui-form-label">联系人身份证：</label>
+				{else/}
+				<label class="layui-form-label">法人身份证号：</label>
+				{/if}
+				<div class="layui-input-block">
+					<input name="contacts_card_no" type="text" lay-verify="idcard" value="{$cert_info.contacts_card_no}" class="layui-input ns-len-mid">
+				</div>
+			</div>
+
+			<div class="layui-form-item">
+				{if condition="$cert_info.cert_type == 1"}
+				<label class="layui-form-label img-upload-lable">申请人身份证正面：</label>
+				{else/}
+				<label class="layui-form-label img-upload-lable">法人身份证正面：</label>
+				{/if}
+				<div class="layui-input-block">
+					<div class="upload-img-block img-upload">
+						
+						<div class="upload-img-box {notempty name="$cert_info['contacts_card_electronic_2']"}hover{/notempty}">
+							<div class="ns-upload-default" id="idCardPicFront">
+								{if condition="$cert_info.contacts_card_electronic_2"}
+								<div id="preview_idCardPicFront" class="preview_img">
+									<img layer-src src="{:img($cert_info.contacts_card_electronic_2)}" class="img_prev"/>
+								</div>
+								{else/}
+								<div class="upload">
+									<img src="ADMIN_IMG/upload_img.png"/>
+									<p>点击上传</p>
+								</div>
+								{/if}
+							</div>
+							<div class="operation">
+								<div>
+									<i title="图片预览" class="iconfont iconreview js-preview" style="margin-right: 20px;"></i>
+									<i title="删除图片" class="layui-icon layui-icon-delete js-delete"></i>
+								</div>
+								<div class="replace_img js-replace">点击替换</div>
+							</div>
+							<input type="hidden" name="contacts_card_electronic_2" value="{$cert_info.contacts_card_electronic_2}">
+						</div>
+						
+						<!-- <div class="upload-img-box icon">
+							{if condition="$cert_info.contacts_card_electronic_2"}
+							<img layer-src src="{:img($cert_info.contacts_card_electronic_2)}" />
+							{else/}
+							<div class="ns-upload-default">
+								<img src="ADMIN_IMG/upload_img.png" />
+								<p>点击上传</p>
+							</div>
+							{/if}
+						</div>
+						<p id="idCardPicFront" class=" {if condition="$cert_info.contacts_card_electronic_2"} replace {else/} no-replace{/if}">替换</p>
+						<i class="del {if condition="$cert_info.contacts_card_electronic_2"}show{/if}">x</i> -->
+					</div>
+				</div>
+			</div>
+			
+			<div class="layui-form-item">
+				{if condition="$cert_info.cert_type == 1"}
+				<label class="layui-form-label img-upload-lable">申请人身份证反面：</label>
+				{else/}
+				<label class="layui-form-label img-upload-lable">法人身份证反面：</label>
+				{/if}
+				<div class="layui-input-block">
+					<div class="upload-img-block img-upload">
+						<div class="upload-img-box {notempty name="$cert_info['contacts_card_electronic_3']"}hover{/notempty}">
+							<div class="ns-upload-default" id="idCardPicBack">
+								{if condition="$cert_info.contacts_card_electronic_3"}
+								<div id="preview_idCardPicBack" class="preview_img">
+									<img layer-src src="{:img($cert_info.contacts_card_electronic_3)}" class="img_prev"/>
+								</div>
+								{else/}
+								<div class="upload">
+									<img src="ADMIN_IMG/upload_img.png"/>
+									<p>点击上传</p>
+								</div>
+								{/if}
+							</div>
+							<div class="operation">
+								<div>
+									<i title="图片预览" class="iconfont iconreview js-preview" style="margin-right: 20px;"></i>
+									<i title="删除图片" class="layui-icon layui-icon-delete js-delete"></i>
+								</div>
+								<div class="replace_img js-replace">点击替换</div>
+							</div>
+							<input type="hidden" name="contacts_card_electronic_3" value="{$cert_info.contacts_card_electronic_3}">
+						</div>
+						<!-- <div class="upload-img-box icon">
+							{if condition="$cert_info.contacts_card_electronic_3"}
+							<img layer-src src="{:img($cert_info.contacts_card_electronic_3)}" />
+							{else/}
+							<div class="ns-upload-default">
+								<img src="ADMIN_IMG/upload_img.png" />
+								<p>点击上传</p>
+							</div>
+							{/if}
+						</div>
+						<p id="idCardPicBack" class=" {if condition="$cert_info.contacts_card_electronic_3"} replace {else/} no-replace{/if}">替换</p>
+						<input type="hidden" name="contacts_card_electronic_3" value="{$cert_info.contacts_card_electronic_3}">
+						<i class="del {if condition="$cert_info.contacts_card_electronic_3"}show{/if}">x</i> -->
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+	<!-- 对公账户信息 -->
+	<!-- 企业供货商独有 -->
+	{if condition="$cert_info.cert_type == 2"}
+	<div class="layui-card ns-card-common ns-card-brief">
+		<div class="layui-card-header">
+			<span class="ns-card-title">对公账户</span>
+		</div>
+		
+		<div class="layui-card-body">
+			<div class="layui-form-item">
+				<label class="layui-form-label">银行开户名：</label>
+				<div class="layui-input-block">
+					<input name="bank_account_name" type="text" value="{$cert_info.bank_account_name}" class="layui-input ns-len-long" autocomplete="off">
+				</div>
+			</div>
+			
+			<div class="layui-form-item">
+				<label class="layui-form-label">公司银行账号：</label>
+				<div class="layui-input-block">
+					<input name="bank_account_number" type="text" lay-verify="required" value="{$cert_info.bank_account_number}" class="layui-input ns-len-long" autocomplete="off">
+				</div>
+			</div>
+			
+			<div class="layui-form-item">
+				<label class="layui-form-label">开户银行支行名称：</label>
+				<div class="layui-input-block">
+					<input name="bank_name" type="text" value="{$cert_info.bank_name}" class="layui-input ns-len-long" autocomplete="off">
+				</div>
+			</div>
+			
+			<div class="layui-form-item" data-flag="area">
+				<label class="layui-form-label">开户银行所在地：</label>
+				<div class="layui-input-block">
+					<input name="bank_address" type="text" value="{$cert_info.bank_address}" class="layui-input ns-len-long" autocomplete="off">
+				</div>
+			</div>
+		</div>
+	</div>
+	{/if}
+
+	<div class="ns-single-filter-box">
+		<div class="ns-form-row">
+			<button class="layui-btn ns-bg-color" lay-submit lay-filter="save">保存</button>
+			<button class="layui-btn layui-btn-primary" onclick="back()">返回</button>
+		</div>
+	</div>
+	
+	<!-- 隐藏域 -->
+	<input type="hidden" value="{$cert_info.site_id}" name="site_id" />
+	<input type="hidden" value="{$cert_info.tax_registration_certificate_electronic}" name="tax_registration_certificate_electronic" />
+	<input type="hidden" value="{$cert_info.contacts_card_electronic_1}" name="contacts_card_electronic_1" />
+</div>
+{/block}
+{block name="script"}
+<script src="ADMIN_JS/address.js"></script>
+<script>
+	layui.use(['form', 'laydate'], function() {
+		var form = layui.form,
+			repeat_flag = false; //防重复标识
+		form.render();
+
+		initArea(form); //初始化三级联动
+
+		// 申请人身份证正面
+		var idCardPicFront_upload = new Upload({
+			elem: '#idCardPicFront',
+			url: ns.url("admin/upload/upload"),
+		});
+
+		// 申请人身份证反面
+		var idCardPicBack_upload = new Upload({
+			elem: '#idCardPicBack',
+			url: ns.url("admin/upload/upload"),
+		});
+
+		// 营业执照电子版
+		var license_upload = new Upload({
+			elem: '#license',
+			url: ns.url("admin/upload/upload"),
+		});
+		
+		//税务登记证电子版
+		var taxlicense = new Upload({
+			elem: '#taxlicense',
+			url: ns.url("admin/upload/upload"),
+		});
+
+		/**
+		 * 监听保存
+		 */
+		form.on('submit(save)', function(data) {
+			data.field.site_id = {$site_id};
+			if (repeat_flag) return false;
+			repeat_flag = true;
+			
+			//删除图片
+			if(!data.field.contacts_card_electronic_2) idCardPicFront_upload.delete();
+			if(!data.field.contacts_card_electronic_3) idCardPicBack_upload.delete();
+			if(!data.field.business_licence_number_electronic) license_upload.delete();
+
+			$.ajax({
+				type: 'POST',
+				url: ns.url("supply://admin/supplier/cert"),
+				data: data.field,
+				dataType: 'JSON',
+				success: function(res) {
+					repeat_flag = false;
+					if (res.code == 0) {
+						layer.confirm('编辑成功', {
+							title:'操作提示',
+							btn: ['返回列表', '继续操作'],
+							yes: function(){
+								location.href = ns.url("supply://admin/supplier/index")
+							},
+							btn2: function() {
+								location.reload();
+							}
+						});
+					} else {
+						layer.msg(res.message);
+					}
+				}
+			});
+		});
+	});
+	
+	function back() {
+		location.href = ns.url("supply://admin/supplier/index");
+	}
+</script>
+{/block}

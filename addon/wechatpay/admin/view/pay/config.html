@@ -1,0 +1,180 @@
+{extend name="app/admin/view/base.html"/}
+{block name="resources"}
+<style>
+	.input-text span{margin-right: 15px;}
+	.form-wrap {margin-top: 0;}
+	.file-upload {display: inline-block; margin-right: 5px;}
+	.api-type-config {display: none}
+</style>
+{/block}
+{block name="main"}
+<div class="layui-form form-wrap ns-form">
+	<div class="layui-form-item">
+		<label class="layui-form-label">商户号：</label>
+		<div class="layui-input-block">
+			<input name="mch_id" type="text" value="{$info.value.mch_id ?? ''}" class="layui-input ns-len-long" lay-verify="required">
+		</div>
+		<div class="ns-word-aux"><span>[MCHID]</span>微信支付商户号</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">支付接口类型：</label>
+		<div class="layui-input-block">
+			<input type="radio" title="v2" name="api_type" lay-filter="api_type" value="v2" {if !$info.value || ($info.value && $info.value.api_type eq 'v2')}checked{/if}>
+			<input type="radio" title="v3" name="api_type" lay-filter="api_type" value="v3" {if $info.value && $info.value.api_type eq 'v3'}checked{/if}>
+		</div>
+	</div>
+
+	<div class="layui-form-item api-type-config v2-config" {if empty($info.value) || ( ($info.value.api_type eq 'v2') || ($info.value.transfer_status == 1 && $info.value.transfer_type eq 'v2') ) }style="display:block"{/if}>
+		<label class="layui-form-label"><span class="required">*</span>APIv2密钥 ：</label>
+		<div class="layui-input-block">
+			<input name="pay_signkey" lay-verify="pay_signkey" type="text" value="{$info.value.pay_signkey ?? ''}" class="layui-input ns-len-long">
+		</div>
+		<div class="ns-word-aux">微信商户APIv2密钥 <a href="https://kf.qq.com/faq/180830UVRZR7180830Ij6ZZz.html" class="text-color" target="_blank">查看指引</a></div>
+	</div>
+
+	<div class="layui-form-item api-type-config v3-config" {if !empty($info.value) && ( ($info.value.api_type eq 'v3') || ($info.value.transfer_status == 1 && $info.value.transfer_type eq 'v3') ) }style="display:block"{/if}>
+		<label class="layui-form-label"><span class="required">*</span>APIv3密钥 ：</label>
+		<div class="layui-input-block">
+			<input name="v3_pay_signkey" lay-verify="v3_pay_signkey" type="text" value="{$info.value.v3_pay_signkey ?? ''}" class="layui-input ns-len-long">
+		</div>
+		<div class="ns-word-aux">微信商户APIv3密钥 <a href="https://kf.qq.com/faq/180830E36vyQ180830AZFZvu.html" class="text-color" target="_blank">查看指引</a></div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">支付证书cert：</label>
+		<div class="layui-input-block">
+			<input type="text" name="apiclient_cert" class="layui-input ns-len-long" value="{$info.value.apiclient_cert ?? ''}">
+		</div>
+		<div class="ns-word-aux">apiclient_cert.pem文件在服务器的磁盘路径,如Linux系统"root/cert/apiclient_cert.pem"或window系统"d:\cert\apiclient_cert.pem"</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">支付证书key：</label>
+		<div class="layui-input-block">
+			<input type="text" name="apiclient_key" class="layui-input ns-len-long" value="{$info.value.apiclient_key ?? ''}">
+		</div>
+		<div class="ns-word-aux">apiclient_key.pem文件在服务器的磁盘路径,如Linux系统"root/cert/apiclient_key.pem"或window系统"d:\cert\apiclient_key.pem"</div>
+	</div>
+
+	<input type="hidden" name="plateform_cert" class="layui-input ns-len-long" value="{$info.value.plateform_cert ?? ''}">
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">是否启用支付：</label>
+		<div class="layui-input-inline">
+			<input type="checkbox" name="pay_status" value="1" lay-skin="switch" {if condition="$info.value && $info.value.pay_status == 1"} checked {/if} />
+		</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">是否启用退款：</label>
+		<div class="layui-input-inline">
+			<input type="checkbox" name="refund_status" value="1" lay-skin="switch" {if condition="$info.value && $info.value.refund_status == 1"} checked {/if} />
+		</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">是否启用转账：</label>
+		<div class="layui-input-inline">
+			<input type="checkbox" name="transfer_status" value="1" lay-skin="switch" {if condition="$info.value && $info.value.transfer_status == 1"} checked {/if} lay-filter="transfer_status"/>
+		</div>
+	</div>
+
+	<div class="transfer-config" {if condition="!$info.value || $info.value.transfer_status != 1"}style="display:none;"{/if}>
+	<div class="layui-form-item">
+		<label class="layui-form-label">转账使用产品：</label>
+		<div class="layui-input-inline">
+			<input type="radio" title="企业付款到零钱" name="transfer_type" lay-filter="transfer_type" value="v2" {if !$info.value || ($info.value && $info.value.transfer_type eq 'v2')}checked{/if}>
+			<input type="radio" title="商家转账到零钱" name="transfer_type" lay-filter="transfer_type" value="v3" {if $info.value && $info.value.transfer_type eq 'v3'}checked{/if}>
+		</div>
+	</div>
+	</div>
+
+	<div class="ns-form-row">
+		<button class="layui-btn ns-bg-color" lay-submit lay-filter="save">保存</button>
+		<button class="layui-btn layui-btn-primary" onclick="back()">返回</button>
+	</div>
+</div>
+
+{/block}
+{block name="script"}
+<script>
+	layui.use(['form'], function() {
+		var form = layui.form,
+				repeat_flag = false; //防重复标识
+		form.render();
+
+		form.on('switch(transfer_status)', function (data) {
+			if ($(data.elem).is(':checked')) {
+				$('.transfer-config').show()
+			} else {
+				$('.transfer-config').hide()
+			}
+		})
+
+		form.on('radio(api_type)', function (data) {
+			$('.api-type-config').hide();
+			$('.' + data.value + '-config').show();
+			$('.' + $('[name="transfer_type"]:checked').val() + '-config').show();
+		})
+
+		form.on('radio(transfer_type)', function (data) {
+			$('.api-type-config').hide();
+			$('.' + data.value + '-config').show()
+			$('.' + $('[name="api_type"]:checked').val() + '-config').show();
+		})
+
+		form.verify({
+			pay_signkey: function(value){
+				if (!$('.v2-config').is(':hidden') && !/[\S]+/.test(value)) return '请设置微信APIv2密钥';
+			},
+			v3_pay_signkey: function(value){
+				if (!$('.v3-config').is(':hidden') && !/[\S]+/.test(value)) return '请设置微信APIv3密钥';
+			},
+			apiclient_cert: function(value){
+				if (!/[\S]+/.test(value)) return '请上传apiclient_cert.pem文件';
+			},
+			apiclient_key: function(value){
+				if (!/[\S]+/.test(value)) return '请上传apiclient_key.pem文件';
+			}
+		})
+
+		/**
+		 * 监听提交
+		 */
+		form.on('submit(save)', function(data) {
+			if (repeat_flag) return false;
+			repeat_flag = true;
+
+			$.ajax({
+				url: ns.url("wechatpay://admin/pay/config"),
+				data: data.field,
+				dataType: 'JSON',
+				type: 'POST',
+				success: function(res) {
+					repeat_flag = false;
+
+					if (res.code == 0) {
+						layer.confirm('编辑成功', {
+							title:'操作提示',
+							btn: ['返回列表', '继续操作'],
+							yes: function(){
+								location.href = ns.url("admin/config/pay")
+							},
+							btn2: function() {
+								location.reload();
+							}
+						});
+					}else{
+						layer.msg(res.message);
+					}
+				}
+			});
+		});
+	});
+
+	function back() {
+		location.href = ns.url("admin/config/pay");
+	}
+</script>
+{/block}

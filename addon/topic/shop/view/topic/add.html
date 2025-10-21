@@ -1,0 +1,300 @@
+{extend name="app/shop/view/base.html"/}
+{block name="resources"}
+<style>
+	.ns-form {margin-top: 0;}
+	.layui-form-item .layui-input-inline.end-time{float: none;}
+	.goods-title{display: flex;align-items: center;}
+	.goods-title .goods-img{display: flex;align-items: center;justify-content: center;width: 55px;height: 55px;margin-right: 5px;}
+	.goods-title .goods-img img{max-height: 100%;max-width: 100%;}
+	.goods-title .goods-name{flex: 1;line-height: 1.6;}
+</style>
+{/block}
+{block name="main"}
+<div class="layui-form ns-form">
+	<div class="layui-form-item">
+		<label class="layui-form-label">活动标题：</label>
+		<div class="layui-input-block">{$info.topic_name}</div>
+	</div>
+	<div class="layui-form-item">
+		<label class="layui-form-label">活动时间：</label>
+		<div class="layui-input-block">{:time_to_date($info.start_time)} -- {:time_to_date($info.end_time)}</div>
+	</div>
+	<div class="layui-form-item">
+		<label class="layui-form-label">活动内容：</label>
+		<div class="layui-input-block ns-len-long">{$info.remark}</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label"><span class="required">*</span>商品：</label>
+		<div class="layui-input-block">
+			<table id="selected_goods_list" lay-filter="selected_goods_list"></table>
+			<button class="layui-btn ns-bg-color" onclick="addGoods()">添加商品</button>
+		</div>
+	</div>
+
+	<input type="hidden" name="topic_id" value="{$info.topic_id}">
+
+	<div class="ns-form-row">
+		<button class="layui-btn ns-bg-color" lay-submit lay-filter="save">保存</button>
+		<button class="layui-btn layui-btn-primary" onclick="back()">返回</button>
+	</div>
+</div>
+
+{/block}
+{block name="script"}
+<script type="text/html" id="bargainFirst">
+	<input type="number" class="layui-input ns-len-input bargain-first" value="{{d.topic_price}}" lay-verify="topic_price" min="0.00" oninput="bargainFirst({{ d.sku_id }},event)" onporpertychange="bargainFirst({{ d.sku_id }},event)"/>
+</script>
+<script type="text/html" id="operation">
+	<div class="ns-table-btn">
+		<a class="layui-btn" onclick="deleteGoods(this,{{d.sku_id}})">删除</a>
+	</div>
+</script>
+<script>
+	var topic_id = "{$info.topic_id}";
+	var selectGoodsSkuId = {:json_encode($goods_ids, JSON_UNESCAPED_UNICODE)};
+	var sku_list = [];
+	layui.use('form', function() {
+		var form = layui.form,
+			repeat_flag = false;//防重复标识
+
+		form.render();
+		renderTable(sku_list);
+
+     	form.verify({
+           topic_price: function(value, item) {
+				var price = $(item).parents("tr").find(".goods-price").text();
+				if (value.trim() == "") {
+					return '活动价格不能为空';
+				}
+				if (parseFloat(value) <= 0) {
+					return '活动价格必须大于0';
+				}
+				if (parseFloat(value) > parseFloat(price)) {
+					return '活动价格不能大于商品价格';
+				}
+				var arrMen = value.split(".");
+				var val = 0;
+				if (arrMen.length == 2) {
+					val = arrMen[1];
+				}
+				if (val.length > 2) {
+					return '活动价格最多保留两位小数';
+				}
+			}
+        });
+
+
+		form.on("submit(save)",function(data){
+			if (sku_list.length == 0) {
+				layer.msg('请选择商品', {icon: 5});
+				return;
+			}
+
+			data.field.goods = {};
+			sku_list.forEach(function (item,index) {
+				if (item.is_delete == 2) return false;
+				var topicJSON = {};
+				if (!data.field.goods['goods_'+item.goods_id]){
+					data.field.goods['goods_'+item.goods_id] = [] ;
+				}
+
+				topicJSON.goods_id = item.goods_id;
+				topicJSON.sku_id = item.sku_id;
+				topicJSON.topic_price = item.topic_price;
+
+				data.field.goods['goods_'+item.goods_id].push(topicJSON);
+			});
+			data.field.goods = JSON.stringify(data.field.goods);
+
+			if (repeat_flag) return false;
+			repeat_flag = true;
+
+			$.ajax({
+				url: ns.url("topic://shop/topic/add"),
+				dataType: 'JSON',
+				type: 'POST',
+				data: data.field,
+				success: function(res){
+					repeat_flag = false;
+					if(res.code == 0){
+						layer.confirm('添加成功',{
+							title: '操作提示',
+							btn: ['返回列表', '继续添加'],
+							closeBtn: 0,
+							yes: function() {
+								location.href = ns.url("topic://shop/topic/goodslist",{topic_id:topic_id});
+							},btn2: function() {
+								location.reload();
+							}
+						})
+					}else{
+						layer.msg(res.message);
+					}
+				}
+			})
+		})
+	});
+
+	/**
+	 * 添加商品
+	 */
+	function addGoods() {
+		goodsSelect(function (res) {
+			if (!res.length) return false;
+			var html = $("#goods tbody .goods-empty").length ? '' : $("#goods tbody").html();
+			for (var i = 0; i < res.length; i++) {
+				for (var k = 0; k < res[i].selected_sku_list.length; k++) {
+					var item = res[i].selected_sku_list[k];
+					sku_list.push(item);
+					selectGoodsSkuId.push(item.sku_id);
+				}
+			}
+			renderTable(sku_list);
+		}, selectGoodsSkuId);
+	}
+
+	/**
+	 * 删除商品
+	 */
+	function deleteGoods(data,id) {
+		for (var i in selectGoodsSkuId) {
+			if (selectGoodsSkuId[i] == Number($(data).attr("data-sku-id"))) {
+				selectGoodsSkuId.splice(i, 1);
+			}
+		}
+
+		for (var i = 0; i < sku_list.length; i++){
+			if (sku_list[i].sku_id == parseInt(id)){
+				sku_list.splice(i,1);
+			}
+		}
+		$(data).parents("tr").remove();
+	}
+
+	// 表格渲染
+	function renderTable(sku_list) {
+		//展示已知数据
+		table = new Table({
+			elem: '#selected_goods_list',
+			page: false,
+			limit: Number.MAX_VALUE,
+			cols: [
+				[{
+					width: "3%",
+					type: 'checkbox',
+					unresize: 'false'
+				},{
+					title: '商品名称',
+					width: '23%',
+					unresize: 'false',
+					templet: function(data) {
+
+						var html = '';
+						html += `
+							<div class="goods-title">
+								<div class="goods-img">
+									<img layer-src src="${data.sku_image ? ns.img(data.sku_image) : ''}" alt="">
+								</div>
+								<p class="ns-multi-line-hiding goods-name" data-goods_id="${data.goods_id}" data-sku_id="${data.sku_id}" title="${data.sku_name}">${data.sku_name}</p>
+							</div>
+						`;
+						return html;
+					}
+				}, {
+					field: 'price',
+					title: '价格',
+					unresize: 'false',
+					width: '12%',
+					templet: function(data) {
+						return '<p class="ns-line-hiding" title="'+ data.price +'">￥<span class="bargain-price">' + data.price +'</span></p>';
+					}
+				}, {
+					field: 'stock',
+					title: '库存',
+					unresize: 'false',
+					width: '10%'
+				}, {
+					title: '活动价格',
+					unresize: 'false',
+					width: '13%',
+					templet: '#bargainFirst'
+				},{
+					title: '操作',
+					toolbar: '#operation',
+					width: '10%',
+					unresize: 'false'
+				}]
+			],
+			data: sku_list,
+			toolbar: '#toolbarOperation'
+		});
+
+		/**
+		 * 批量操作
+		 */
+		table.toolbar(function(obj) {
+			if (obj.data.length < 1) {
+				layer.msg('请选择要操作的数据');
+				return;
+			}
+			switch (obj.event) {
+				case "activity_price":
+					editInput(0,obj);
+					break;
+			}
+		});
+	}
+	function editInput(textIndex=0,data) {
+		var text = [{
+			name: '活动价',
+			value: 'topic_price'
+		}];
+		layer.open({
+			type: 1,
+			title:"修改"+text[textIndex].name,
+			area:['600px'],
+			btn:["保存","返回"],
+			content: `
+			<div class="layui-form-item">
+				<label class="layui-form-label"><span class="required">*</span>${text[textIndex].name}：</label>
+				<div class="layui-input-block">
+					<input type="text" name="bargain_edit_input" lay-verify="required" autocomplete="off" class="layui-input ns-len-mid" placeholder="请输入${text[textIndex].name}">
+				</div>
+			</div>
+		`,
+			yes: function(index, layero){
+				var val = $("input[name='bargain_edit_input']").val();
+				if (!val){
+					layer.msg("请输入" + text[textIndex].name);
+					return false;
+				}
+				data.data.forEach(function (item,index) {
+					sku_list.forEach(function (skuItem,skuIndex) {
+						if (item.sku_id == skuItem.sku_id){
+							sku_list[skuIndex][text[textIndex].value] = val;
+						}
+					})
+				});
+				renderTable(sku_list);
+				layer.closeAll();
+			}
+		});
+	}
+
+	function bargainFirst(index,event) {
+		for (var i = 0; i < sku_list.length; i++){
+			if (sku_list[i].sku_id == index)
+				sku_list[i].topic_price = event.srcElement.value;
+		}
+	}
+
+	function back(){
+		location.href = ns.url("topic://shop/topic/lists");
+	}
+</script>
+
+<script type="text/html" id="toolbarOperation">
+	<button class="layui-btn layui-btn-primary" lay-event="activity_price">活动价</button>
+</script>
+{/block}

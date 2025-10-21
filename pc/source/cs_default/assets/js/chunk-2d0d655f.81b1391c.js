@@ -1,0 +1,2 @@
+(window["webpackJsonp"]=window["webpackJsonp"]||[]).push([["chunk-2d0d655f"],{"71b1":function(t,e,i){"use strict";i.r(e);var n=function(){var t=this,e=t._self._c;return e("div",[t._v("专题活动详情："+t._s(t.id))])},o=[],c={name:"topic_detail",components:{},data:()=>({id:0}),created(){this.id=this.$route.path.replace("/promotion/topic-","")},methods:{}},d=c,a=i("2877"),s=Object(a["a"])(d,n,o,!1,null,"6f90dcff",null);e["default"]=s.exports}}]);
+//# sourceMappingURL=chunk-2d0d655f.81b1391c.js.map

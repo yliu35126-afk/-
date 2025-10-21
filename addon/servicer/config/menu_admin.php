@@ -1,0 +1,183 @@
+<?php
+// +----------------------------------------------------------------------
+// | 平台端菜单设置
+// +----------------------------------------------------------------------
+return [
+    [
+        'name'       => 'SERVICER',
+        'title'      => '客服管理',
+        'url'        => 'servicer://admin/servicer/index',
+        'parent'     => 'PROMOTION_ROOT',
+        'is_show'    => 1,
+        'is_control' => 1,
+        'is_icon'    => 0,
+        'sort'       => 100,
+        'child_list' => [
+            [
+                'name'       => 'SERVICER_MANAGER',
+                'title'      => '客服列表',
+                'url'        => 'servicer://admin/servicer/index',
+                'is_show'    => 1,
+                'is_control' => 1,
+                'is_icon'    => 0,
+                'sort'       => 1,
+                'child_list' => [
+                    [
+                        'name'       => 'SERVICE_MANAGER_ADD',
+                        'title'      => '添加客服',
+                        'url'        => 'servicer://admin/servicer/add',
+                        'is_show'    => 1,
+                        'is_control' => 1,
+                        'is_icon'    => 0,
+                        'sort'       => 1,
+                    ],
+                    [
+                        'name'       => 'SERVICE_MANAGER_EDIT',
+                        'title'      => '编辑客服',
+                        'url'        => 'servicer://admin/servicer/edit',
+                        'is_show'    => 1,
+                        'is_control' => 1,
+                        'is_icon'    => 0,
+                        'sort'       => 2,
+                    ],
+                    [
+                        'name'       => 'SERVICE_MANAGER_DELETE',
+                        'title'      => '删除客服',
+                        'url'        => 'servicer://admin/servicer/delete',
+                        'is_show'    => 0,
+                        'is_control' => 1,
+                        'is_icon'    => 0,
+                        'sort'       => 3,
+                    ],
+
+                ]
+            ],
+            [
+                'name'       => 'SERVICER_CONFIG',
+                'title'      => '客服配置',
+                'url'        => 'servicer://admin/config/config',
+                'is_show'    => 1,
+                'is_control' => 1,
+                'is_icon'    => 0,
+                'sort'       => 2,
+            ],
+            [
+                'name'       => 'SERVICER_GROUP',
+                'title'      => '客服分组',
+                'url'        => 'servicer://admin/group/index',
+                'is_show'    => 1,
+                'is_control' => 1,
+                'is_icon'    => 0,
+                'sort'       => 3,
+                'child_list' => [
+                    [
+                        'name'       => 'SERVICER_GROUP_ADD',
+                        'title'      => '添加分组',
+                        'url'        => 'servicer://admin/group/add',
+                        'is_show'    => 1,
+                        'is_control' => 1,
+                        'is_icon'    => 0,
+                        'sort'       => 1,
+                    ],
+                    [
+                        'name'       => 'SERVICER_GROUP_EDIT',
+                        'title'      => '编辑分组',
+                        'url'        => 'servicer://admin/group/edit',
+                        'is_show'    => 1,
+                        'is_control' => 1,
+                        'is_icon'    => 0,
+                        'sort'       => 2,
+                    ],
+                    [
+                        'name'       => 'SERVICER_GROUP_DELETE',
+                        'title'      => '删除分组',
+                        'url'        => 'servicer://admin/group/delete',
+                        'is_show'    => 0,
+                        'is_control' => 1,
+                        'is_icon'    => 0,
+                        'sort'       => 3,
+                    ],
+
+                ]
+            ],
+            [
+                'name'       => 'SERVICER_KEYWORD_REPLY',
+                'title'      => '关键词回复',
+                'url'        => 'servicer://admin/keyword/index',
+                'is_show'    => 1,
+                'is_control' => 1,
+                'is_icon'    => 0,
+                'sort'       => 4,
+                'child_list' => [
+                    [
+                        'name'       => 'SERVICER_KEYWORD_REPLY_ADD',
+                        'title'      => '添加关键词',
+                        'url'        => 'servicer://admin/keyword/add',
+                        'is_show'    => 1,
+                        'is_control' => 1,
+                        'is_icon'    => 0,
+                        'sort'       => 1,
+                    ],
+                    [
+                        'name'       => 'SERVICER_KEYWORD_REPLY_EDIT',
+                        'title'      => '编辑关键词',
+                        'url'        => 'servicer://admin/keyword/edit',
+                        'is_show'    => 1,
+                        'is_control' => 1,
+                        'is_icon'    => 0,
+                        'sort'       => 2,
+                    ],
+                    [
+                        'name'       => 'SERVICER_KEYWORD_REPLY_DELETE',
+                        'title'      => '删除关键词',
+                        'url'        => 'servicer://admin/keyword/delete',
+                        'is_show'    => 0,
+                        'is_control' => 1,
+                        'is_icon'    => 0,
+                        'sort'       => 3,
+                    ],
+
+                ]
+            ],
+            [
+                'name'       => 'SERVICER_FAST_REPLY',
+                'title'      => '快捷回复',
+                'url'        => 'servicer://admin/fast/index',
+                'is_show'    => 1,
+                'is_control' => 1,
+                'is_icon'    => 0,
+                'sort'       => 5,
+                'child_list' => [
+                    [
+                        'name'       => 'SERVICER_KEYWORD_FAST_ADD',
+                        'title'      => '添加快捷回复',
+                        'url'        => 'servicer://admin/fast/add',
+                        'is_show'    => 1,
+                        'is_control' => 1,
+                        'is_icon'    => 0,
+                        'sort'       => 1,
+                    ],
+                    [
+                        'name'       => 'SERVICER_KEYWORD_FAST_EDIT',
+                        'title'      => '编辑快捷回复',
+                        'url'        => 'servicer://admin/fast/edit',
+                        'is_show'    => 1,
+                        'is_control' => 1,
+                        'is_icon'    => 0,
+                        'sort'       => 2,
+                    ],
+                    [
+                        'name'       => 'SERVICER_KEYWORD_FAST_DELETE',
+                        'title'      => '删除快捷回复',
+                        'url'        => 'servicer://admin/fast/delete',
+                        'is_show'    => 0,
+                        'is_control' => 1,
+                        'is_icon'    => 0,
+                        'sort'       => 3,
+                    ],
+
+                ]
+            ],
+        ]
+    ]
+];

@@ -1,0 +1,60 @@
+.item-wrap {
+	background: #fff;
+	margin-top: $margin-updown;
+	.form-wrap {
+		display: flex;
+		align-items: center;
+		margin: 0 $margin-both;
+		border-bottom: 1px solid $color-line;
+		height: 100rpx;
+		line-height: 100rpx;
+		&:last-child {
+			border-bottom: none;
+		}
+		.label {
+			vertical-align: middle;
+			margin-right: $margin-both;
+		}
+		.value {
+			vertical-align: middle;
+			display: inline-block;
+			flex: 1;
+			text-align: right;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: pre;
+			&.money {
+				font-weight: bold;
+			}
+			.radio-wrap {
+				display: inline-block;
+				vertical-align: middle;
+				margin-right: 20rpx;
+			}
+			.radio {
+				margin-right: 10rpx;
+			}
+		}
+		&.reason {
+			height: initial;
+			display: block;
+			position: relative;
+			flex-direction: column;
+			textarea {
+				width: 100%;
+			}
+		}
+	}
+}
+.tips {
+	font-weight: bold;
+	margin: 20rpx $margin-both 0;
+}
+.footer-wrap {
+	width: 100%;
+	padding: 40rpx 0;
+	display: flex;
+	button {
+		flex: 1;
+	}
+}

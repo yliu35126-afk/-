@@ -1,0 +1,691 @@
+{extend name="app/shop/view/base.html"/}
+{block name="resources"}
+<style>
+	.ns-len-input {width: 100%;max-width: 120px;}
+	.layui-form-item .layui-input-inline.end-time{float: none;}
+	.desc{margin-bottom: 15px;border:1px dashed #ff8143;padding: 5px 10px;background: #fff0e9;color: #ff8143;width: 65%;}
+	.goods-title{display: flex;align-items: center;}
+	.goods-title .goods-img{display: flex;align-items: center;justify-content: center;width: 55px;height: 55px;margin-right: 5px;}
+	.goods-title .goods-img img{max-height: 100%;max-width: 100%;}
+	.goods-title .goods-name{flex: 1;line-height: 1.6;}
+</style>
+{/block}
+{block name="main"}
+<div class="layui-form ns-form">
+
+	<div class="layui-form-item">
+		<label class="layui-form-label"><span class="required">*</span>活动名称：</label>
+		<div class="layui-input-block">
+			<input type="text" name="presale_name" value="{$presale_name}" lay-verify="required" autocomplete="off" class="layui-input ns-len-long">
+		</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label"><span class="required">*</span>定金支付时间：</label>
+		<div class="layui-inline">
+			<div class="layui-input-inline ns-len-mid">
+				<input type="text" id="start_time" name="start_time" lay-verify="required" class="layui-input" autocomplete="off" readonly>
+				<i class="ns-calendar"></i>
+			</div>
+			<span class="layui-form-mid">-</span>
+			<div class="layui-input-inline ns-len-mid end-time">
+				<input type="text" id="end_time" name="end_time" lay-verify="required|etime" class="layui-input" autocomplete="off" readonly>
+				<i class="ns-calendar"></i>
+			</div>
+		</div>
+		<div class="ns-word-aux">
+			<p>定金支付时间</p>
+		</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label"><span class="required">*</span>尾款支付时间：</label>
+		<div class="layui-inline">
+			<div class="layui-input-inline ns-len-mid">
+				<input type="text" id="pay_start_time" name="pay_start_time" lay-verify="required|spay_time" class="layui-input" autocomplete="off" readonly>
+				<i class="ns-calendar"></i>
+			</div>
+			<span class="layui-form-mid">-</span>
+			<div class="layui-input-inline ns-len-mid end-time">
+				<input type="text" id="pay_end_time" name="pay_end_time" lay-verify="required|epay_time" class="layui-input" autocomplete="off" readonly>
+				<i class="ns-calendar"></i>
+			</div>
+		</div>
+		<div class="ns-word-aux">
+			<p>注意：当尾款支付时间结束，那么该预售活动也就结束</p>
+		</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">限购：</label>
+		<div class="layui-input-block">
+			<input type="number" min="0" name="presale_num" class="layui-input ns-len-short">
+		</div>
+		<div class="ns-word-aux">
+			<p>下单时每人最多可购买数量限制，不填时不限制。</p>
+		</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">预计发货时间：</label>
+		<div class="layui-input-block">
+			<input type="radio" name="deliver_type" value="0" lay-filter="deliver_type" checked="checked" title="固定时间">
+			<input type="radio" name="deliver_type" value="1" lay-filter="deliver_type" title="支付尾款后">
+		</div>
+
+	</div>
+
+	<div class="layui-form-item ns-end-time">
+		<label class="layui-form-label">固定时间：</label>
+		<div class="layui-input-block">
+			<input type="text" lay-verify="deliver_time" id="deliver_time" class="layui-input ns-len-mid" autocomplete="off" readonly>
+		</div>
+		<div class="ns-word-aux">
+			<p>仅用于前台展示,不用于实际限制预售订单的发货业务！</p>
+		</div>
+	</div>
+
+	<div class="layui-form-item ns-fixed-term" style="display: none">
+		<label class="layui-form-label">支付尾款：</label>
+		<div class="layui-input-block">
+			<div class="layui-input-inline">
+				<input type="number" min="1" max="365" id="pay_days"  autocomplete="off" class="layui-input ns-len-short">
+			</div>
+			<span class="layui-form-mid">天后，开始发货</span>
+		</div>
+		<div class="ns-word-aux">
+			<p>不能小于0，且必须为整数</p>
+		</div>
+	</div>
+
+<!--	<div class="layui-form-item">-->
+<!--		<label class="layui-form-label">是否参与分销：</label>-->
+<!--		<div class="layui-input-block">-->
+<!--			<input type="radio" name="is_fenxiao" value="0" title="不参与" checked>-->
+<!--			<input type="radio" name="is_fenxiao" value="1" title="参与">-->
+<!--		</div>-->
+<!--	</div>-->
+	<div class="layui-form-item">
+		<label class="layui-form-label">是否支持退定金：</label>
+		<div class="layui-input-block">
+			<input type="radio" name="is_deposit_back" value="0" title="是" lay-filter="deposit_back" checked>
+			<input type="radio" name="is_deposit_back" value="1" title="否" lay-filter="deposit_back">
+		</div>
+	</div>
+	<div class="layui-form-item layui-form-text ns-deposit_agreement layui-hide">
+		<label class="layui-form-label">定金退还协议：</label>
+		<div class="layui-input-inline">
+			<textarea name="deposit_agreement" id="deposit_agreement" class="layui-textarea ns-len-long"></textarea>
+		</div>
+	</div>
+	<div class="layui-form-item goods_list">
+		<label class="layui-form-label">活动商品：</label>
+		<div class="layui-input-block">
+			<table id="selected_goods_list" lay-filter="selected_goods_list"></table>
+			<button class="layui-btn ns-bg-color" onclick="addGoods()">选择商品</button>
+		</div>
+		<div class="ns-word-aux">
+			<p>预售活动与其他优惠（满减、优惠券）活动不同时参与。</p>
+		</div>
+	</div>
+	<input type="hidden" name="sku_ids">
+
+	<div class="layui-form-item layui-form-text">
+		<label class="layui-form-label">活动规则说明：</label>
+		<div class="layui-input-inline">
+			<textarea name="remark" class="layui-textarea ns-len-long"></textarea>
+		</div>
+	</div>
+
+	<div class="ns-form-row">
+		<button class="layui-btn ns-bg-color" lay-submit lay-filter="save">保存</button>
+		<button class="layui-btn layui-btn-primary" onclick="back()">返回</button>
+	</div>
+</div>
+{/block}
+{block name="script" }
+<script type="text/html" id="toolbarOperation">
+	<button class="layui-btn layui-btn-primary" lay-event="presale-stock">预售库存</button>
+	<button class="layui-btn layui-btn-primary" lay-event="presale-deposit">定金</button>
+	<button class="layui-btn layui-btn-primary" lay-event="presale-price">定金抵扣金额</button>
+</script>
+<script>
+    var goodsId = {}, selectedGoodsId = [], sku_list = [],
+		form,laydate,repeat_flag,currentDate,minDate;
+    layui.use(['form', 'laydate'], function() {
+        form = layui.form;
+		laydate = layui.laydate;
+		repeat_flag = false;
+		currentDate = new Date();
+		minDate = "";
+        currentDate.setDate(currentDate.getDate() + 30);
+        form.render();
+
+        renderTable(sku_list); // 初始化表格
+
+        for (var i = 0; i <= 30; i++) {
+            if (i < 10) {
+                var html = '<option value="' + i + '">0' + i + '</option>';
+            } else {
+                var html = '<option value="' + i + '">' + i + '</option>';
+            }
+            if (i == 1) {
+                var html = '<option value="' + i + '" selected>0' + i + '</option>';
+            }
+            $(".presale-day").append(html);
+        }
+        for (var i = 0; i <= 23; i++) {
+            if (i < 10) {
+                var html = '<option value="' + i + '">0' + i + '</option>';
+            } else {
+                var html = '<option value="' + i + '">' + i + '</option>';
+            }
+            $(".presale-hour").append(html);
+        }
+        for (var i = 0; i <= 59; i++) {
+            if (i < 10) {
+                var html = '<option value="' + i + '">0' + i + '</option>';
+            } else {
+                var html = '<option value="' + i + '">' + i + '</option>';
+            }
+            $(".presale-minute").append(html);
+        }
+        form.render('select');
+
+		//定金开始时间
+		laydate.render({
+			elem: '#start_time', //指定元素
+			type: 'datetime',
+			value: new Date(),
+			done: function(value) {
+				minDate = value;
+			}
+		});
+		//定金结束时间
+		laydate.render({
+			elem: '#end_time', //指定元素
+			type: 'datetime',
+			value: new Date(currentDate)
+		});
+
+		//尾款开始时间
+		laydate.render({
+			elem: '#pay_start_time', //指定元素
+			type: 'datetime'
+		});
+		//尾款结束时间
+		laydate.render({
+			elem: '#pay_end_time', //指定元素
+			type: 'datetime'
+		});
+
+		//发货时间
+		laydate.render({
+			elem: '#deliver_time', //指定元素
+			type: 'datetime'
+		});
+
+		// 监听单选按钮
+		form.on('radio(deliver_type)', function(data) {
+			if (data.value == 0) {
+				$('#deliver_time').attr('lay-verify','deliver_time');
+				$('#pay_days').attr('lay-verify','');
+				$('.ns-end-time').show();
+				$('.ns-fixed-term').hide();
+				$('#pay_days').val('');
+
+
+			} else {
+				$('#deliver_time').attr('lay-verify','');
+				$('#pay_days').attr('lay-verify','days');
+				$('.ns-end-time').hide();
+				$('.ns-fixed-term').show();
+				$('#deliver_time').val('');
+			}
+		});
+		// 监听单选按钮是否退定金显示退定金协议
+		form.on('radio(deposit_back)', function(data) {
+			if (data.value == 1) {
+				$(".ns-deposit_agreement").removeClass("layui-hide");
+
+
+			} else {
+				$('#deposit_agreement').val('');
+
+				$(".ns-deposit_agreement").addClass("layui-hide");
+
+			}
+		});
+
+		/**
+		 * 表单验证
+		 */
+		form.verify({
+
+			etime: function(value) {
+				var now_time = (new Date()).getTime();
+				var start_time = (new Date($("#start_time").val())).getTime();
+				var end_time = (new Date(value)).getTime();
+
+				if (now_time > end_time) {
+					return '结束时间不能小于当前时间!'
+				}
+				if (start_time > end_time) {
+					return '结束时间不能小于开始时间!';
+				}
+			},
+			spay_time: function(value) {
+				var now_time = (new Date()).getTime();
+				var start_time =(new Date(value)).getTime();
+				var deposit_end_time = (new Date($("#end_time").val())).getTime();
+
+				if (now_time > start_time) {
+					return '开始时间不能小于当前时间!'
+				}
+
+				if(start_time < deposit_end_time){
+					return '尾款开始支付时间不能小于定金结束支付时间!'
+
+				}
+
+			},
+			epay_time: function(value) {
+				var now_time = (new Date()).getTime();
+				var start_time = (new Date($("#pay_start_time").val())).getTime();
+				var end_time = (new Date(value)).getTime();
+
+				if (now_time > start_time) {
+					return '开始时间不能小于当前时间!'
+				}
+				if (now_time > end_time) {
+					return '结束时间不能小于当前时间!'
+				}
+				if (start_time > end_time) {
+					return '结束时间不能小于开始时间!';
+				}
+			},
+			deliver_time: function(value) {
+				var pay_end_time = (new Date($("#pay_end_time").val())).getTime();
+				var deliver_time = (new Date(value)).getTime();
+				if (value.trim() == "") {
+					return '预计发货时间不能为空!';
+				}
+				if(deliver_time < pay_end_time && deliver_time!=''){
+					return '预计发货时间不能小于尾款结束支付时间!'
+				}
+
+
+			},
+			days: function(value) {
+
+				if (value.trim() == "") {
+					return '预计发货时间不能为空!';
+				}
+
+
+
+			},
+			presale_stock: function(value) {
+
+				if (value.trim() == "") {
+					return '预售库存不能为空';
+				}
+				if (Number(value) <= 0) {
+					return '预售库存必须大于0';
+				}
+				if (value % 1 != 0) {
+					return '砍价库存必须为整数';
+				}
+			},
+			presale_deposit: function(value, item) {
+				var sku_id = $(item).attr('data-id');
+				var price = $(item).parent().parent().siblings().children().children().children(".presale-price-"+sku_id).text();
+				if (Number(value) <= 0) {
+					return '定金必须大于0';
+				}
+				if(Number(value)>Number(price)){
+					return '定金不能大于价格';
+				}
+
+			},
+			presale_price: function(value, item) {
+				var sku_id = $(item).attr('data-id');
+				var presale_deposit = $(item).parent().parent().siblings().children().children(".presale_deposit_"+sku_id).val();
+				var price = $(item).parent().parent().siblings().children().children().children(".presale-price-"+sku_id).text();
+
+				if (value.trim() == "") {
+					return '定金可抵金额不能为空';
+				}
+				if(Number(value)>Number(price)){
+					return '定金可抵金额不能大于价格';
+				}
+				if(Number(value)<Number(presale_deposit)){
+					return '定金可抵金额不能小于定金';
+				}
+			}
+		});
+
+        /**
+         * 监听提交
+         */
+        form.on('submit(save)', function(data){
+
+			var field = data.field;
+
+            if (!Object.keys(goodsId).length) {
+                layer.msg("请选择活动商品！", {icon: 5, anim: 6});
+                return;
+            }
+
+
+			var deposit_end_time = (new Date($("#end_time").val())).getTime();
+			var pay_start_time = (new Date($("#pay_start_time").val())).getTime();
+			if(pay_start_time < deposit_end_time){
+				layer.msg('尾款开始支付时间不能小于定金结束支付时间');
+				$("#pay_start_time").focus();
+				return;
+			}
+
+			if(field.deliver_type == 1){
+				field.deliver_time = $('#pay_days').val();
+			}else{
+				var pay_end_time = (new Date($("#pay_end_time").val())).getTime();
+				var deliver_time = (new Date($("#deliver_time").val())).getTime();
+				if(deliver_time < pay_end_time){
+					layer.msg('预计发货时间不能小于尾款结束支付时间');
+
+					return;
+				}
+				field.deliver_time = $('#deliver_time').val();
+			}
+
+			field.goods_ids = selectedGoodsId.split(',');
+
+            var skuId = [];
+			Object.values(goodsId).forEach(function (item,index) {
+				Object.values(item.sku_id).forEach(function (skuItem,skuIndex) {
+					skuId.push(skuItem.sku);
+				});
+			});
+			field.sku_ids = skuId;
+			var skuLisArr = [];
+			sku_list.forEach(function(item,index) {
+                var sku_detail = {};
+                sku_detail.sku_id = item.sku_id;
+				sku_detail.goods_id = item.goods_id;
+                sku_detail.presale_stock = item.presale_stock || 0;
+                sku_detail.presale_deposit = item.presale_deposit || 0.00;
+                sku_detail.presale_price = item.presale_price || 0.00;
+				skuLisArr.push(sku_detail);
+            });
+			field.sku_list = skuLisArr;
+			if(repeat_flag) return;
+            repeat_flag = true;
+            $.ajax({
+                type: 'POST',
+                dataType: 'JSON',
+                url: ns.url("presale://shop/presale/add"),
+                data: field,
+                async: false,
+                success: function(res){
+                    repeat_flag = false;
+
+                    if (res.code == 0) {
+                        layer.confirm('添加成功', {
+							title: '操作提示',
+							btn: ['返回列表', '继续添加'],
+							closeBtn: 0,
+							yes: function () {
+								location.href = ns.url("presale://shop/presale/lists");
+							},
+							btn2: function () {
+								location.href = ns.url("presale://shop/presale/add");
+							}
+						});
+                    }else{
+                        layer.msg(res.message);
+                    }
+                }
+            })
+        });
+    });
+	
+	// 表格渲染
+	function renderTable(sku_list) {
+	    //展示已知数据
+	    table = new Table({
+	        elem: '#selected_goods_list',
+			page: false,
+			limit: Number.MAX_VALUE,
+	        cols: [
+	            [{
+					width: "3%",
+					type: 'checkbox',
+					unresize: 'false'
+				},{
+	                title: '商品名称',
+					width: '23%',
+	                unresize: 'false',
+					templet: function(data) {
+	                	var html = '';
+						html += `
+							<div class="goods-title">
+								<div class="goods-img">
+									<img layer-src src="${data.sku_image ? ns.img(data.sku_image) : ''}" alt="">
+								</div>
+								<p class="ns-multi-line-hiding goods-name" data-goods_id="${data.goods_id}" data-sku_id="${data.sku_id}" title="${data.sku_name}">${data.sku_name}</p>
+							</div>
+						`;
+						return html;
+					}
+	            }, {
+	                field: 'price',
+	                title: '商品价格',
+	                unresize: 'false',
+	                align: 'right',
+					width: '15%',
+	                templet: function(data) {
+	                    return '<p class="ns-line-hiding" title="'+ data.price +'">￥<span class="presale-price presale-price-'+data.sku_id+'">' + data.price +'</span></p>';
+	                }
+	            }, {
+	                title: '预售库存',
+	                unresize: 'false',
+					width: '13%',
+					templet: '#presaleStock'
+	            }, {
+	                title: '定金',
+	                unresize: 'false',
+					width: '13%',
+					templet: '#presaleDeposit'
+	            }, {
+	                title: '定金可抵金额',
+	                unresize: 'false',
+					width: '13%',
+					templet: '#presalePrice'
+	            }, {
+	                title: '操作',
+	                toolbar: '#operation',
+					width: '10%',
+	                unresize: 'false'
+	            }]
+	        ],
+	        data: sku_list,
+			toolbar: '#toolbarOperation'
+	    });
+
+		/**
+		 * 批量操作
+		 */
+		table.toolbar(function(obj) {
+			if (obj.data.length < 1) {
+				layer.msg('请选择要操作的数据');
+				return;
+			}
+			switch (obj.event) {
+
+				case "presale-stock":
+					editInput(0,obj);
+					break;
+				case "presale-deposit":
+					editInput(1,obj);
+					break;
+				case "presale-price":
+					editInput(2,obj);
+					break;
+			}
+		});
+	}
+
+	function editInput(textIndex=0,data) {
+		var text = [{
+			name: '预售库存',
+			value: 'presale_stock'
+		},{
+			name: '定金',
+			value: 'presale_deposit'
+		},{
+			name: '定金抵扣金额',
+			value: 'presale_price'
+		}];
+		layer.open({
+			type: 1,
+			title:"修改"+text[textIndex].name,
+			area:['600px'],
+			btn:["保存","返回"],
+			content: `
+			<div class="layui-form-item">
+				<label class="layui-form-label"><span class="required">*</span>${text[textIndex].name}：</label>
+				<div class="layui-input-block">
+					<input type="text" name="presale_edit_input" lay-verify="required" autocomplete="off" class="layui-input ns-len-mid" placeholder="请输入${text[textIndex].name}">
+				</div>
+			</div>
+		`,
+			yes: function(index, layero){
+				var val = $("input[name='presale_edit_input']").val();
+				if (!val){
+					layer.msg("请输入" + text[textIndex].name);
+					return false;
+				}
+				data.data.forEach(function (item,index) {
+					sku_list.forEach(function (skuItem,skuIndex) {
+						if (item.sku_id == skuItem.sku_id){
+							sku_list[skuIndex][text[textIndex].value] = val;
+						}
+					})
+				});
+				renderTable(sku_list);
+				layer.closeAll();
+			}
+		});
+	}
+
+    /**
+     * 添加商品
+     */
+    function addGoods(){
+        goodsSelect(function(res) {
+			if (!res.length) return false;
+
+            for(var i=0;i<res.length;i++) {
+
+            	goodsId['goods_'+ res[i].goods_id] = {};
+				goodsId['goods_'+ res[i].goods_id].sku_id = {};
+				goodsId['goods_'+ res[i].goods_id].spu_id = res[i].goods_id;
+
+                for (var k = 0; k < res[i].selected_sku_list.length; k++) {
+                    var item = res[i].selected_sku_list[k];
+
+					goodsId['goods_'+ res[i].goods_id].sku_id['sku_'+item.sku_id]={};
+					goodsId['goods_'+ res[i].goods_id].sku_id['sku_'+item.sku_id].sku = item.sku_id;
+                    sku_list.push(item);
+                }
+            }
+
+            renderTable(sku_list);
+			$("input[name='sku_ids']").val(JSON.stringify(goodsId));
+
+			var spuId = [];
+			Object.values(goodsId).forEach(function (item,index) {
+				spuId.push(item.spu_id);
+			});
+			selectedGoodsId = spuId.toString();
+		}, selectedGoodsId);
+    }
+	
+	function delRow(obj,id) {
+		for (var i = 0; i < sku_list.length; i++){
+			if (sku_list[i].sku_id == parseInt(id)){
+				sku_list.splice(i,1);
+			}
+		}
+		Object.values(goodsId).forEach(function (item,index) {
+			delete item.sku_id['sku_'+id];
+			if (!Object.keys(item.sku_id).length){
+				delete goodsId['goods_'+item.spu_id];
+			}
+		});
+
+		var spuId = [];
+		Object.values(goodsId).forEach(function (item,index) {
+			spuId.push(item.spu_id);
+		});
+		selectedGoodsId = spuId.toString();
+		$(obj).parents("tr").remove();
+	}
+
+
+	function presaleStock(index,event) {
+		for (var i = 0; i < sku_list.length; i++){
+			if (sku_list[i].sku_id == index)
+				sku_list[i].presale_stock = event.srcElement.value;
+		}
+	}
+
+	function presaleDeposit(index,event) {
+		for (var i = 0; i < sku_list.length; i++){
+			if (sku_list[i].sku_id == index)
+				sku_list[i].presale_deposit = event.srcElement.value;
+		}
+	}
+
+	function presalePrice(index,event) {
+		for (var i = 0; i < sku_list.length; i++){
+			if (sku_list[i].sku_id == index)
+				sku_list[i].presale_price = event.srcElement.value;
+		}
+	}
+	function deposit(sku_id,value,index,event){
+		$(".presale_price_"+sku_id).val(value);
+
+
+
+		for (var i = 0; i < sku_list.length; i++){
+			if (sku_list[i].sku_id == index)
+				sku_list[i].presale_price = event.srcElement.value;
+		}
+
+
+	}
+    function back() {
+        location.href = ns.url("presale://shop/presale/lists");
+    }
+</script>
+
+<script type="text/html" id="presaleStock">
+	<input type="number" class="layui-input ns-len-input presale-stock" value="{{d.presale_stock ? d.presale_stock : '0' }}" lay-verify="presale_stock" min="0" oninput="presaleStock({{ d.sku_id }},event)" onporpertychange="presaleStock({{ d.sku_id }},event)"/>
+</script>
+
+<script type="text/html" id="presaleDeposit">
+	<input type="number" class="layui-input ns-len-input presale-deposit presale_deposit_{{ d.sku_id }}" value="{{d.presale_deposit ? d.presale_deposit : '0'}}" lay-verify="presale_deposit" min="0.00" oninput="presaleDeposit({{ d.sku_id }},event)" onporpertychange="presaleDeposit({{ d.sku_id }},event)" data-id="{{ d.sku_id }}" onchange="deposit({{ d.sku_id }},value,{{ d.sku_id }},event)"/>
+</script>
+
+<script type="text/html" id="presalePrice">
+	<input type="number" class="layui-input ns-len-input presale-price presale_price_{{ d.sku_id }}" lay-verify="presale_price" min="0.00" value="{{d.presale_price ? d.presale_price : '0'}}" oninput="presalePrice({{ d.sku_id }},event)" onporpertychange="presalePrice({{ d.sku_id }},event)" data-id="{{ d.sku_id }}" />
+</script>
+
+<script type="text/html" id="operation">
+	<div class="ns-table-btn">
+		<a class="layui-btn" onclick="delRow(this,{{d.sku_id}})">删除</a>
+	</div>
+</script>
+{/block}

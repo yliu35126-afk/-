@@ -1,0 +1,320 @@
+{extend name="app/admin/view/base.html"/}
+{block name="resources"}
+{/block}
+{block name="main"}
+
+<!-- 搜索框 -->
+<div class="ns-single-filter-box">
+	<a class="layui-btn ns-bg-color" href="{:addon_url('servicer://admin/servicer/add')}">添加客服</a>
+	<a class="layui-btn layui-btn-primary" href="{:addon_url('servicer://servicer/index/index')}" target="_blank">客服工作台</a>
+
+	<div class="layui-form" lay-filter="selection_panel_form">
+		<div class="layui-inline">
+			<div class="layui-input-inline">
+				<select name="search_type">
+					{foreach $field_list as $key => $val}
+					<option value="{$key}">{$val}</option>
+					{/foreach}
+				</select>
+			</div>
+			<div class="layui-input-inline">
+				<input type="text" name="search_text" placeholder="请根据类型搜索" autocomplete="off" class="layui-input ">
+				<button type="button" class="layui-btn layui-btn-primary" lay-filter="search" lay-submit>
+					<i class="layui-icon">&#xe615;</i>
+				</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!-- 列表 -->
+<div class="layui-tab ns-table-tab" lay-filter="page_tab">
+	<ul class="layui-tab-title">
+		<li class="layui-this" lay-id="">全部</li>
+		<li lay-id="1">正常</li>
+		<li lay-id="0">关闭</li>
+	</ul>
+	<div class="layui-tab-content">
+		<table id="page_list" lay-filter="page_list"></table>
+	</div>
+</div>
+{/block}
+{block name="script"}
+<script>
+	layui.use(['form', 'element', 'laytpl'], function (form, element, laytpl) {
+		// 防重复标识
+		var is_submit = false;
+
+		var table = new Table({
+			elem: '#page_list',
+			url: ns.url('servicer://admin/servicer/index'),
+			cols: [
+				[
+					{
+						title: '客服昵称',
+						field: 'nickname',
+						width: '12%'
+					},
+					{
+						title: '客服头像',
+						width: '10%',
+						templet: function (data) {
+							var html = '';
+							html += '<div class="ns-table-title">';
+								html += '<div class="ns-title-pic">';
+									html += '<img layer-src src="'+ (data.avatar ? ns.img(data.avatar) : '') +'">';
+								html += '</div>';
+							html += '</div>';
+
+							return html;
+						},
+					},
+					{
+						title: '客服账号',
+						field: 'username',
+						width: '12%'
+					},
+					{
+						title: '客服分组',
+						field: 'group_name',
+						width: '12%'
+					},
+					{
+						title: '最后登录时间',
+						width: '20%',
+						templet: function(data) {
+							return data.login_time > 0 ? ns.time_to_date(data.login_time) : '';
+						}
+					},
+					{
+						title: '状态',
+						width: '10%',
+						templet: function (data) {
+							return '<input type="checkbox" lay-filter="status" value="'+ data.uid +'" lay-skin="switch" '+ (data.status === 1 ? 'checked' : '') +' />';
+						},
+					},
+					{
+						title: '操作',
+						width: '15%',
+						templet: function(data) {
+							var html = '';
+
+							html += '<div class="ns-table-btn">';
+								html += '<a class="layui-btn" href="'+ ns.url('servicer://admin/servicer/edit', {uid: data.uid}) +'">编辑</a>';
+								html += '<a class="layui-btn" lay-event="delete">删除</a>';
+								html += '<a class="layui-btn" lay-event="reset_password">重置密码</a>';
+							html += '</div>';
+							return html;
+						},
+					}
+				]
+			],
+		});
+
+		/**
+		 * 搜索功能
+		 */
+		form.on('submit(search)', function(data) {
+			table.reload({
+				page: {
+					curr: 1
+				},
+				where: data.field
+			});
+			return false;
+		});
+
+		// 监听Tab切换
+		element.on('tab(page_tab)', function () {
+			var status = $(this).attr('lay-id');
+
+			table.reload({
+				page: {
+					curr: 1
+				},
+				where: {
+					status: status
+				}
+			});
+		});
+
+
+		/**
+		 * 监听工具栏操作
+		 */
+		table.tool(function(obj) {
+			var data = obj.data;
+
+			switch (obj.event) {
+				// 删除
+				case 'delete':
+					deleteServicer(data.uid);
+					break;
+				// 重置密码
+				case 'reset_password':
+					resetPassword(data.uid);
+					break;
+			}
+		});
+
+		/**
+		 * 监听状态开关
+		 */
+		form.on('switch(status)', function(data){
+
+			if (is_submit) return false;
+			is_submit = true;
+
+			$.ajax({
+				url: ns.url('servicer://admin/servicer/modifyUserStatus'),
+				data: {
+					uid: data.value,
+					status: (data.elem.checked ? 1 : 0)
+				},
+				dataType: 'JSON',
+				type: 'POST',
+				success: function (res) {
+					is_submit = false;
+
+					if (res.code >= 0) {
+						table.reload();
+					} else {
+						$(data.elem).prop('checked', (data.elem.checked) ? false : true)
+						form.render('checkbox', $('[lay-id='+ table.filter +']').attr('filter'));
+						layer.msg(res.message);
+					}
+				},
+				error: function () {
+					is_submit = false;
+					layer.msg('操作异常');
+				}
+			});
+		});
+
+		/**
+		 * 删除客服
+		 * @param uid
+		 */
+		function deleteServicer(uid) {
+			var layer_index;
+
+			layer.confirm('确定要删除该客服吗?', function(index) {
+				layer.close(index);
+
+				if (is_submit) return false;
+				is_submit = true;
+
+				$.ajax({
+					url: ns.url('servicer://admin/servicer/delete'),
+					data: {uid : uid},
+					dataType: 'JSON',
+					type: 'POST',
+					beforeSend : function(){
+						layer_index = layer.load();
+					},
+					complete : function () {
+						layer.close(layer_index);
+					},
+					success: function (res) {
+						is_submit = false;
+						layer.msg(res.message);
+
+						if (res.code >= 0) {
+							table.reload();
+						}
+					},
+					error: function () {
+						is_submit = false;
+						layer.msg('操作异常');
+					}
+				});
+			});
+		}
+
+
+		/**
+		 * 重置密码
+		 * @param uid
+		 */
+		function resetPassword(uid) {
+			var layer_index, index;
+
+			// 渲染
+			laytpl($('#reset_password_html').html()).render({}, function(html) {
+				index = layer.open({
+					title: '重置密码',
+					skin: 'layer-tips-class',
+					type: 1,
+					area: ['500px'],
+					content: html,
+				});
+			});
+
+			// 验证
+			form.verify({
+				// 确认密码
+				confirm_password: function (value) {
+					if(value !== form.val('reset_password_form').password){
+						return '两次密码输入不一致!';
+					}
+				},
+			});
+
+			// 提交
+			form.on('submit(reset_password)', function (data) {
+				layer.close(index);
+
+				if (is_submit) return false;
+				is_submit = true;
+
+				$.ajax({
+					url: ns.url('servicer://admin/servicer/modifyPassword'),
+					data: $.extend(data.field, {uid: uid}),
+					dataType: 'JSON',
+					type: 'POST',
+					beforeSend : function(){
+						layer_index = layer.load();
+					},
+					complete : function () {
+						layer.close(layer_index);
+					},
+					success: function (res) {
+						is_submit = false;
+						layer.msg(res.message);
+					},
+					error: function () {
+						is_submit = false;
+						layer.msg('操作异常');
+					}
+				});
+			});
+		}
+	});
+</script>
+
+<!-- 重置密码弹框html -->
+<script type="text/html" id="reset_password_html">
+	<div class="layui-form" lay-filter="reset_password_form">
+		<div class="layui-form-item">
+			<label class="layui-form-label mid"><span class="required">*</span>新密码</label>
+			<div class="layui-input-block">
+				<input type="password" name="password" placeholder="请输入密码" class="layui-input ns-len-mid" lay-verify="required" maxlength="18" autocomplete="off">
+			</div>
+		</div>
+		
+		<div class="layui-form-item">
+			<label class="layui-form-label mid"><span class="required">*</span>确认新密码</label>
+			<div class="layui-input-block">
+				<input type="password" name="confirm_password" placeholder="请再次输入密码" lay-verify="required|confirm_password" class="layui-input ns-len-mid" maxlength="18" autocomplete="off">
+			</div>
+			<div class="ns-word-aux mid">
+				<p>请再一次输入密码，两次输入密码须一致</p>
+			</div>
+		</div>
+		
+		<div class="ns-form-row mid">
+			<button class="layui-btn ns-bg-color" lay-submit lay-filter="reset_password">确定</button>
+		</div>
+	</div>
+</script>
+{/block}

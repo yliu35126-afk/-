@@ -1,0 +1,17 @@
+@CHARSET "UTF-8";
+/* 展示 */
+.component-city .cut-city-wrap{
+	padding: 0 15px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	height: 50px;
+}
+
+.component-city .cut-city-left, .component-city .cut-city-right{
+	display: flex;
+	align-items: center;
+}
+.component-city .cut-city-left .iconfont{
+	color: red;
+}

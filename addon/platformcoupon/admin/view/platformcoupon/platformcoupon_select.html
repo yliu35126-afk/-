@@ -1,0 +1,122 @@
+{extend name="app/admin/view/base.html"/}
+{block name="resources"}
+<style>
+	.platformcoupon-list {
+		padding: 0 20px;
+	}
+</style>
+{/block}
+{block name="body"}
+<div class="platformcoupon-list">
+	<div class="ns-single-filter-box">
+		<div class="layui-form">
+			<div class="layui-input-inline">
+				<input type="text" name="platformcoupon_name" placeholder="请输入优惠券名称" class="layui-input">
+				<button type="button" class="layui-btn layui-btn-primary" lay-submit lay-filter="search">
+					<i class="layui-icon">&#xe615;</i>
+				</button>
+			</div>
+		</div>
+	</div>
+
+	<table id="platformcoupon_list" lay-filter="platformcoupon_list"></table>
+</div>
+{/block}
+{block name="script"}
+<script type="text/html" id="checkbox">
+	{{# if($.inArray(d.platformcoupon_type_id.toString(), selected_id_arr) != -1){ }}
+	<input type="checkbox" data-platformcoupon-id="{{d.platformcoupon_type_id}}" name="platformcoupon_checkbox" lay-skin="primary" lay-filter="platformcoupon_checkbox" checked>
+	{{# }else{ }}
+	<input type="checkbox" data-platformcoupon-id="{{d.platformcoupon_type_id}}" name="platformcoupon_checkbox" lay-skin="primary" lay-filter="platformcoupon_checkbox">
+	{{# } }}
+</script>
+
+<script>
+	var table, form, laytpl,
+		select_id = "{$select_id}", //选中商品id
+		selected_id_arr = select_id.length ? select_id.split(',') : [],
+		goodsIdArr = selected_id_arr ? selected_id_arr : [];
+
+	$(function () {
+		layui.use(['form', 'laytpl'], function () {
+			form = layui.form;
+			laytpl = layui.laytpl;
+
+			table = new Table({
+				elem: '#platformcoupon_list',
+				url: ns.url("platformcoupon://admin/platformcoupon/couponSelect"),
+				cols: [
+					[
+						{
+							unresize: 'false',
+							width: '10%',
+							templet: '#checkbox'
+						}, {
+							field: 'platformcoupon_name',
+							title: '优惠券名称',
+							unresize: 'false',
+							width: '20%'
+						},{
+						    title: '优惠金额',
+						    unresize: 'false',
+						    width: '20%',
+							templet: function(data) {
+								return '<span style="padding-right: 15px;">￥'+ data.money +'</span>';
+							}
+						}, {
+						    field: 'count',
+						    title: '发放数量',
+						    unresize: 'false',
+						    width: '20%'
+						}
+					]
+				]
+			});
+
+			/**
+			 * 监听搜索
+			 */
+			form.on('submit(search)', function (data) {
+				table.reload({
+					page: {
+						curr: 1
+					},
+					where: data.field
+				});
+			});
+
+			// 勾选商品
+			form.on('checkbox(platformcoupon_checkbox)', function(data) {
+				var platformcoupon_id = $(data.elem).attr("data-platformcoupon-id");
+				if (data.elem.checked){
+					goodsIdArr.push(platformcoupon_id);
+				} else{
+					goodsIdArr.remove(platformcoupon_id);
+				}
+			});
+		});
+	});
+
+	function selectGoods(callback) {
+		var res = goodsIdArr;
+		callback(res);
+	}
+
+	Array.prototype.indexOf = function(val) {
+		for (var i = 0; i < this.length; i++) {
+			if (this[i].platformcoupon_type_id){
+				if (this[i].platformcoupon_type_id == parseInt(val)) return i;
+			} else {
+				if (this[i] == val) return i;
+			}
+		}
+		return -1;
+	};
+	Array.prototype.remove = function(val) {
+		var index = this.indexOf(val);
+		if (index > -1) {
+			this.splice(index, 1);
+		}
+	};
+</script>
+{/block}

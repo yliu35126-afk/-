@@ -1,0 +1,249 @@
+{extend name="app/shop/view/base.html"/}
+{block name="resources"}
+{/block}
+{block name="main"}
+
+{if condition="$pintuan_id"}
+<input type="hidden" class="pintuan-id" value="{$pintuan_id}" />
+{else/}
+<input type="hidden" class="pintuan-id" value="" />
+{/if}
+
+<div class="ns-screen layui-collapse" lay-filter="selection_panel">
+	<div class="layui-colla-item">
+		<form class="layui-form layui-colla-content layui-form layui-show"  lay-filter="order_list">
+			<div class="layui-form-item">
+				<div class="layui-inline">
+					<label class="layui-form-label">商品名称：</label>
+					<div class="layui-input-inline">
+						<input type="text" class="layui-input" name="goods_name">
+					</div>
+				</div>
+				
+				<div class="layui-inline">
+					<label class="layui-form-label">团长昵称：</label>
+					<div class="layui-input-inline">
+						<input type="text" class="layui-input" name="nickname">
+					</div>
+				</div>
+				
+			</div>
+			
+			<div class="layui-form-item">
+				<div class="layui-inline">
+					<label class="layui-form-label">开团时间：</label>
+					<div class="layui-input-inline">
+						<input type="text" class="layui-input" name="start_time" placeholder="开始时间" id="start_time" readonly>
+						<i class="ns-calendar"></i>
+					</div>
+					<div class="layui-form-mid">-</div>
+					<div class="layui-input-inline">
+						<input type="text" class="layui-input" name="end_time" placeholder="结束时间" id="end_time" readonly>
+						<i class="ns-calendar"></i>
+					</div>
+					<button class="layui-btn layui-btn-primary date-picker-btn" onclick="datePick(7, this);return false;">近7天</button>
+					<button class="layui-btn layui-btn-primary date-picker-btn" onclick="datePick(30, this);return false;">近30天</button>
+				</div>
+			</div>
+			
+			<div class="layui-form-item">
+				<div class="layui-inline">
+					<label class="layui-form-label">拼团状态：</label>
+					<div class="layui-input-inline">
+						<select name="status" lay-filter="status">
+							<option value="">全部</option>
+							<option value="3">拼团成功</option>
+							<option value="2">组团中</option>
+							<option value="1">拼团失败</option>
+						</select>
+					</div>
+				</div>
+			</div>
+			
+			<div class="ns-form-row">
+				<button class="layui-btn ns-bg-color" lay-submit lay-filter="search">筛选</button>
+				<button type="reset" class="layui-btn layui-btn-primary">重置</button>
+			</div>
+		</form>
+	</div>
+</div>
+
+
+<table id="team_list" lay-filter="team_list"></table>
+
+<!-- 商品 -->
+<script type="text/html" id="goods">
+	<div class="ns-table-title">
+		<div class="ns-title-pic">
+			{{#  if(d.goods_image){  }}
+			<img layer-src src="{{ns.img(d.goods_image.split(',')[0],'small')}}"/>
+			{{#  }  }}
+		</div>
+		<div class="ns-title-content">
+			<a href="javascript:;" class="ns-multi-line-hiding ns-gn-color" title="{{d.goods_name}}">{{d.goods_name}}</a>
+		</div>
+	</div>
+</script>
+
+<!-- 会员 -->
+<script type="text/html" id="member_info">
+	<div class="ns-table-title">
+		<div class="ns-title-pic">
+			{{#  if(d.headimg){  }}
+			<img layer-src src="{{ns.img(d.headimg)}}"/>
+			{{#  }  }}
+		</div>
+		<div class="ns-title-content">
+			<a href="javascript:;" class="ns-multi-line-hiding ns-text-color" title="{{d.nickname}}">{{d.nickname}}</a>
+		</div>
+	</div>
+</script>
+
+<!-- 状态 -->
+<script type="text/html" id="status">
+	{{#  if(d.status == 1){  }}
+	拼团失败
+	{{#  }else if(d.status == 2){  }}
+	组团中
+	{{#  }else if(d.status == 3){  }}
+	拼团成功
+	{{#  }  }}
+</script>
+
+<!-- 操作 -->
+<script type="text/html" id="operation">
+	<div class="ns-table-btn">
+		<a class="layui-btn" lay-event="check">查看</a>
+	</div>
+</script>
+{/block}
+
+{block name="script"}
+<script>
+	layui.use(['form', 'element', 'laydate'], function() {
+		var table,
+			form = layui.form,
+			laydate = layui.laydate;
+
+		form.render();
+
+	 	//渲染时间
+        laydate.render({
+            elem: '#start_time'
+            ,type: 'datetime'
+            ,change: function(value, date, endDate){
+                $(".date-picker-btn").removeClass("selected");
+            }
+        });
+        laydate.render({
+            elem: '#end_time'
+            ,type: 'datetime'
+            ,change: function(value, date, endDate){
+                $(".date-picker-btn").removeClass("selected");
+            }
+        });
+
+		table = new Table({
+			elem: '#team_list',
+			url: ns.url("pintuan://shop/pintuan/group"),
+			where: {
+				"pintuan_id": $(".pintuan-id").val()
+			},
+			cols: [
+				[ {
+					title: '团长信息',
+					unresize: 'false',
+					width: '17%',
+					templet: '#member_info'
+				},{
+					title: '拼团商品',
+					unresize: 'false',
+					width: '22%',
+					templet: '#goods'
+				}, {
+					title: '开团时间',
+					unresize: 'false',
+					width: '15%',
+					templet:function(data){
+						return ns.time_to_date(data.create_time);
+					}
+				}, {
+					title: '成团人数/当前人数',
+					unresize: 'false',
+					width: '10%',
+					templet: function(data) {
+						return data.pintuan_num + ' / ' + data.pintuan_count;
+					}
+				}, {
+					title: '结束时间',
+					unresize: 'false',
+					width: '15%',
+					templet: function(data) {
+						return ns.time_to_date(data.end_time);
+					}
+				}, {
+					title: '拼团状态',
+					unresize: 'false',
+					width: '10%',
+					templet: '#status'
+				}, {
+					title: '操作',
+					toolbar: '#operation',
+					unresize: 'false',
+					width: '10%'
+				}]
+			],
+
+		});
+		
+		/**
+		 * 监听工具栏操作
+		 */
+		table.tool(function(obj) {
+			var data = obj.data;
+			switch (obj.event) {
+				case 'check': //查看
+					location.href = ns.url("pintuan://shop/pintuan/grouporder?group_id="+ data.group_id);
+					break;
+			}
+		});
+
+        //监听筛选事件
+       	form.on('submit(search)', function(data) {
+			table.reload({
+				page: {
+					curr: 1
+				},
+				where: data.field
+			});
+			return false;
+		});
+	});
+
+	function datePick(date_num,event_obj){
+        $(".date-picker-btn").removeClass("selected");
+        $(event_obj).addClass('selected');
+
+        Date.prototype.Format = function (fmt,date_num) { //author: meizz
+            this.setDate(this.getDate()-date_num);
+            var o = {
+                "M+": this.getMonth() + 1, //月份
+                "d+": this.getDate(), //日
+                "H+": this.getHours(), //小时
+                "m+": this.getMinutes(), //分
+                "s+": this.getSeconds(), //秒
+                "q+": Math.floor((this.getMonth() + 3) / 3), //季度
+                "S": this.getMilliseconds() //毫秒
+            };
+            if (/(y+)/.test(fmt)) fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+            for (var k in o)
+                if (new RegExp("(" + k + ")").test(fmt)) fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+            return fmt;
+        };
+        var now_time =  new Date().Format("yyyy-MM-dd 23:59:59",0);//当前日期
+        var before_time =  new Date().Format("yyyy-MM-dd 00:00:00",date_num-1);//前几天日期
+        $("input[name=start_time]").val(before_time,0);
+        $("input[name=end_time]").val(now_time,date_num-1);
+    }
+</script>
+{/block}

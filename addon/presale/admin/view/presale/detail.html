@@ -1,0 +1,176 @@
+{extend name="app/admin/view/base.html"/}
+{block name="resources"}
+<style>
+	.presale-title{display: flex;align-items: center}
+	.presale-title .title-icon{
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 55px;
+		height: 55px;
+		margin-right: 5px;
+	}
+	.presale-title .title-icon img{
+		max-height: 100%;
+		max-width: 100%;
+	}
+	.presale-title .title-name{
+		flex: 1;
+		line-height: 1.6;
+	}
+</style>
+{/block}
+{block name="main"}
+<div class="layui-form">
+	<div class="layui-form-item">
+		<label class="layui-form-label">店铺名称：</label>
+		<div class="layui-input-inline">{$presale_info.site_name}</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">活动名称：</label>
+		<div class="layui-input-inline">{$presale_info.presale_name}</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">活动时间：</label>
+		<div class="layui-input-inline">
+			{:date('Y-m-d H:i:s',$presale_info.start_time)} — {:date('Y-m-d H:i:s',$presale_info.end_time)}
+		</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">尾款支付时间：</label>
+		<div class="layui-input-inline">
+			{:date('Y-m-d H:i:s',$presale_info.pay_start_time)} — {:date('Y-m-d H:i:s',$presale_info.pay_end_time)}
+		</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">预售总库存：</label>
+		<div class="layui-input-inline">{$presale_info.presale_stock}</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">限购：</label>
+		<div class="layui-input-inline">
+			{if $presale_info.presale_num == 0}
+				不限制
+			{else /}
+				{$presale_info.presale_num}
+			{/if}
+		</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">发货时间：</label>
+		<div class="layui-input-inline">
+			{if $presale_info.deliver_type == 0}
+				{:date('Y-m-d H:i:s',$presale_info.deliver_time)}
+			{else/}
+				支付尾款{$presale_info.deliver_time}天后，开始发货
+			{/if}
+		</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">销量：</label>
+		<div class="layui-input-inline">{$presale_info.sale_num}</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">是否参与分销：</label>
+		<div class="layui-input-inline">{if $presale_info.is_fenxiao == 1} 参与 {else/} 不参与 {/if}</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">是否退定金：</label>
+		<div class="layui-input-inline">{if $presale_info.is_deposit_back == 0} 是 {else/} 否 {/if}</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">状态：</label>
+		<div class="layui-input-inline">{$presale_info.status_name}</div>
+	</div>
+
+	<div class="layui-form-item">
+		<label class="layui-form-label">添加时间：</label>
+		<div class="layui-input-inline">
+			{:date('Y-m-d H:i:s',$presale_info.create_time)}
+		</div>
+	</div>
+
+	<div class="layui-form-item goods_list">
+		<label class="layui-form-label">活动商品：</label>
+		<div class="layui-input-block">
+
+			<table id="selected_sku_list"></table>
+		</div>
+	</div>
+
+	<div class="ns-form-row">
+		<button class="layui-btn layui-btn-primary" onclick="back()">返回</button>
+	</div>
+
+</div>
+{/block}
+{block name="script"}
+<script>
+
+	var goods_list = {:json_encode($presale_info.sku_list, JSON_UNESCAPED_UNICODE)};
+
+	layui.use('form', function() {
+		var table,
+			form = layui.form;
+		
+		table = new Table({
+			elem: '#selected_sku_list',
+			cols: [
+                [{
+                    field: 'sku_name',
+                    title: '商品名称',
+                    width: '30%',
+                    unresize: 'false',
+                    templet: function(data) {
+                    	var html = ""
+						html += `<div class="presale-title">
+									<div class="title-icon">
+										<img src="${ns.img(data.sku_image)}" alt="">
+									</div>
+									<p class="title-name ns-multi-line-hiding">${data.sku_name}</p>
+								</div>`;
+                        return html;
+                    }
+                }, {
+                    field: 'price',
+                    title: '商品价格',
+                    unresize: 'false',
+                    templet: function(data) {
+                        return '<p class="ns-line-hiding" title="'+ data.price +'">￥<span class="presale-price">' + data.price +'</span></p>';
+                    }
+                }, {
+                    field: 'presale_stock',
+                    title: '预售库存',
+                    unresize: 'false',
+                    templet: function(data) {
+                        return '<p class="presale-stock">' + data.presale_stock +'</p>';
+                    }
+                }, {
+                    field: 'presale_deposit',
+                    title: '定金',
+                    unresize: 'false'
+                }, {
+                    field: 'presale_price',
+                    title: '定金抵扣金额',
+                    unresize: 'false'
+                }]
+			],
+			data: goods_list
+		});
+	});
+	
+	function back() {
+		location.href = ns.url("presale://admin/presale/lists");
+	}
+</script>
+{/block}

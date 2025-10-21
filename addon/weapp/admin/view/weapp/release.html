@@ -1,0 +1,43 @@
+{extend name="app/admin/view/base.html" /}
+{block name="resources"}
+<style>
+	.applet-list {
+		text-align:center;
+		height:150px;
+		line-height:150px;
+	}
+	.empty {
+		text-align:center;
+		height:150px;
+		line-height:150px;
+	}
+</style>
+{/block}
+
+{block name="main"}
+<div class="layui-collapse ns-tips">
+	<div class="layui-colla-item">
+		<h2 class="layui-colla-title">操作提示</h2>
+		<ul class="layui-colla-content layui-show">
+			<li>下载之后需使用HBuilderX编译成微信小程序,然后进行发布,HBuilderX下载地址: <a href="https://www.dcloud.io/hbuilderx.html" target="_blank">https://www.dcloud.io/hbuilderx.html</a></li>
+		</ul>
+	</div>
+</div>
+
+<div class="layui-card ns-card-common ns-card-brief">
+	<div class="layui-card-body layui-field-box">
+		<div class="applet-list">
+			{if isset($auth_info['code']) && $auth_info['code'] == 0}
+			<a href="{:addon_url('weapp://admin/weapp/download')}" class="layui-btn ns-bg-color">下载小程序</a>
+			{else/}
+			<div class="empty">
+				您尚未授权只有授权之后才可以下载，<a href="https://www.niushop.com" target="_blank">去授权</a>
+			</div>
+			{/if}
+		</div>
+	</div>
+</div>
+{/block}
+
+{block name="script"}
+{/block}
