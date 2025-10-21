@@ -27,3 +27,5 @@ web.config
 /clients/*/dist/
 /clients/*/build/
 /clients/*/node_modules/
+/clients/miniapp/**
+/clients/app/**
