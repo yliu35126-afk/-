@@ -71,6 +71,8 @@
 				url: "{:url('admin/login/login')}",
 				data: data.field,
 				dataType: "JSON",
+				contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+				headers: { 'X-Requested-With': 'XMLHttpRequest' },
 				success: function(res) {
 					if (res.code == 0) {
 						layer.msg('登录成功',{anim: 5,time: 500},function () {
@@ -81,6 +83,18 @@
 						repeat_flag = false;
 						verificationCode();
 					}
+				},
+				error: function(xhr, status, err) {
+					var msg = '网络或服务器错误，请稍后重试';
+					if (xhr && xhr.responseText) {
+						try {
+							var json = JSON.parse(xhr.responseText);
+							if (json && json.message) msg = json.message;
+						} catch(e) {}
+					}
+					layer.msg(msg);
+					repeat_flag = false;
+					verificationCode();
 				}
 			});
 		});

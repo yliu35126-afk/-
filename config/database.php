@@ -21,13 +21,13 @@ return [
             // 数据库类型
             'type'              => 'mysql',
             // 服务器地址
-            'hostname'          => 'localhost',
+            'hostname'          => '127.0.0.1',
             // 数据库名
-            'database'          => '19_zhaopintuigua',
+            'database'          => 'b2b2c503',
             // 用户名
-            'username'          => '19_zhaopintuigua',
+            'username'          => 'root',
             // 密码
-            'password'          => 'm8Yd1nm6cCc4mEM1',
+            'password'          => '123456',
             // 端口
             'hostport'          => '3306',
             // 数据库连接参数
@@ -60,4 +60,7 @@ return [
         // 更多的数据库配置信息
     ],
 ];
+
+
+?>
 
