@@ -239,7 +239,8 @@
 		function clearCache () {
 			$.ajax({
 				type: 'post',
-				url: ns.url("supply://admin/Login/clearCache"),
+				url: ns.url("admin/system/cache"),
+				data: { key: 'all' },
 				dataType: 'JSON',
 				success: function(res) {
 					layer.msg(res.message);

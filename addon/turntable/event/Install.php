@@ -19,6 +19,8 @@ class Install
 	 */
 	public function handle()
 	{
+        // 执行插件安装 SQL（创建抽奖相关数据表）
+        execute_sql('addon/turntable/data/install.sql');
         return success();
 	}
 }

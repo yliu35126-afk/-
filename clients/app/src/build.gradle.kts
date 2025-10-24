@@ -54,7 +54,7 @@ android {
             applicationIdSuffix = ".debug"
             isDebuggable = true
             // 本地联调：统一使用 LAN_IP 注入，默认 10.0.2.2（模拟器）或设置为真机IP
-            buildConfigField("String", "BACKEND_BASE_URL", "\"http://${LAN_IP}:8000/index.php/api/\"")
+            buildConfigField("String", "BACKEND_BASE_URL", "\"http://${LAN_IP}:8003/index.php/api/\"")
             buildConfigField("String", "SOCKET_BASE_URL", "\"http://${LAN_IP}:3001\"")
             buildConfigField("String", "SOCKET_PATH", "\"/socket.io/\"")
             buildConfigField("int", "LOTTERY_DURATION_MS", "4000")

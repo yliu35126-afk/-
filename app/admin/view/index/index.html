@@ -32,20 +32,20 @@
                         </div>
                         <div class="ns-survey-line"></div>
                         <div class="ns-survey-bottom">
-                            <p class="ns-survey-detail-num ns-text-color">{$stat_day.order_pay_count}</p>
+                            <p class="ns-survey-detail-num ns-text-color">{$stat_day.order_pay_count|default=0}</p>
                             <div class="ns-survey-detail-rate">
                                 {php}
-                                $t = $stat_day['order_pay_count'];
-                                $y = $stat_yesterday['order_pay_count'];
+                                $t = isset($stat_day['order_pay_count']) ? (int)$stat_day['order_pay_count'] : 0;
+                                $y = isset($stat_yesterday['order_pay_count']) ? (int)$stat_yesterday['order_pay_count'] : 0;
                                 {/php}
-                                <div>日同比 <span>{$t > $y ? '+' : ''}{$day_rate.order_pay_count}</span><i class="layui-icon layui-icon-triangle-d {$t > $y ? 'layui-icon-increase ns-text-color' : $t == $y ? 'is-null' : ''}"></i></div>
-                                <div>昨日订单数 <span>{$stat_yesterday.order_pay_count} </span></div>
+                                <div>日同比 <span>{$t > $y ? '+' : ''}{$day_rate.order_pay_count|default=0}</span><i class="layui-icon layui-icon-triangle-d {$t > $y ? 'layui-icon-increase ns-text-color' : $t == $y ? 'is-null' : ''}"></i></div>
+                                <div>昨日订单数 <span>{$stat_yesterday.order_pay_count|default=0} </span></div>
                             </div>
                             <div class="ns-survey-line"></div>
                             <div class="ns-survey-detail-split"></div>
                             <div class="ns-survey-detail-total">
                                 <span>订单总数</span>
-                                <span>{$stat_info.order_pay_count}</span>
+                                <span>{$stat_info.order_pay_count|default=0}</span>
                             </div>
                             <!-- <p class="ns-survey-detail-yesterday">昨日：{$stat_yesterday.order_pay_count}</p> -->
                             <div class="title ns-prompt-block">
@@ -68,11 +68,11 @@
                             <p class="ns-survey-detail-num ns-text-color">{if isset($stat_day.order_total)}{$stat_day.order_total}{else /} 0.00 {/if}</p>
                             <div class="ns-survey-detail-rate">
                                 {php}
-                                $t = $stat_day['order_total'];
-                                $y = $stat_yesterday['order_total'];
+                                $t = isset($stat_day['order_total']) ? (float)$stat_day['order_total'] : 0;
+                                $y = isset($stat_yesterday['order_total']) ? (float)$stat_yesterday['order_total'] : 0;
                                 {/php}
-                                <div>日同比 <span>{$t > $y ? '+' : ''}{$day_rate.order_total}</span><i class="layui-icon layui-icon-triangle-d {$t > $y ? 'layui-icon-increase ns-text-color' : $t == $y ? 'is-null' : ''}"></i></div>
-                                <div>昨日销售额(元) <span>{$stat_yesterday.order_total} </span>
+                                <div>日同比 <span>{$t > $y ? '+' : ''}{$day_rate.order_total|default=0}</span><i class="layui-icon layui-icon-triangle-d {$t > $y ? 'layui-icon-increase ns-text-color' : $t == $y ? 'is-null' : ''}"></i></div>
+                                <div>昨日销售额(元) <span>{$stat_yesterday.order_total|default=0} </span>
                                     <!--								<i class="layui-icon layui-icon-triangle-d"></i>-->
                                 </div>
                             </div>
@@ -80,7 +80,7 @@
                             <div class="ns-survey-detail-split"></div>
                             <div class="ns-survey-detail-total">
                                 <span>销售总额</span>
-                                <span>{$stat_info.order_total}</span>
+                                <span>{$stat_info.order_total|default=0}</span>
                             </div>
                             <!-- <p class="ns-survey-detail-yesterday">昨日：{if isset($stat_yesterday.order_total)}{$stat_yesterday.order_total}{else /} 0.00 {/if}</p> -->
                             <div class="title ns-prompt-block">
@@ -100,14 +100,14 @@
                         <p class="ns-survey-detail-aco">今日新增会员数</p>
                         <div class="ns-survey-line"></div>
                         <div class="ns-survey-bottom">
-                            <p class="ns-survey-detail-num ns-text-color">{$stat_day.member_count}</p>
+                            <p class="ns-survey-detail-num ns-text-color">{$stat_day.member_count|default=0}</p>
                             <div class="ns-survey-detail-rate">
                                 {php}
-                                $t = $stat_day['member_count'];
-                                $y = $stat_yesterday['member_count'];
+                                $t = isset($stat_day['member_count']) ? (int)$stat_day['member_count'] : 0;
+                                $y = isset($stat_yesterday['member_count']) ? (int)$stat_yesterday['member_count'] : 0;
                                 {/php}
-                                <div>日同比 <span>{$t > $y ? '+' : ''}{$day_rate.member_count}</span><i class="layui-icon layui-icon-triangle-d {$t > $y ? 'layui-icon-increase ns-text-color' : $t == $y ? 'is-null' : ''}"></i></div>
-                                <div>昨日新增会员数 <span>{$stat_yesterday.member_count} </span></div>
+                                <div>日同比 <span>{$t > $y ? '+' : ''}{$day_rate.member_count|default=0}</span><i class="layui-icon layui-icon-triangle-d {$t > $y ? 'layui-icon-increase ns-text-color' : $t == $y ? 'is-null' : ''}"></i></div>
+                                <div>昨日新增会员数 <span>{$stat_yesterday.member_count|default=0} </span></div>
                             </div>
                             <div class="ns-survey-line"></div>
                             <div class="ns-survey-detail-split"></div>
@@ -132,14 +132,14 @@
                         <p class="ns-survey-detail-aco">今日申请店铺数</p>
                         <div class="ns-survey-line"></div>
                         <div class="ns-survey-bottom">
-                            <p class="ns-survey-detail-num ns-text-color">{$today_apply_count}</p>
+                            <p class="ns-survey-detail-num ns-text-color">{$today_apply_count|default=0}</p>
                             <div class="ns-survey-detail-rate">
                                 {php}
                                 $t = $today_apply_count;
                                 $y = $yesterday_apply_count;
                                 {/php}
-                                <div>日同比 <span>{$t > $y ? '+' : ''}{$day_rate.shop_count}</span><i class="layui-icon layui-icon-triangle-d {$t > $y ? 'layui-icon-increase ns-text-color' : $t == $y ? 'is-null' : ''}"></i></div>
-                                <div>昨日申请店铺数 <span>{$yesterday_apply_count} </span></div>
+                                <div>日同比 <span>{$t > $y ? '+' : ''}{$day_rate.shop_count|default=0}</span><i class="layui-icon layui-icon-triangle-d {$t > $y ? 'layui-icon-increase ns-text-color' : $t == $y ? 'is-null' : ''}"></i></div>
+                                <div>昨日申请店铺数 <span>{$yesterday_apply_count|default=0} </span></div>
                             </div>
                             <div class="ns-survey-line"></div>
                             <div class="ns-survey-detail-split"></div>
@@ -165,60 +165,60 @@
 
             <div class="statistics-wrap">
                 <div class="item">
-                    <div class="flex-box f_box_border"  onclick="location.href='{:addon_url('admin/order/lists')}#!order_status=0'">
-                        <div class="num">{$num_data.waitpay}</div>
+                    <div class="flex-box f_box_border"  data-url="{:addon_url('admin/order/lists')}#!order_status=0" onclick="location.href=this.dataset.url">
+                        <div class="num">{$num_data.waitpay|default=0}</div>
                         <h5 class="title">待付款订单</h5>
                     </div>
-                    <div class="flex-box f_box_border" onclick="location.href='{:addon_url('admin/order/lists')}#!order_status=1'">
-                        <div class="num">{$num_data.waitsend}</div>
+                    <div class="flex-box f_box_border" data-url="{:addon_url('admin/order/lists')}#!order_status=1" onclick="location.href=this.dataset.url">
+                        <div class="num">{$num_data.waitsend|default=0}</div>
                         <h5 class="title">待发货订单</h5>
                     </div>
                 </div>
 
                 {if $is_fenxiao eq 0}
                 <div class="item">
-                    <div class="flex-box f_box_border" onclick="location.href='{:addon_url('admin/order/lists')}#!order_status=3'">
-                        <div class="num">{$num_data.waitconfirm}</div>
+                    <div class="flex-box f_box_border" data-url="{:addon_url('admin/order/lists')}#!order_status=3" onclick="location.href=this.dataset.url">
+                        <div class="num">{$num_data.waitconfirm|default=0}</div>
                         <h5 class="title">待收货订单</h5>
                     </div>
-                    <div class="flex-box f_box_border" onclick="location.href='{:addon_url('admin/order/lists')}#!order_status=10'">
-                        <div class="num">{$num_data.complete}</div>
+                    <div class="flex-box f_box_border" data-url="{:addon_url('admin/order/lists')}#!order_status=10" onclick="location.href=this.dataset.url">
+                        <div class="num">{$num_data.complete|default=0}</div>
                         <h5 class="title">已完成订单</h5>
                     </div>
                 </div>
                 {/if}
 
                 <div class="item">
-                    <div class="flex-box f_box_border" onclick="location.href='{:addon_url('admin/order/lists')}#!order_status=refunding'">
-                        <div class="num">{$num_data.refund}</div>
+                    <div class="flex-box f_box_border" data-url="{:addon_url('admin/order/lists')}#!order_status=refunding" onclick="location.href=this.dataset.url">
+                        <div class="num">{$num_data.refund|default=0}</div>
                         <h5 class="title">退款中订单</h5>
                     </div>
 
-                    <div class="flex-box f_box_border" onclick="location.href='{:addon_url('admin/complain/lists')}#!complain_status=1'">
-                        <div class="num">{$num_data.complain_count}</div>
+                    <div class="flex-box f_box_border" data-url="{:addon_url('admin/complain/lists')}#!complain_status=1" onclick="location.href=this.dataset.url">
+                        <div class="num">{$num_data.complain_count|default=0}</div>
                         <h5 class="title">维权订单</h5>
                     </div>
                 </div>
 
                 <div class="item">
-                    <div class="flex-box f_box_border"  onclick="location.href='{:addon_url('admin/goods/lists')}'">
-                        <div class="num">{$num_data.goods_total}</div>
+                    <div class="flex-box f_box_border"  data-url="{:addon_url('admin/goods/lists')}" onclick="location.href=this.dataset.url">
+                        <div class="num">{$num_data.goods_total|default=0}</div>
                         <h5 class="title">出售中商品</h5>
                     </div>
-                    <div class="flex-box f_box_border"  onclick="location.href='{:addon_url('admin/goods/lists')}'">
-                        <div class="num">{$num_data.warehouse_goods}</div>
+                    <div class="flex-box f_box_border"  data-url="{:addon_url('admin/goods/lists')}" onclick="location.href=this.dataset.url">
+                        <div class="num">{$num_data.warehouse_goods|default=0}</div>
                         <h5 class="title">仓库中商品</h5>
                     </div>
                 </div>
 
                 {if $is_fenxiao eq 1}
                 <div class="item">
-                    <div class="flex-box f_box_border" onclick="location.href='{:addon_url('fenxiao://admin/fenxiao/apply')}'">
-                        <div class="num">{$num_data.apply_count}</div>
+                    <div class="flex-box f_box_border" data-url="{:addon_url('fenxiao://admin/fenxiao/apply')}" onclick="location.href=this.dataset.url">
+                        <div class="num">{$num_data.apply_count|default=0}</div>
                         <h5 class="title">分销商申请</h5>
                     </div>
-                    <div class="flex-box f_box_border" onclick="location.href='{:addon_url('fenxiao://admin/withdraw/lists')}'">
-                        <div class="num">{$num_data.withdraw_count}</div>
+                    <div class="flex-box f_box_border" data-url="{:addon_url('fenxiao://admin/withdraw/lists')}" onclick="location.href=this.dataset.url">
+                        <div class="num">{$num_data.withdraw_count|default=0}</div>
                         <h5 class="title">提现待审核</h5>
                     </div>
                 </div>
@@ -332,77 +332,45 @@
                     <tbody>
                     <tr>
                         <td class="ns-bg-color-light-gray">服务器操作系统</td>
-                        <td>{$system_config['os']}</td>
+                        <td>{$system_config['os']|default=''}</td>
                         <td class="ns-bg-color-light-gray">服务器域名</td>
-                        <td>{$system_config['dns']}:{$system_config['port']}</td>
+                        <td>{$system_config['dns']|default=''}:{$system_config['port']|default=''}</td>
                     </tr>
                     <tr>
                         <td class="ns-bg-color-light-gray">服务器环境</td>
-                        <td>{$system_config['server_software']}</td>
+                        <td>{$system_config['server_software']|default=''}</td>
                         <td class="ns-bg-color-light-gray">PHP版本</td>
-                        <td>{$system_config['php_version']}</td>
+                        <td>{$system_config['php_version']|default=''}</td>
                     </tr>
                     <tr>
                         <td class="ns-bg-color-light-gray">文件上传限制</td>
-                        <td>{$system_config['upload_max_filesize']}</td>
+                        <td>{$system_config['upload_max_filesize']|default=''}</td>
                         <td class="ns-bg-color-light-gray">GD版本</td>
-                        <td>{$system_config['gd_version']}</td>
+                        <td>{$system_config['gd_version']|default=''}</td>
                     </tr>
                     <tr>
                         <td class="ns-bg-color-light-gray">sockets开启</td>
-                        <td>{if condition="$system_config['sockets'] eq true"}已开启{else/}<span style="color:red;">未开启，邮箱功能将无法正常使用</span>{/if}</td>
+                        <td>{if condition="isset($system_config['sockets']) && $system_config['sockets'] eq true"}已开启{else/}<span style="color:red;">未开启，邮箱功能将无法正常使用</span>{/if}</td>
                         <td class="ns-bg-color-light-gray">curl支持</td>
-                        <td>{if condition="$system_config['curl'] eq true"}支持{else/}<span style="color:red;">不支持，微信和支付宝等功能将无法正常使用</span>{/if}</td>
+                        <td>{if condition="isset($system_config['curl']) && $system_config['curl'] eq true"}支持{else/}<span style="color:red;">不支持，微信和支付宝等功能将无法正常使用</span>{/if}</td>
                     </tr>
                     <tr>
                         <td class="ns-bg-color-light-gray">openssl开启</td>
-                        <td>{if condition="$system_config['openssl'] eq true"}已开启{else/}<span style="color:red;">未开启，不支持https</span>{/if}</td>
+                        <td>{if condition="isset($system_config['openssl']) && $system_config['openssl'] eq true"}已开启{else/}<span style="color:red;">未开启，不支持https</span>{/if}</td>
                         <td class="ns-bg-color-light-gray">fileinfo开启</td>
-                        <td>{if condition="$system_config['fileinfo'] eq true"}已开启{else/}<span style="color:red;">未开启，将无法获取上传文件类型，导致上传图片失败</span>{/if}</td>
+                        <td>{if condition="isset($system_config['fileinfo']) && $system_config['fileinfo'] eq true"}已开启{else/}<span style="color:red;">未开启，将无法获取上传文件类型，导致上传图片失败</span>{/if}</td>
                     </tr>
                     <tr>
                         <td class="ns-bg-color-light-gray">upload目录权限</td>
-                        <td>{if $system_config['upload_dir_jurisdiction'] == 1}可读可写{else/}<span style="color:red;">不可读不可写，会造成图片无法上传和访问</span>{/if}</td>
+                        <td>{if condition="isset($system_config['upload_dir_jurisdiction']) && $system_config['upload_dir_jurisdiction'] == 1"}可读可写{else/}<span style="color:red;">不可读不可写，会造成图片无法上传和访问</span>{/if}</td>
                         <td class="ns-bg-color-light-gray">runtime目录权限</td>
-                        <td>{if $system_config['runtime_dir_jurisdiction'] == 1}可读可写{else/}<span style="color:red;">不可读不可写，会造成编译文件缓存文件无法生成读取，是网站访问出错</span>{/if}</td>
+                        <td>{if condition="isset($system_config['runtime_dir_jurisdiction']) && $system_config['runtime_dir_jurisdiction'] == 1"}可读可写{else/}<span style="color:red;">不可读不可写，会造成编译文件缓存文件无法生成读取，是网站访问出错</span>{/if}</td>
                     </tr>
                     </tbody>
                 </table>
             </div>
         </div>
 
-    </div>
-    <div class="index-info">
-        <div class="layui-card ns-card-common">
-            <div class="layui-card-header">
-                <span>
-                     <img src="ADMIN_IMG/index/service.png" class="layui-card-sicon">
-                </span>
-                <span>客户服务</span>
-            </div>
-            <div class="layui-card-body">
-                <p class="ns-text-color-dark-gray">客服电话：400-886-7993</p>
-                <p class="ns-text-color-dark-gray">官网：https://www.niushop.com</p>
-                <p class="ns-text-color-dark-gray">交流群：29507902</p>
-            </div>
-        </div>
-        <div class="layui-card ns-card-common">
-            <div class="layui-card-header">
-                <span>
-                     <img src="ADMIN_IMG/index/news.png" class="layui-card-sicon">
-                </span>
-                <span>最新动态</span>
-            </div>
-            <div class="layui-card-body news-list">
-                <!--<p class="ns-text-color-dark-gray"><span class="ns-bg-color">1</span>Niushop多商户V4上线啦！</p>-->
-                <!--<p class="ns-text-color-dark-gray"><span class="ns-bg-color">2</span>Niushop多商户V4上线啦！</p>-->
-                <!--<p class="ns-text-color-dark-gray"><span class="ns-bg-color">3</span>Niushop多商户V4上线啦！</p>-->
-                <!--<p class="ns-text-color-dark-gray"><span class="ns-bg-color-gray">4</span>Niushop多商户V4上线啦！</p>-->
-                <!--<p class="ns-text-color-dark-gray"><span class="ns-bg-color-gray">5</span>Niushop多商户V4上线啦！</p>-->
-                <!--<p class="ns-text-color-dark-gray"><span class="ns-bg-color-gray">6</span>Niushop多商户V4上线啦！</p>-->
-                <!--<p class="ns-text-color-dark-gray"><span class="ns-bg-color-gray">7</span>Niushop多商户V4上线啦！</p>-->
-            </div>
-        </div>
     </div>
 
 </div>
@@ -442,7 +410,7 @@
 </script>
 
 <script>
-    var ten_day_json = {:json_encode($ten_day, JSON_UNESCAPED_UNICODE)};
+    var ten_day_json = JSON.parse('{:json_encode($ten_day, JSON_UNESCAPED_UNICODE)}');
 
     function getDay(day){
         var today = new Date();
@@ -469,7 +437,7 @@
     var myChart = echarts.init(document.getElementById('order'));
 
     // 指定图表的配置项和数据
-    option = {
+    var option = {
         xAxis: {
             type: 'category',
             data: data
@@ -513,7 +481,7 @@
     var moneyChart = echarts.init(document.getElementById('money'));
 
     // 指定图表的配置项和数据
-    moneyOption = {
+    var moneyOption = {
         xAxis: {
             type: 'category',
             data: data

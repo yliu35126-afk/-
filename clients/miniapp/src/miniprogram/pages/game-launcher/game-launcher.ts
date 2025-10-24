@@ -256,7 +256,7 @@ Page({
     let token = app.globalData.token || wx.getStorageSync('token');
     if (!token) {
       wx.showLoading({ title: '正在登录…' });
-      const ok = await app.ensureLogin?.();
+      const ok = typeof (app as any).ensureLogin === 'function' ? await (app as any).ensureLogin() : true;
       wx.hideLoading();
       if (!ok) {
         wx.showToast({ title: '请先登录后再抽奖', icon: 'none' });
@@ -880,80 +880,88 @@ Page({
     });
 
     // 监听连接打开
-    socketTask?.onOpen?.(() => {
-      console.log('WebSocket连接已建立');
-      this.setData({
-        connectionStatus: 'connected',
-        socketTask: socketTask
+    if (socketTask && typeof (socketTask as any).onOpen === 'function') {
+      (socketTask as any).onOpen(() => {
+        console.log('WebSocket连接已建立');
+        this.setData({
+          connectionStatus: 'connected',
+          socketTask: socketTask
+        });
+        
+        this.addLog('WebSocket连接已建立，等待Socket.IO握手...');
+        // 不再在 onOpen 主动发送 Socket.IO 连接帧(40)，统一在收到 Engine.IO 握手(0) 后发送
+        
+        // 不要在这里发送认证消息，等待Socket.IO握手完成后再发送
       });
-      
-      this.addLog('WebSocket连接已建立，等待Socket.IO握手...');
-      // 不再在 onOpen 主动发送 Socket.IO 连接帧(40)，统一在收到 Engine.IO 握手(0) 后发送
-      
-      // 不要在这里发送认证消息，等待Socket.IO握手完成后再发送
-    });
+    }
 
     // 监听消息
-    socketTask?.onMessage?.((res) => {
-      console.log('收到服务器消息:', res.data);
-      this.handleServerMessage(res.data as string);
-    });
+    if (socketTask && typeof (socketTask as any).onMessage === 'function') {
+      (socketTask as any).onMessage((res: any) => {
+        console.log('收到服务器消息:', res.data);
+        this.handleServerMessage(res.data as string);
+      });
+    }
 
     // 监听连接关闭
-    socketTask?.onClose?.((res) => {
-      console.log('WebSocket连接已关闭:', res);
-      try {
-        const code = (res as any)?.code;
-        const reason = (res as any)?.reason;
-        console.log(`连接关闭详情: code=${code ?? ''}, reason=${reason ?? ''}`);
-      } catch (_) { /* 忽略 */ }
-      this.addLog(`连接关闭: code=${(res as any).code || ''}, reason=${(res as any).reason || ''}`);
-
-      // 抽奖等待守护：等待中保持UI并自动重连
-      if (this.data.showLotteryLoading && !this.data.isLotteryFinished) {
-        this.addLog('网络波动，保持“等待结果”，正在自动重连...');
-        // 增加指数退避：2/4/6 秒，最多3次
-        const attempt = (this.data.reconnectAttempts || 0) + 1;
-        const delay = Math.min(6000, 2000 * attempt);
-        // 清理之前的定时器
-        if (this.data.reconnectTimer) {
-          clearTimeout(this.data.reconnectTimer);
-        }
-        const timer = setTimeout(() => {
-          try {
-            this.connectDevice();
-          } catch (e) {
-            console.warn('自动重连失败（忽略）:', e);
+    if (socketTask && typeof (socketTask as any).onClose === 'function') {
+      (socketTask as any).onClose((res: any) => {
+        console.log('WebSocket连接已关闭:', res);
+        try {
+          const code = (res as any)?.code;
+          const reason = (res as any)?.reason;
+          console.log(`连接关闭详情: code=${code ?? ''}, reason=${reason ?? ''}`);
+        } catch (_) { /* 忽略 */ }
+        this.addLog(`连接关闭: code=${(res as any).code || ''}, reason=${(res as any).reason || ''}`);
+  
+        // 抽奖等待守护：等待中保持UI并自动重连
+        if (this.data.showLotteryLoading && !this.data.isLotteryFinished) {
+          this.addLog('网络波动，保持“等待结果”，正在自动重连...');
+          // 增加指数退避：2/4/6 秒，最多3次
+          const attempt = (this.data.reconnectAttempts || 0) + 1;
+          const delay = Math.min(6000, 2000 * attempt);
+          // 清理之前的定时器
+          if (this.data.reconnectTimer) {
+            clearTimeout(this.data.reconnectTimer);
           }
-        }, delay);
-        this.setData({
-          reconnectAttempts: attempt,
-          reconnectTimer: timer,
-          // 保持等待UI不变
-          connectionStatus: 'disconnected',
-          socketTask: null
-        });
-      } else {
-        // 非等待状态，正常清理
-        this.setData({
-          connectionStatus: 'disconnected',
-          socketTask: null
-        });
-        this.addLog('设备连接已断开');
-      }
-    });
+          const timer = setTimeout(() => {
+            try {
+              this.connectDevice();
+            } catch (e) {
+              console.warn('自动重连失败（忽略）:', e);
+            }
+          }, delay);
+          this.setData({
+            reconnectAttempts: attempt,
+            reconnectTimer: timer,
+            // 保持等待UI不变
+            connectionStatus: 'disconnected',
+            socketTask: null
+          });
+        } else {
+          // 非等待状态，正常清理
+          this.setData({
+            connectionStatus: 'disconnected',
+            socketTask: null
+          });
+          this.addLog('设备连接已断开');
+        }
+      });
+    }
 
     // 监听连接错误
-    (socketTask as any)?.onError?.((error: any) => {
-      console.error('WebSocket连接错误:', error);
-      try {
-        console.log('错误详情: errMsg=', (error as any)?.errMsg || '');
-      } catch (_) { /* 忽略 */ }
-      this.setData({
-        connectionStatus: 'disconnected'
+    if (socketTask && typeof (socketTask as any).onError === 'function') {
+      (socketTask as any).onError((error: any) => {
+        console.error('WebSocket连接错误:', error);
+        try {
+          console.log('错误详情: errMsg=', (error as any)?.errMsg || '');
+        } catch (_) { /* 忽略 */ }
+        this.setData({
+          connectionStatus: 'disconnected'
+        });
+        this.addLog('连接错误: ' + JSON.stringify(error));
       });
-      this.addLog('连接错误: ' + JSON.stringify(error));
-    });
+    }
   },
 
   // 启用模拟连接（演示用） - 生产环境禁用
@@ -1051,8 +1059,11 @@ Page({
 
   // 断开设备连接
   disconnectDevice() {
-    if (this.data.socketTask) {
-      this.data.socketTask?.close?.();
+    const st = this.data.socketTask as any;
+    if (st && typeof st.close === 'function') {
+      st.close();
+    } else if (st && typeof st.disconnect === 'function') {
+      st.disconnect();
     }
     
     this.setData({
@@ -1071,12 +1082,13 @@ Page({
 
   // 发送消息到服务器
   sendMessage(message: any) {
-    if (this.data.socketTask) {
+    const st = this.data.socketTask as any;
+    if (st && typeof st.send === 'function') {
       // Socket.IO消息格式: "42" + JSON.stringify([event, data])
       // 42表示Engine.IO的MESSAGE类型和Socket.IO的EVENT类型
       const socketIOMessage = `42${JSON.stringify(['game_control', message])}`;
       
-      this.data.socketTask?.send?.({
+      st.send({
         data: socketIOMessage,
         success: () => {
           console.log('消息发送成功:', socketIOMessage);
@@ -1087,6 +1099,8 @@ Page({
           this.addLog('消息发送失败: ' + JSON.stringify(error));
         }
       });
+    } else {
+      this.addLog('当前未连接或发送接口不可用');
     }
   },
 

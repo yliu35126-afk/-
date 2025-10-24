@@ -1,24 +1,16 @@
 <?php
-/**
- * Niushop商城系统 - 团队十年电商经验汇集巨献!
- * =========================================================
- * Copy right 2019-2029 上海牛之云网络科技有限公司, 保留所有权利。
- * ----------------------------------------------
- * 官方网址: https://www.niushop.com
- * =========================================================
- */
+namespace addon\wechat\event;
 
-
-namespace addon\system\Wechat\event;
-
-use addon\system\Wechat\common\model\Wechat;
+use addon\wechat\model\Wechat;
 
 class WechatMsg
 {
-	public function handle($param = [])
-	{
-		$wechat_config = new Wechat();
-		$res = $wechat_config->sendTemplateMsg(request()->siteid(), $param);
-		return $res;
-	}
+    public function handle($param = [])
+    {
+        $wechat_config = new Wechat();
+        /** @var \app\Request $request */
+        $request = request();
+        $res = $wechat_config->sendTemplateMsg($request->siteid(), $param);
+        return $res;
+    }
 }

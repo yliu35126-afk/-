@@ -82,10 +82,19 @@ const config = {
     
     // 设备相关接口 - 使用API模块
     deviceRegister: 'device/register',              // POST - 设备注册
+    /**
+     * GET device/profitconfig
+     * 响应契约：
+     * { code: 1, data: { device_id:number, tiers:[{tier_id:number, price:number, template:string, profit_json:string}] }, msg:string }
+     */
     getDeviceConfig: 'device/profitconfig',         // GET - 获取设备分润配置
 
     // 支付相关接口 - 使用API模块
     createPayOrder: 'pay/create',                   // POST - 创建支付订单
+    /**
+     * POST pay/notify
+     * 响应契约：{ code:1, data:{ order_id:number, status:'paid'|'failed' }, msg:string }
+     */
     payNotify: 'pay/notify',                        // POST - 支付结果通知
     queryPayOrder: 'pay/query',                     // POST - 查询并同步支付状态
     
@@ -96,10 +105,25 @@ const config = {
     getPrizeList: 'prizeapi/list',                  // GET - 获取奖品列表
     
     // 抽奖相关接口 - 使用API模块
+    /**
+     * POST device/smartLottery
+     * 请求：{ device_id:number, tier_id:number }
+     * 响应：{ code:1, data:{ record_id:number, result:'hit'|'miss', prize_type:string, goods_id?:number, amount:number }, msg:string }
+     */
     smartLottery: 'device/smartLottery',            // POST - 智能抽奖
     getLotteryRecords: 'orders/getLotteryRecords',  // GET - 获取抽奖记录
     getDevicePrizes: 'device/profitprizes',         // GET - 获取指定金额奖品（API接口）
-    getDeviceConfig: 'device/profitconfig',         // GET - 获取设备绑定的分润金额列表
+
+    // Turntable 插件接口（统一前缀）
+    turntablePrizeList: 'addons/turntable/api/turntable/prizeList',  // GET - 16格奖品列表
+    /**
+     * POST addons/turntable/api/turntable/draw
+     * 响应：{ code:1, data:{ record_id:number, slot_id:number, goods_id?:number }, msg:string }
+     */
+    turntableDraw: 'addons/turntable/api/turntable/draw',            // POST - 抽一次
+    turntableRecord: 'addons/turntable/api/turntable/record',        // GET - 抽奖记录
+    turntableAddress: 'addons/turntable/api/turntable/address',      // POST - 收件信息
+    turntableVerify: 'addons/turntable/api/turntable/verify',        // POST - 到店核销
     
     // 二维码相关接口 - 使用API模块
     generateQrcode: 'qrcode/generate',              // POST - 生成二维码
@@ -114,6 +138,10 @@ const config = {
     
     // 核销相关接口
     scanCode: 'lottery/scan',                       // POST - 扫码处理接口
+    /**
+     * GET lottery/result
+     * 响应：{ code:1, data:{ record_id:number, result:'hit'|'miss', order_id?:number, ext?:object }, msg:string }
+     */
     getLotteryResult: 'lottery/result',             // GET - 获取抽奖结果
     getUserOrders: 'orders/getList',                // GET - 获取用户订单列表
     verifyOrder: 'agent/verifyOrder',               // POST - 核销订单接口

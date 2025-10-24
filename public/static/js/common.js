@@ -1,6 +1,6 @@
-var ns = window.ns_url;
+var ns = window.ns_url || {};
 var site_id = ns.site_id || 0;
-var post = ns_url.route[0];
+var post = (ns.route && ns.route[0]) || '';
 
 /**
  * 解析URL
@@ -266,6 +266,30 @@ ns.append_url_params = function (url, params) {
 		url += url_params;
 	}
 	return url;
+};
+
+/**
+ * 通用 AJAX 封装，兼容旧模板调用 ns.nsajax
+ * options: { url, data, type, method, async, success, error }
+ */
+ns.nsajax = function(options){
+	options = options || {};
+	var ajaxOptions = {
+		url: options.url || '',
+		type: options.type || options.method || 'POST',
+		data: options.data || {},
+		dataType: 'JSON',
+		async: (options.async !== undefined) ? options.async : true,
+		success: function(res){
+			var json;
+			try { json = (typeof res === 'string') ? JSON.parse(res) : res; } catch(e){ json = res; }
+			if (typeof options.success === 'function') options.success(json);
+		},
+		error: function(xhr){
+			if (typeof options.error === 'function') options.error(xhr);
+		}
+	};
+	$.ajax(ajaxOptions);
 };
 
 /**

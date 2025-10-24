@@ -48,7 +48,10 @@ App<IAppOption>({
     });
     if (this.autoLogin) {
       this.autoLogin().finally(() => {
-        try { this.globalData.loginReadyResolve?.(); } catch(_) {}
+        // 显式守卫调用，避免 TS2722（不能调用可能是未定义的对象）
+        if (typeof this.globalData.loginReadyResolve === 'function') {
+          try { this.globalData.loginReadyResolve(); } catch(_) {}
+        }
       });
     }
 
@@ -146,7 +149,10 @@ App<IAppOption>({
   // 强制确保已登录（按钮拦截调用）
   async ensureLogin() {
     if (this.globalData.token || wx.getStorageSync('token')) return true;
-    await this.autoLogin?.();
+    // 显式守卫调用，避免 TS2722
+    if (this.autoLogin) {
+      await this.autoLogin();
+    }
     return !!(this.globalData.token || wx.getStorageSync('token'));
   },
 
@@ -273,9 +279,15 @@ App<IAppOption>({
       try {
         // 兼容 weapp.socket.io 或原生 SocketTask
         if ((this.globalData.socketTask as any)?.disconnect) {
-          try { (this.globalData.socketTask as any).disconnect?.(); } catch (e) { console.log('断开失败（忽略）:', e); }
+          const st: any = this.globalData.socketTask as any;
+          if (typeof st.disconnect === 'function') {
+            try { st.disconnect(); } catch (e) { console.log('断开失败（忽略）:', e); }
+          }
         } else if ((this.globalData.socketTask as any)?.close) {
-          try { (this.globalData.socketTask as any).close?.({ code: 1000, reason: '主动关闭' }); } catch (e) { console.log('关闭失败（忽略）:', e); }
+          const st: any = this.globalData.socketTask as any;
+          if (typeof st.close === 'function') {
+            try { st.close({ code: 1000, reason: '主动关闭' }); } catch (e) { console.log('关闭失败（忽略）:', e); }
+          }
         }
       } catch (e) {
         console.log('关闭旧连接异常（忽略）:', e);
@@ -289,7 +301,7 @@ App<IAppOption>({
     const apiConfig = require('./config/api.js');
 
     // 统一使用完整 Socket.IO 地址，不强制附加 Engine.IO 参数
-    const baseUrl = apiConfig.wsUrl || envConfig.websocketUrl || 'ws://127.0.0.1:3001/socket.io/';
+    const baseUrl = apiConfig.wsUrl || envConfig.websocketUrl || 'ws://localhost:3001/socket.io/';
     // 补齐 Engine.IO 必需的握手参数，避免服务端拒绝连接
     const wsUrl = `${baseUrl}?EIO=4&transport=websocket&deviceCode=${encodeURIComponent(deviceCode)}`;
     
@@ -340,24 +352,17 @@ App<IAppOption>({
       return;
     }
 
-    // 监听WebSocket事件（方法可选链，避免“可能为未定义的对象”）
-    socketTask?.onOpen?.(() => {
-      console.log('✅ WebSocket连接已打开');
-      isConnected = true;
-      if (connectTimeout) {
+    // 绑定事件：使用显式守卫替代可选调用，避免 TS2722
+    if (socketTask.onOpen) {
+      socketTask.onOpen(() => {
+        console.log('✅ WebSocket连接已打开');
+        isConnected = true;
         clearTimeout(connectTimeout);
-        connectTimeout = null;
-      }
-      
-      this.globalData.socketTask = socketTask;
-      this.globalData.currentDeviceCode = deviceCode;
-      this.globalData.isConnecting = false;
+      });
+    }
 
-      wx.showToast({ title: '设备连接成功', icon: 'success' });
-      // 不再在 onOpen 主动发送 Socket.IO 连接帧，由收到 Engine.IO 握手(0) 后统一发送
-    });
-
-      socketTask?.onMessage?.((res) => {
+    if (socketTask.onMessage) {
+      socketTask.onMessage((res) => {
         console.log('📨 收到WebSocket消息:', res.data);
         try {
           const data = res.data as string;
@@ -367,10 +372,10 @@ App<IAppOption>({
             const engineData = JSON.parse(data.substring(1));
             console.log('🤝 Engine.IO握手:', engineData.sid);
             // 发送Socket.IO连接消息
-            socketTask?.send?.({ data: '40' });
+            socketTask.send({ data: '40' });
           } else if (data === '2') {
             // ping -> pong（仅被动响应，不主动发送 ping）
-            socketTask?.send?.({ data: '3' });
+            socketTask.send({ data: '3' });
           } else if (data === '3') {
             // pong
           } else if (data.startsWith('40')) {
@@ -400,7 +405,12 @@ App<IAppOption>({
               type: 'client',
               timestamp: Date.now()
             }])}`;
-            socketTask.send({ data: authMessage });
+            try {
+              socketTask.send({ data: authMessage });
+              console.log('✅ 已发送 device_auth 认证消息');
+            } catch (e) {
+              console.log('发送认证消息失败（忽略）:', e);
+            }
           } else if (data.startsWith('42')) {
             const eventData = JSON.parse(data.substring(2));
             const event = eventData[0];
@@ -416,82 +426,25 @@ App<IAppOption>({
           console.error('❌ 解析WebSocket消息失败:', error, '原始数据:', res.data);
         }
       });
+    }
 
-      if (socketTask && typeof (socketTask as any).onError === 'function') {
-      socketTask.onError((error) => {
-        console.error('❌ WebSocket错误:', error);
-        try {
-          console.log('❌ 错误详情: errMsg=', (error as any)?.errMsg || '');
-        } catch (_) { /* 忽略 */ }
-        
-        // 清理超时定时器
-        if (connectTimeout) {
-          clearTimeout(connectTimeout);
-          connectTimeout = null;
-        }
-        
-      // 清理连接状态
-      this.globalData.socketTask = undefined;
-      this.globalData.currentDeviceCode = undefined;
-      this.globalData.isConnecting = false;
-        
-        // 检查错误类型并提供更具体的提示
-        const errorMsg = error.errMsg || '';
-        if (errorMsg.includes('未完成的操作') || errorMsg.includes('operation not completed')) {
-          console.log('🔄 检测到"未完成的操作"错误，尝试重新连接...');
-          // 延迟重连，避免频繁连接
-          setTimeout(() => {
-            if (this.reconnectWebSocket) {
-              this.reconnectWebSocket(deviceCode, 1);
-            }
-          }, 2000);
-        } else {
-          wx.showToast({ title: '设备连接失败', icon: 'none' });
-        }
+    if ((socketTask as any).onError) {
+      (socketTask as any).onError((error: any) => {
+        console.error('WebSocket错误:', error);
+        // 允许轻量重连：错误发生后复位状态
+        this.globalData.isConnecting = false;
       });
-      }
+    }
 
-      if (socketTask && typeof (socketTask as any).onClose === 'function') {
-      socketTask.onClose((res) => {
-        console.log('🔌 WebSocket连接已关闭:', res);
-        try {
-          const code = (res as any)?.code;
-          const reason = (res as any)?.reason;
-          console.log(`🔌 关闭详情: code=${code ?? ''}, reason=${reason ?? ''}`);
-        } catch (_) { /* 忽略 */ }
-        
-        // 清理超时定时器
-        if (connectTimeout) {
-          clearTimeout(connectTimeout);
-          connectTimeout = null;
-        }
-        
-      if (this.stopHeartbeat) this.stopHeartbeat();
-      this.globalData.socketTask = undefined;
-      this.globalData.currentDeviceCode = undefined;
-      this.globalData.isConnecting = false;
-        
-        // 非主动关闭：在抽奖等待中自动重连并保持等待UI
-        if (res.code !== 1000) {
-          const pages = getCurrentPages();
-          const currentPage: any = pages.length ? pages[pages.length - 1] : undefined;
-          const waiting = !!(currentPage?.data?.showLotteryLoading) && !currentPage?.data?.isLotteryFinished;
-          if (waiting && this.reconnectWebSocket) {
-            console.log('抽奖等待中发生断开，启动自动重连');
-            this.reconnectWebSocket(deviceCode, 0);
-          } else {
-            console.log('设备连接已断开（静默）');
-          }
-        }
+    if ((socketTask as any).onClose) {
+      (socketTask as any).onClose((res: any) => {
+        console.log('WebSocket连接关闭:', res);
+        this.globalData.isConnecting = false;
+        this.globalData.socketTask = undefined;
       });
-      }
-
-      // 保存socketTask到全局（在连接打开时会再次设置）
-      this.globalData.socketTask = socketTask;
-      this.globalData.currentDeviceCode = deviceCode;
+    }
   },
 
-  // 处理设备消息
   handleDeviceMessage(data: any) {
     console.log('处理设备消息:', data);
     
@@ -549,7 +502,6 @@ App<IAppOption>({
     }
   },
 
-  // 重连WebSocket
   reconnectWebSocket(deviceCode: string, retryCount = 0) {
     const maxRetries = 3;
     if (retryCount >= maxRetries) {
@@ -574,7 +526,6 @@ App<IAppOption>({
     }, delay);
   },
 
-  // 触发全局事件
   triggerGlobalEvent(eventName: string, data: any) {
     // 可以通过全局事件总线或者直接调用页面方法
     const pages = getCurrentPages();
@@ -587,7 +538,6 @@ App<IAppOption>({
     }
   },
 
-  // 解析扫码参数
   parseSceneParams(scene: string): any {
     const params: any = {};
     if (scene) {
@@ -604,7 +554,6 @@ App<IAppOption>({
     return params;
   },
 
-  // 解析路径参数
   parsePathParams(path: string): any {
     const params: any = {};
     const queryIndex = path.indexOf('?');
@@ -621,7 +570,6 @@ App<IAppOption>({
     return params;
   },
 
-  // 启动心跳（改为被动模式：仅在收到服务器 ping(2) 时回复 pong(3)）
   startHeartbeat(socketTask: WechatMiniprogram.SocketTask) {
     // 标记读取以避免 TS6133 未使用参数告警
     void socketTask;
@@ -635,7 +583,6 @@ App<IAppOption>({
     this.globalData.heartbeatTimer = undefined as any;
   },
 
-  // 停止心跳
   stopHeartbeat() {
     if (this.globalData.heartbeatTimer) {
       console.log('💓 停止心跳定时器');

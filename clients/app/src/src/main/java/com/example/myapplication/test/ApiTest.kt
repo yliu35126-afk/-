@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import com.example.myapplication.repository.DeviceRepository
 import com.example.myapplication.repository.PrizeRepository
+import com.example.myapplication.repository.TurntableRepository
 
 /**
  * API测试类 - 用于测试后端接口连接
@@ -30,6 +31,45 @@ class ApiTest {
                 },
                 onError = { error ->
                     Log.e(TAG, "✗ 设备注册API测试失败: $error")
+                }
+            )
+        }
+
+        /**
+         * 测试 Turntable 插件：奖品列表 + 抽一次
+         */
+        fun testTurntableApis() {
+            Log.d(TAG, "开始测试 Turntable 插件接口...")
+            val repo = TurntableRepository()
+            // 可按需替换 deviceId/boardId/siteId
+            val deviceId: Int? = 0
+            val boardId: Int? = null
+            val siteId: Int? = 0
+
+            repo.fetchPrizeList(
+                siteId = siteId,
+                deviceSn = null,
+                deviceId = deviceId,
+                boardId = boardId,
+                onSuccess = { resp ->
+                    val slots = resp.data?.slots ?: emptyList()
+                    Log.d(TAG, "✓ 奖品列表获取成功，槽位数量=${slots.size}")
+                    // 选一个价档进行抽奖（若需价档，可在此填写实际 tierId）
+                    repo.drawOnce(
+                        siteId = siteId,
+                        deviceId = deviceId,
+                        boardId = resp.data?.board?.board_id,
+                        tierId = null,
+                        onSuccess = { draw ->
+                            Log.d(TAG, "✓ 抽奖成功，结果=${draw.data?.result}, 命中=${draw.data?.hit}")
+                        },
+                        onError = { err ->
+                            Log.e(TAG, "✗ 抽奖失败: $err")
+                        }
+                    )
+                },
+                onError = { err ->
+                    Log.e(TAG, "✗ 奖品列表获取失败: $err")
                 }
             )
         }

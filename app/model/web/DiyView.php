@@ -424,23 +424,26 @@ class DiyView extends BaseModel
     public function qrcode($condition, $type = "create")
     {
         $check_condition = array_column($condition, 2, 0);
-        $site_id = isset($check_condition[ 'site_id' ]) ? $check_condition[ 'site_id' ] : 0;
-
-        $diy_view_info = $this->getSiteDiyViewInfo($condition, 'site_id,name');
+        $site_id = isset($check_condition['site_id']) ? $check_condition['site_id'] : 0;
+    
+        $diy_view_info_res = $this->getSiteDiyViewInfo($condition, 'site_id,name');
         $page = $this->getPage();
-        $diy_view_info = $diy_view_info[ 'data' ];
+        $diy_view_info = isset($diy_view_info_res['data']) && is_array($diy_view_info_res['data']) ? $diy_view_info_res['data'] : [];
+        if (empty($diy_view_info) || empty($diy_view_info['name'])) {
+            return $this->error('自定义页面不存在或未配置');
+        }
         $data = [
             'app_type' => "all", // all为全部
             'type' => $type, // 类型 create创建 get获取
             'site_id' => $site_id,
             'data' => [
-                "name" => $diy_view_info[ 'name' ]
+                "name" => $diy_view_info['name']
             ],
             'page' => '/otherpages/diy/diy/diy',
             'qrcode_path' => 'upload/qrcode/diy',
-            'qrcode_name' => "diy_qrcode_" . $diy_view_info[ 'name' ],
+            'qrcode_name' => "diy_qrcode_" . $diy_view_info['name'],
         ];
-
+    
         if (!empty($site_id)) {
             $data[ 'qrcode_name' ] = "diy_qrcode_" . $diy_view_info[ 'name' ] . '_' . $site_id;
         }
@@ -499,34 +502,27 @@ class DiyView extends BaseModel
                     break;
                 case 'weapp':
                     $res = $config->getConfig([ [ 'site_id', '=', 0 ], [ 'app_module', '=', 'admin' ], [ 'config_key', '=', 'WEAPP_CONFIG' ] ]);
-                    if (!empty($res[ 'data' ])) {
-                        if (empty($res[ 'data' ][ 'value' ][ 'qrcode' ])) {
-                            $path[ $k ][ 'status' ] = 2;
-                            $path[ $k ][ 'message' ] = '未配置微信小程序';
-                        } else {
-                            $path[ $k ][ 'status' ] = 1;
-                            $path[ $k ][ 'img' ] = $res[ 'data' ][ 'value' ][ 'qrcode' ];
-                        }
-
-                    } else {
+                    $val = (!empty($res['data']) && isset($res['data']['value']) && is_array($res['data']['value'])) ? $res['data']['value'] : [];
+                    $qrcodeVal = isset($val['qrcode']) ? $val['qrcode'] : '';
+                    if ($qrcodeVal === '' || $qrcodeVal === null) {
                         $path[ $k ][ 'status' ] = 2;
                         $path[ $k ][ 'message' ] = '未配置微信小程序';
+                    } else {
+                        $path[ $k ][ 'status' ] = 1;
+                        $path[ $k ][ 'img' ] = $qrcodeVal;
                     }
                     break;
 
                 case 'wechat':
                     $res = $config->getConfig([ [ 'site_id', '=', 0 ], [ 'app_module', '=', 'admin' ], [ 'config_key', '=', 'WECHAT_CONFIG' ] ]);
-                    if (!empty($res[ 'data' ])) {
-                        if (empty($res[ 'data' ][ 'value' ][ 'qrcode' ])) {
-                            $path[ $k ][ 'status' ] = 2;
-                            $path[ $k ][ 'message' ] = '未配置微信公众号';
-                        } else {
-                            $path[ $k ][ 'status' ] = 1;
-                            $path[ $k ][ 'img' ] = $res[ 'data' ][ 'value' ][ 'qrcode' ];
-                        }
-                    } else {
+                    $val = (!empty($res['data']) && isset($res['data']['value']) && is_array($res['data']['value'])) ? $res['data']['value'] : [];
+                    $qrcodeVal = isset($val['qrcode']) ? $val['qrcode'] : '';
+                    if ($qrcodeVal === '' || $qrcodeVal === null) {
                         $path[ $k ][ 'status' ] = 2;
                         $path[ $k ][ 'message' ] = '未配置微信公众号';
+                    } else {
+                        $path[ $k ][ 'status' ] = 1;
+                        $path[ $k ][ 'img' ] = $qrcodeVal;
                     }
                     break;
             }

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>数据库迁移检查与视图映射指南</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto;line-height:1.6;margin:0;background:#f9fafb;color:#111}
+    header{background:#111827;color:#fff;padding:16px 20px}
+    main{max-width:900px;margin:20px auto;background:#fff;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+    h1,h2{margin:0}
+    .section{padding:20px;border-top:1px solid #eee}
+    .section:first-child{border-top:none}
+    pre{background:#0f172a;color:#e5e7eb;border-radius:6px;padding:12px;overflow:auto;font-size:12px}
+    code{font-family:Consolas,Menlo,monospace}
+    ul{padding-left:18px}
+    .tip{background:#fef3c7;border:1px solid #f59e0b;color:#92400e;padding:8px;border-radius:6px;margin:10px 0}
+    a{color:#2563eb;text-decoration:none}
+  </style>
+</head>
+<body>
+<header>
+  <h1>数据库迁移检查与视图映射指南</h1>
+</header>
+<main>
+  <div class="section">
+    <h2>目标</h2>
+    <ul>
+      <li>检查并补齐新表（基于 <code>addon/turntable/data/install.sql</code>）。</li>
+      <li>对比字段差异并输出报告（不自动变更字段）。</li>
+      <li>如命名不一致，提供视图映射建议以兼容旧代码。</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>执行差异与自动补齐缺失表</h2>
+    <div class="tip">确保 <code>config/database.php</code> 中的连接信息正确，数据库服务可达。</div>
+    <pre><code># 生成差异报告（默认基准SQL：turntable/install.sql）
+php scripts/db_diff.php
+
+# 自动执行缺失表DDL并生成日志
+php scripts/db_diff.php --apply
+
+# 日志位置
+scripts/db_diff.log</code></pre>
+    <ul>
+      <li>缺失表会自动执行 <code>CREATE TABLE</code>（替换 <code>{{prefix}}</code>）。</li>
+      <li>字段差异仅报告：<code>missing</code>/<code>extra</code> 字段，不自动执行 <code>ALTER TABLE</code>。</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>视图映射建议</h2>
+    <p>当旧代码依赖历史表名或字段名时，可使用 <code>CREATE VIEW</code> 构建兼容视图，避免大范围改动：</p>
+    <pre><code>-- 示例：若旧代码读取 old_lottery_record，而新表为 lottery_record
+CREATE VIEW old_lottery_record AS
+SELECT id, device_id, goods_id, result, created_at
+FROM lottery_record;
+
+-- 示例：字段名差异映射（将 new_field 暴露为 old_field）
+CREATE VIEW legacy_device_info AS
+SELECT id, device_sn AS old_device_sn, site_id, created_at
+FROM device_info;</code></pre>
+    <ul>
+      <li>视图应只读；更新操作仍应走新表。</li>
+      <li>如有复杂变换（如 JSON 字段拆分），可考虑创建物化表或触发器。</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>常见问题排查</h2>
+    <ul>
+      <li>连接失败（2002）：检查 <code>hostname</code>、<code>hostport</code>、<code>database</code>、<code>username</code>、<code>password</code>。</li>
+      <li>缺少权限：确保账号具备 <code>CREATE</code>、<code>ALTER</code>、<code>VIEW</code> 权限。</li>
+      <li>前缀为空：<code>config/database.php</code> 中 <code>prefix</code> 为空时，直接以实际表名创建。</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>关联文档</h2>
+    <p><a href="/api-contract.html">接口契约轻量文档</a> · 端点与响应</p>
+    <p><a href="/api-errors.html">错误码说明</a> · 统一响应与错误示例</p>
+  </div>
+</main>
+</body>
+</html>

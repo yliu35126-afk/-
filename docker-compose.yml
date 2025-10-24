@@ -1,0 +1,40 @@
+services:
+  niushop-mysql:
+    image: mysql:5.7
+    container_name: niushop-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: niushop
+      MYSQL_USER: niushop
+      MYSQL_PASSWORD: niushop
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --max_connections=300
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./b2b2c503.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    networks:
+      - niushop-net
+
+  niushop-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: niushop-web
+    depends_on:
+      - niushop-mysql
+    environment:
+      WEB_DOCUMENT_ROOT: /app/public
+    ports:
+      - "8200:80"
+    volumes:
+      - ./:/app
+      - ./docker/nginx-aliases.conf:/opt/docker/etc/nginx/vhost.common.d/niushop-aliases.conf:ro
+    networks:
+      - niushop-net
+
+volumes:
+  db_data:
+
+networks:
+  niushop-net:

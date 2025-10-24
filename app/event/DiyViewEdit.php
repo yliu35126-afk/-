@@ -30,17 +30,17 @@ class DiyViewEdit extends Controller
         $diy_view = new DiyViewModel();
 
         $shop = new Shop();
-        $shop_info = $shop->getShopInfo([ [ 'site_id', '=', $data[ 'site_id' ] ] ], 'group_id');
-        $shop_info = $shop_info[ 'data' ];
+        $shop_info_res = $shop->getShopInfo([[ 'site_id', '=', $data['site_id'] ]], 'group_id');
+        $shop_info = is_array($shop_info_res) ? ($shop_info_res['data'] ?? []) : [];
+        $group_id = isset($shop_info['group_id']) ? $shop_info['group_id'] : 0;
 
-
-        if ($data[ 'app_module' ] == 'shop') {
-
+        $addon_array = [];
+        if ($data['app_module'] == 'shop') {
             // 查询店铺套餐
             $shop_group_model = new ShopGroupModel();
-            $group_info = $shop_group_model->getGroupInfo([ 'group_id' => $shop_info[ 'group_id' ] ], 'addon_array');
-            $group_info = $group_info[ 'data' ];
-            $group_addon_array = $group_info[ 'addon_array' ] ?? '';
+            $group_info_res = $shop_group_model->getGroupInfo([ 'group_id' => $group_id ], 'addon_array');
+            $group_info = is_array($group_info_res) ? ($group_info_res['data'] ?? []) : [];
+            $group_addon_array = $group_info['addon_array'] ?? '';
 
             if (!empty($group_addon_array)) {
                 $addon_array = explode(',', $group_addon_array);
@@ -48,23 +48,23 @@ class DiyViewEdit extends Controller
         }
 
         $addon_array[] = '';
-        if (!empty($data[ 'addon_name' ])) {
-            $addon_array[] = $data[ 'addon_name' ];
+        if (!empty($data['addon_name'])) {
+            $addon_array[] = $data['addon_name'];
         }
 
-        if (!empty($data[ 'site_id' ])) {
+        if (!empty($data['site_id'])) {
             // 自定义模板组件集合
-            $data[ 'condition' ][] = [
+            $data['condition'][] = [
                 [ 'addon_name', 'in', $addon_array, 'or' ]
             ];
         }
 
-        $utils = $diy_view->getDiyViewUtilList($data[ 'condition' ]);
+        $utils = $diy_view->getDiyViewUtilList($data['condition']);
 
         $diy_view_info = [];
         // 推广码
         $qrcode_info = [];
-        if (!empty($data[ 'id' ])) {
+        if (!empty($data['id'])) {
             $diy_view_info = $diy_view->getSiteDiyViewDetail([
                 [ 'sdv.site_id', '=', $data[ 'site_id' ] ],
                 [ 'sdv.id', '=', $data[ 'id' ] ]
@@ -84,44 +84,48 @@ class DiyViewEdit extends Controller
             ]);
             $diy_view_info = $diy_view->getSiteDiyViewDetail($condition);
         }
-        if (!empty($diy_view_info) && !empty($diy_view_info[ 'data' ])) {
-            $diy_view_info = $diy_view_info[ 'data' ];
+        if (!empty($diy_view_info) && !empty($diy_view_info['data'])) {
+            $diy_view_info = $diy_view_info['data'];
         }
 
         if (!empty($qrcode_info)) {
-            $qrcode_info = $qrcode_info[ 'data' ];
+            $qrcode_info = $qrcode_info['data'] ?? [];
             // 目前只支持H5
-            if ($qrcode_info[ 'path' ][ 'h5' ][ 'status' ] != 1) {
+            $h5_status = 0;
+            if (isset($qrcode_info['path']) && isset($qrcode_info['path']['h5']) && isset($qrcode_info['path']['h5']['status'])) {
+                $h5_status = $qrcode_info['path']['h5']['status'];
+            }
+            if ($h5_status != 1) {
                 $qrcode_info = [];
             }
         }
 
         $diy_view_utils = [];
-        if (!empty($utils[ 'data' ])) {
+        if (!empty($utils['data'])) {
 
             // 先遍历，组件分类
-            foreach ($utils[ 'data' ] as $k => $v) {
+            foreach ($utils['data'] as $k => $v) {
                 $value = [];
-                $value[ 'type' ] = $v[ 'type' ];
-                $value[ 'type_name' ] = $diy_view->getTypeName($v[ 'type' ]);
-                $value[ 'list' ] = [];
+                $value['type'] = $v['type'] ?? '';
+                $value['type_name'] = $diy_view->getTypeName($v['type'] ?? '');
+                $value['list'] = [];
                 if (!in_array($value, $diy_view_utils)) {
                     array_push($diy_view_utils, $value);
                 }
             }
 
             // 遍历每一个组件，将其添加到对应的分类中
-            foreach ($utils[ 'data' ] as $k => $v) {
+            foreach ($utils['data'] as $k => $v) {
                 foreach ($diy_view_utils as $diy_k => $diy_v) {
-                    if ($diy_v[ 'type' ] == $v[ 'type' ]) {
-                        array_push($diy_view_utils[ $diy_k ][ 'list' ], $v);
+                    if (($diy_v['type'] ?? '') == ($v['type'] ?? '')) {
+                        array_push($diy_view_utils[$diy_k]['list'], $v);
                     }
                 }
             }
         }
 
         // 平台/城市分站端，组件的icon特殊处理
-        if ($data[ 'app_module' ] == 'admin' || $data[ 'app_module' ] == 'city') {
+        if ($data['app_module'] == 'admin' || $data['app_module'] == 'city') {
             foreach ($diy_view_utils as $k => $v) {
                 foreach ($v[ 'list' ] as $ck => $cv) {
                     if (!empty($cv[ 'icon' ])) {

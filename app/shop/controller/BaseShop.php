@@ -47,14 +47,23 @@ class BaseShop extends Controller
         //检测基础登录
         $user_model = new UserModel();
         $this->uid = $user_model->uid($this->app_module);
-        $this->url = request()->parseUrl();
-        $this->addon = request()->addon() ? request()->addon() : '';
+        /** @var \app\Request $req */
+        $req = request();
+        $this->url = $req->parseUrl();
+        $this->addon = $req->addon() ? $req->addon() : '';
         $this->user_info = $user_model->userInfo($this->app_module);
         $this->assign("user_info", $this->user_info);
         $this->site_id = $this->user_info[ "site_id" ] ?? 0;
         if (empty($this->uid)) {
-            $this->redirect(url("shop/login/login"));
-            exit();
+            /** @var \app\Request $req */
+            $req = request();
+            $currentModule = strtolower($req->module() ?? '');
+            $currentController = strtolower($req->controller() ?? '');
+            // 避免在登录页自身发生重定向循环
+            if (!($currentModule === 'shop' && $currentController === 'login')) {
+                $this->redirect(url("shop/login/login"));
+                exit();
+            }
         }
         if ($this->site_id == 0) {
             $this->redirect(url("shop/apply/index"));
@@ -134,7 +143,7 @@ class BaseShop extends Controller
             } else {
                 //选择了应用下的某个插件，则移除【应用管理】菜单，显示该插件下的菜单，并且标题名称改为插件名称
                 $addon_model = new Addon();
-                $addon_info = $addon_model->getAddonInfo([ [ 'name', '=', request()->addon() ] ], 'name,title');
+                $addon_info = $addon_model->getAddonInfo([ [ 'name', '=', $this->addon ] ], 'name,title');
                 $addon_info = $addon_info[ 'data' ] ?? [ 'name' => '', 'title' => '' ];
                 $promotion_menu_arr = [ 'PROMOTION_CENTER', 'PROMOTION_MEMBER', 'PROMOTION_TOOL' ];
                 foreach ($init_menu as $k => $v) {

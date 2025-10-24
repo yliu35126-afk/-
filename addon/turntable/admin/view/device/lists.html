@@ -1,0 +1,119 @@
+{extend name="app/admin/view/base.html"/}
+{block name="resources"}
+<style>
+  .layui-table-view td:last-child>div{overflow: inherit;}
+  .operation-wrap{position: relative;}
+  .layui-table-box{overflow: inherit;}
+  .layui-table-body{overflow: inherit;}
+</style>
+{/block}
+{block name="main"}
+<div class="layui-collapse ns-tips">
+  <div class="layui-colla-item">
+    <h2 class="layui-colla-title">操作提示</h2>
+    <ul class="layui-colla-content layui-show">
+      <li>管理设备与其绑定的抽奖盘。</li>
+    </ul>
+  </div>
+</div>
+
+<div class="ns-single-filter-box">
+  <button class="layui-btn ns-bg-color" onclick="add()">新增设备</button>
+  <div class="layui-form">
+    <div class="layui-input-inline">
+      <input type="text" name="keyword" value="" placeholder="设备SN关键词" class="layui-input" autocomplete="off">
+      <button type="button" class="layui-btn layui-btn-primary" lay-filter="search" lay-submit>
+        <i class="layui-icon">&#xe615;</i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="layui-tab ns-table-tab" lay-filter="device_tab">
+  <ul class="layui-tab-title">
+    <li class="layui-this" data-status="">全部</li>
+    <li data-status="1">启用</li>
+    <li data-status="0">禁用</li>
+  </ul>
+  <div class="layui-tab-content">
+    <table id="device_list" lay-filter="device_list"></table>
+  </div>
+</div>
+
+<script type="text/html" id="statusTpl">
+  {{#  if(d.status == 1){  }}
+  启用
+  {{#  }else{  }}
+  禁用
+  {{#  }  }}
+</script>
+
+<script type="text/html" id="action">
+  <div class="ns-table-btn">
+    <a class="layui-btn" lay-event="edit">编辑</a>
+    <a class="layui-btn" lay-event="del">删除</a>
+  </div>
+</script>
+{/block}
+
+{block name="script"}
+<script>
+layui.use(['form','element'], function(){
+  var form = layui.form,
+      element = layui.element,
+      table;
+  form.render();
+
+  element.on('tab(device_tab)', function(){
+    table.reload({
+      page: { curr: 1 },
+      where: { 'status': this.getAttribute('data-status') }
+    });
+  });
+
+  table = new Table({
+    elem: '#device_list',
+    url: ns.url('turntable://admin/device/lists'),
+    cols: [[
+      { field: 'id', title: 'ID', width: '8%' },
+      { field: 'device_sn', title: '设备SN', width: '20%' },
+      { field: 'board_id', title: '盘ID', width: '12%' },
+      { title: '状态', templet: '#statusTpl' },
+      { title: '操作', toolbar: '#action', width: '18%' }
+    ]]
+  });
+
+  form.on('submit(search)', function(data){
+    table.reload({
+      page: { curr: 1 },
+      where: { keyword: data.field.keyword }
+    });
+    return false;
+  });
+
+  window.add = function(){
+    location.href = ns.url('turntable://admin/device/add');
+  };
+
+  table.tool(function(obj){
+    var data = obj.data;
+    if (obj.event === 'edit') {
+      location.href = ns.url('turntable://admin/device/edit', { id: data.id });
+    } else if (obj.event === 'del') {
+      layer.confirm('确定删除该设备吗？', function(){
+        $.ajax({
+          url: ns.url('turntable://admin/device/delete'),
+          data: { id: data.id },
+          dataType: 'json',
+          type: 'POST',
+          success: function(res){
+            layer.msg(res.message);
+            if(res.code === 0){ table.reload(); }
+          }
+        });
+      });
+    }
+  });
+});
+</script>
+{/block}

@@ -1,0 +1,70 @@
+{extend name="app/admin/view/base.html"/}
+{block name="main"}
+<div class="layui-collapse ns-tips">
+  <div class="layui-colla-item">
+    <h2 class="layui-colla-title">操作提示</h2>
+    <ul class="layui-colla-content layui-show">
+      <li>修改抽奖盘信息并保存。</li>
+    </ul>
+  </div>
+</div>
+
+<div class="layui-form ns-form">
+  <input type="hidden" name="board_id" value="{$info.board_id}" />
+
+  <div class="layui-form-item">
+    <label class="layui-form-label">盘名</label>
+    <div class="layui-input-block">
+      <input type="text" name="name" value="{$info.name}" placeholder="请输入盘名" class="layui-input" autocomplete="off" />
+    </div>
+  </div>
+
+  <div class="layui-form-item">
+    <label class="layui-form-label">状态</label>
+    <div class="layui-input-block">
+      <input type="radio" name="status" value="1" title="启用" {if $info.status == 1}checked{/if} />
+      <input type="radio" name="status" value="0" title="禁用" {if $info.status == 0}checked{/if} />
+    </div>
+  </div>
+
+  <div class="layui-form-item">
+    <label class="layui-form-label">轮次控制</label>
+    <div class="layui-input-block">
+      <input type="radio" name="round_control" value="0" title="关闭" {if $info.round_control == 0}checked{/if} />
+      <input type="radio" name="round_control" value="1" title="开启" {if $info.round_control == 1}checked{/if} />
+    </div>
+  </div>
+
+  <div class="layui-form-item">
+    <div class="layui-input-block">
+      <button class="layui-btn ns-bg-color" lay-submit lay-filter="save">保存</button>
+      <button type="button" class="layui-btn layui-btn-primary" onclick="history.back()">返回</button>
+    </div>
+  </div>
+</div>
+{/block}
+
+{block name="script"}
+<script>
+layui.use(['form'], function(){
+  var form = layui.form;
+  form.render();
+
+  form.on('submit(save)', function(data){
+    $.ajax({
+      url: ns.url('turntable://admin/board/edit'),
+      data: data.field,
+      dataType: 'json',
+      type: 'POST',
+      success: function(res){
+        layer.msg(res.message);
+        if(res.code === 0){
+          location.href = ns.url('turntable://admin/board/lists');
+        }
+      }
+    });
+    return false;
+  });
+});
+</script>
+{/block}

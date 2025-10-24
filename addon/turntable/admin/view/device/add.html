@@ -1,0 +1,51 @@
+{extend name="app/admin/view/base.html"/}
+{block name="main"}
+<div class="layui-form ns-form">
+  <div class="layui-form-item">
+    <label class="layui-form-label">设备SN</label>
+    <div class="layui-input-block">
+      <input type="text" name="device_sn" value="" placeholder="设备序列号" class="layui-input">
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">盘ID</label>
+    <div class="layui-input-block">
+      <input type="number" name="board_id" value="" placeholder="绑定抽奖盘ID(可选)" class="layui-input">
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">状态</label>
+    <div class="layui-input-block">
+      <input type="radio" name="status" value="1" title="启用" checked>
+      <input type="radio" name="status" value="0" title="禁用">
+    </div>
+  </div>
+  <div class="ns-form-row">
+    <button class="layui-btn ns-bg-color" lay-submit lay-filter="save">保存</button>
+    <button class="layui-btn layui-btn-primary" onclick="history.back()">返回</button>
+  </div>
+</div>
+{/block}
+{block name="script"}
+<script>
+layui.use(['form'], function(){
+  var form = layui.form;
+  form.render();
+  form.on('submit(save)', function(data){
+    $.ajax({
+      url: ns.url('turntable://admin/device/add'),
+      data: data.field,
+      dataType: 'json',
+      type: 'POST',
+      success: function(res){
+        layer.msg(res.message);
+        if(res.code === 0){
+          location.href = ns.url('turntable://admin/device/lists');
+        }
+      }
+    });
+    return false;
+  });
+});
+</script>
+{/block}

@@ -1,0 +1,82 @@
+{extend name="app/admin/view/base.html"/}
+{block name="resources"}
+{/block}
+{block name="main"}
+<div class="layui-row layui-col-space15">
+  <div class="layui-col-md3">
+    <div class="layui-card">
+      <div class="layui-card-header">设备</div>
+      <div class="layui-card-body"><span id="metric_devices">-</span></div>
+    </div>
+  </div>
+  <div class="layui-col-md3">
+    <div class="layui-card">
+      <div class="layui-card-header">抽奖盘</div>
+      <div class="layui-card-body"><span id="metric_boards">-</span></div>
+    </div>
+  </div>
+  <div class="layui-col-md3">
+    <div class="layui-card">
+      <div class="layui-card-header">格子</div>
+      <div class="layui-card-body"><span id="metric_slots">-</span></div>
+    </div>
+  </div>
+  <div class="layui-col-md3">
+    <div class="layui-card">
+      <div class="layui-card-header">抽奖记录(总/今日)</div>
+      <div class="layui-card-body"><span id="metric_records_total">-</span> / <span id="metric_records_today">-</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="layui-row layui-col-space15">
+  <div class="layui-col-md4">
+    <div class="layui-card">
+      <div class="layui-card-header">分润金额(总)</div>
+      <div class="layui-card-body"><span id="metric_profit_total">-</span></div>
+    </div>
+  </div>
+  <div class="layui-col-md4">
+    <div class="layui-card">
+      <div class="layui-card-header">分润金额(今日)</div>
+      <div class="layui-card-body"><span id="metric_profit_today">-</span></div>
+    </div>
+  </div>
+  <div class="layui-col-md4">
+    <div class="layui-card">
+      <div class="layui-card-header">今日核销/结算</div>
+      <div class="layui-card-body"><span id="metric_verified_today">-</span> / <span id="metric_settled_today">-</span></div>
+    </div>
+  </div>
+</div>
+{/block}
+
+{block name="script"}
+<script>
+layui.use(['element'], function(){
+  function load(){
+    ns.nsajax({
+      url: ns.url('turntable://admin/dashboard/index'),
+      type: 'GET',
+      success: function(res){
+        var d = res.data || {};
+        document.getElementById('metric_devices').innerText = d.devices || 0;
+        document.getElementById('metric_boards').innerText = d.boards || 0;
+        document.getElementById('metric_slots').innerText = d.slots || 0;
+        document.getElementById('metric_records_total').innerText = d.records_total || 0;
+        document.getElementById('metric_records_today').innerText = d.records_today || 0;
+        document.getElementById('metric_profit_total').innerText = (d.profit_total || 0).toFixed ? (d.profit_total).toFixed(2) : d.profit_total;
+        document.getElementById('metric_profit_today').innerText = (d.profit_today || 0).toFixed ? (d.profit_today).toFixed(2) : d.profit_today;
+        document.getElementById('metric_verified_today').innerText = d.verified_today || 0;
+        document.getElementById('metric_settled_today').innerText = d.settled_today || 0;
+      },
+      error: function(xhr){
+        console && console.error && console.error('[dashboard] ajax error', xhr && xhr.status, xhr && xhr.responseText);
+        layer && layer.msg && layer.msg('加载统计失败，请稍后重试');
+      }
+    });
+  }
+  load();
+});
+</script>
+{/block}

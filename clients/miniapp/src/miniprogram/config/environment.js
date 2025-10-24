@@ -17,6 +17,7 @@ const envs = {
   },
   localhost: {
     name: '本机localhost',
+    // 绑定到 127.0.0.1，避免 Windows/DevTools 使用 IPv6 ::1 导致超时
     websocketUrl: 'ws://127.0.0.1:3001/socket.io/',
     apiBaseUrl: 'http://127.0.0.1:8000/index.php/api/'
   },
@@ -40,58 +41,20 @@ function getStored(key, def) {
   try { return wx.getStorageSync(key) || def; } catch (_) { return def; }
 }
 
-function setStored(key, val) {
-  try { wx.setStorageSync(key, val); } catch (_) {}
-}
-
-// 设置当前环境（已禁用动态切换，统一由代理/后端配置）
-function setEnv(mode, ip) {
-  // 切换到指定模式；开发默认使用 localhost，发布版仍强制 online
-  try {
-    const m = (mode || 'localhost').trim();
-    setStored(KEY_ENV_MODE, m);
-    if (ip) setStored(KEY_ENV_LAN_IP, ip);
-  } catch (_) {}
-}
-
-function resolveMode() {
-  // 默认以存储为准（开发默认 localhost），发布版（release）强制使用 online，避免误改导致走测试兜底
-  const stored = getStored(KEY_ENV_MODE, 'localhost');
-  let mode = stored;
-  try {
-    const info = wx.getAccountInfoSync && wx.getAccountInfoSync();
-    const ver = info && info.miniProgram && info.miniProgram.envVersion;
-    if (ver === 'release') {
-      mode = 'online';
-      // 若之前被改为 localhost/lan，发布版启动时自动纠正
-      if (stored !== 'online') {
-        setStored(KEY_ENV_MODE, 'online');
-      }
-    } else {
-      // 开发/体验版本均默认使用 localhost，便于本地联调
-      mode = 'localhost';
-      if (stored !== 'localhost') {
-        setStored(KEY_ENV_MODE, 'localhost');
-      }
-    }
-  } catch (_) {}
-  // 若开启强制线上模式，始终返回 online 并写入缓存
-  if (FORCE_ONLINE === true) {
-    if (stored !== 'online') {
-      setStored(KEY_ENV_MODE, 'online');
-    }
-    return 'online';
-  }
-  return mode;
-}
-
+// 获取当前环境配置（支持缓存切换）
 function getCurrentConfig() {
-  const mode = resolveMode();
-  if (mode === 'online') return envs.online;
-  if (mode === 'localhost') return envs.localhost;
-  // 局域网：优先使用已存IP，否则默认IP
-  const ip = getStored(KEY_ENV_LAN_IP, '192.168.1.2');
-  return formatLan(ip);
+  try {
+    const mode = getStored(KEY_ENV_MODE, 'localhost');
+    if (FORCE_ONLINE) return envs.online;
+    if (mode === 'localhost') return envs.localhost;
+    if (mode === 'lan') {
+      const ip = getStored(KEY_ENV_LAN_IP, '192.168.1.2');
+      return formatLan(ip);
+    }
+    return envs.online;
+  } catch (_) {
+    return envs.localhost;
+  }
 }
 
 // 生成用于 Socket.IO 握手的完整 wsUrl（附加 Engine.IO 必需参数）

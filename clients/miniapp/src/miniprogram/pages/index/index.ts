@@ -402,7 +402,7 @@ Page({
     let token = app.globalData.token || wx.getStorageSync('token');
     if (!token) {
       wx.showLoading({ title: '正在登录…' });
-      const ok = await app.ensureLogin?.();
+      const ok = typeof (app as any).ensureLogin === 'function' ? await (app as any).ensureLogin() : true;
       wx.hideLoading();
       if (!ok) {
         wx.showToast({ title: '请先登录后再抽奖', icon: 'none' });

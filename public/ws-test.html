@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WebSocket 联调说明与测试步骤</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto;line-height:1.6;margin:0;background:#f9fafb;color:#111}
+    header{background:#111827;color:#fff;padding:16px 20px}
+    main{max-width:900px;margin:20px auto;background:#fff;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+    h1,h2{margin:0}
+    .section{padding:20px;border-top:1px solid #eee}
+    .section:first-child{border-top:none}
+    pre{background:#0f172a;color:#e5e7eb;border-radius:6px;padding:12px;overflow:auto;font-size:12px}
+    code{font-family:Consolas,Menlo,monospace}
+    ul{padding-left:18px}
+    .tip{background:#fef3c7;border:1px solid #f59e0b;color:#92400e;padding:8px;border-radius:6px;margin:10px 0}
+    a{color:#2563eb;text-decoration:none}
+  </style>
+</head>
+<body>
+<header>
+  <h1>WebSocket 联调说明与测试步骤</h1>
+</header>
+<main>
+  <div class="section">
+    <h2>目标</h2>
+    <ul>
+      <li>验证 <code>lottery_result</code> 消息是否正确到达客户端并显示。</li>
+      <li>验证断线重连与心跳看门狗是否正常。</li>
+      <li>确保消息分发：<code>lottery_result</code>、<code>notification</code>、<code>system_message</code>。</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>小程序端测试脚本</h2>
+    <p>在微信开发者工具控制台执行：</p>
+    <pre><code>// 引入：clients/miniapp/src/miniprogram/utils/ws_integration_test.js
+// 运行
+wsTest.run({
+  wsUrl: require('../config/api.js').wsUrl,
+  onLottery: (payload) => console.log('lottery_result:', payload),
+});
+
+// 模拟断线
+data.socketTask.close({ code: 1000, reason: 'manual test' });
+
+// 观察重连过程与心跳日志</code></pre>
+    <div class="tip">若 <code>wsUrl</code> 为 socket.io 地址，确保服务端兼容微信 <code>wx.connectSocket</code> 或提供原生 WebSocket 端点。</div>
+  </div>
+
+  <div class="section">
+    <h2>服务端联调建议</h2>
+    <ul>
+      <li>统一消息结构：<code>{ type, payload, ts }</code>。</li>
+      <li>心跳：客户端每 25s 发送 <code>heartbeat</code>，服务端 30s 内无心跳则断开。</li>
+      <li>断线重连：指数退避，手动断开不重连。</li>
+    </ul>
+    <pre><code>// 抽奖结果示例消息（服务端推送 -> 客户端）
+{
+  "type": "lottery_result",
+  "payload": { "record_id": 98765, "result": "hit", "goods_id": 1001, "amount": 2.00 },
+  "ts": 1710000000
+}</code></pre>
+  </div>
+
+  <div class="section">
+    <h2>排查清单</h2>
+    <ul>
+      <li>确认 <code>wsUrl</code> 可达（局域网/localhost 替换为可访问域名）。</li>
+      <li>确认服务端允许跨域与小程序来源。</li>
+      <li>确认消息类型与字段名称大小写一致。</li>
+      <li>查看前端控制台日志，确保分发函数被调用。</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>关联文档</h2>
+    <p><a href="/api-contract.html">接口契约轻量文档</a> · WebSocket 契约</p>
+    <p><a href="/api-errors.html">错误码说明</a></p>
+    <p><a href="/db-migration.html">迁移指南</a></p>
+  </div>
+</main>
+</body>
+</html>

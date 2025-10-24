@@ -1,0 +1,79 @@
+{extend name="app/admin/view/base.html"/}
+{block name="main"}
+<div class="layui-card" style="margin-bottom: 15px;">
+  <div class="layui-card-header">当前价档与盘</div>
+  <div class="layui-card-body">
+    <div style="margin-bottom:8px;">
+      <strong>抽奖盘：</strong>
+      {if !empty($board_info)}
+        {$board_info.name|default='(未命名)'}
+        {if !empty($info.board_id)}
+          <a class="layui-btn layui-btn-xs" href="{\:ns.url('turntable://admin/board/edit', ['board_id'=>$info.board_id])}">查看/编辑盘</a>
+        {/if}
+      {else/}
+        <span style="color:#999;">未设置</span>
+        <a class="layui-btn layui-btn-xs" href="{\:ns.url('turntable://admin/board/lists')}">去设置</a>
+      {/if}
+    </div>
+    <div>
+      <strong>当前价档：</strong>
+      {if !empty($tier_info)}
+        {$tier_info.title|default=''} （￥{$tier_info.price|default='0.00'}）
+        <a class="layui-btn layui-btn-xs" href="{\:ns.url('turntable://admin/pricetier/edit', ['tier_id'=>$tier_info.tier_id])}">价档详情</a>
+      {else/}
+        <span style="color:#999;">未绑定</span>
+      {/if}
+      <a class="layui-btn layui-btn-primary layui-btn-xs" style="margin-left:8px;" href="{\:ns.url('turntable://admin/bind/lists', ['device_id'=>$info.id])}">管理该设备的绑定</a>
+    </div>
+  </div>
+</div>
+<div class="layui-form ns-form">
+  <input type="hidden" name="id" value="{$info.id}">
+  <div class="layui-form-item">
+    <label class="layui-form-label">设备SN</label>
+    <div class="layui-input-block">
+      <input type="text" name="device_sn" value="{$info.device_sn}" class="layui-input">
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">盘ID</label>
+    <div class="layui-input-block">
+      <input type="number" name="board_id" value="{$info.board_id}" class="layui-input">
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">状态</label>
+    <div class="layui-input-block">
+      <input type="radio" name="status" value="1" title="启用" {if $info.status==1}checked{/if}>
+      <input type="radio" name="status" value="0" title="禁用" {if $info.status==0}checked{/if}>
+    </div>
+  </div>
+  <div class="ns-form-row">
+    <button class="layui-btn ns-bg-color" lay-submit lay-filter="save">保存</button>
+    <button class="layui-btn layui-btn-primary" onclick="history.back()">返回</button>
+  </div>
+</div>
+{/block}
+{block name="script"}
+<script>
+layui.use(['form'], function(){
+  var form = layui.form;
+  form.render();
+  form.on('submit(save)', function(data){
+    $.ajax({
+      url: ns.url('turntable://admin/device/edit'),
+      data: data.field,
+      dataType: 'json',
+      type: 'POST',
+      success: function(res){
+        layer.msg(res.message);
+        if(res.code === 0){
+          location.href = ns.url('turntable://admin/device/lists');
+        }
+      }
+    });
+    return false;
+  });
+});
+</script>
+{/block}

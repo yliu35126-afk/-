@@ -88,8 +88,12 @@ class System extends BaseAdmin
             if ($tag == 'install') {
                 $res = $addon->install($addon_name);
                 return $res;
-            } else {
+            } elseif ($tag == 'uninstall') {
                 $res = $addon->uninstall($addon_name);
+                return $res;
+            } elseif ($tag == 'repair') {
+                // 仅执行安装事件，适合补齐表结构等场景
+                $res = $addon->repairInstall($addon_name);
                 return $res;
             }
         }
@@ -1100,7 +1104,7 @@ class System extends BaseAdmin
                 Db::execute($sql);
             }
             return json([ 'code' => 0, 'message' => '备份回滚成功!' ]);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return json([ 'code' => -1, 'message' => $e->getMessage() ]);
         }
     }

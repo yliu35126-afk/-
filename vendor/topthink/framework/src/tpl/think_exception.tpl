@@ -3,7 +3,9 @@
 if (!function_exists('parse_padding')) {
     function parse_padding($source)
     {
-        $length  = strlen(strval(count($source['source']) + $source['first']));
+        $first = (isset($source['first']) && is_numeric($source['first'])) ? (int)$source['first'] : 0;
+        $count = (isset($source['source']) && is_array($source['source'])) ? count($source['source']) : 0;
+        $length  = strlen(strval($count + $first));
         return 40 + ($length - 1) * 8;
     }
 }

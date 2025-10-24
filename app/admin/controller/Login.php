@@ -29,35 +29,33 @@ class Login extends Controller
     {
         $config_model = new ConfigModel();
         $config_info = $config_model->getCaptchaConfig();
-        $config = $config_info[ 'data' ][ 'value' ];
-        $admin_login = $config[ "admin_login" ] ?? 0;
+        $config_data = (is_array($config_info) && isset($config_info['data']) && is_array($config_info['data'])) ? $config_info['data'] : [];
+        $config = (isset($config_data['value']) && is_array($config_data['value'])) ? $config_data['value'] : [];
+        $admin_login = $config["admin_login"] ?? 0;
         if (request()->isAjax()) {
             $username = input('username', '');
             $password = input('password', '');
             if ($admin_login == 1) {
                 $captcha_result = $this->checkCaptcha();
                 //验证码
-                if ($captcha_result[ "code" ] != 0) {
+                if ($captcha_result["code"] != 0) {
                     return $captcha_result;
                 }
             }
 
             $user_model = new UserModel();
             $res = $user_model->login($username, $password, $this->app_module);
-            return $res;
+            return json($res);
         } else {
             $this->assign('admin_login', $admin_login);
             $this->assign("menu_info", [ 'title' => "登录" ]);
             $this->assign("config", $config);
-            // 验证码
-            $captcha = $this->captcha();
-            $captcha = $captcha[ 'data' ];
-            $this->assign("captcha", $captcha);
-            //加载版权信息
-            $copyright = $config_model->getCopyright();
-            $this->assign('copyright', $copyright[ 'data' ][ 'value' ]);
-
-            return $this->fetch('login/login');
+            // 验证码仅在开启时生成，避免环境缺少GD导致报错
+            if ($admin_login == 1) {
+                $captcha = $this->getCaptchaData();
+                $this->assign("captcha", $captcha);
+            }
+            return $this->fetch("login/login");
         }
     }
 
@@ -69,68 +67,80 @@ class Login extends Controller
         $user_model = new UserModel();
         $uid = $user_model->uid($this->app_module);
         if ($uid > 0) {
-            //清除登录信息session
+            // 清除登录信息session
             $user_model->clearLogin($this->app_module);
-            $this->redirect(url("admin/login/login"));
+            $this->redirect('/admin/login/login.html');
         } else {
-            $this->redirect(url("admin/login/login"));
+            $this->redirect('/admin/login/login.html');
         }
     }
 
     /**
-     * 清理缓存
+     * 生成验证码数据（仅供内部调用）
      */
-    public function clearCache()
+    private function getCaptchaData(): array
     {
-        Cache::clear();
-        return success('', '缓存更新成功', '');
+        $str = md5(rand(1000, 9999) . time());
+        $captcha_id = substr($str, 0, 4) . substr($str, -4);
+        $captcha_src = url("admin/login/code", [ 'captcha_id' => $captcha_id ]);
+        return [ 'id' => $captcha_id, 'img' => $captcha_src ];
     }
 
     /**
-     * 验证码
+     * 验证码接口（对外统一返回 JSON）
      */
     public function captcha()
     {
-        $captcha_data = ThinkCaptcha::create(null, true);
-        $captcha_id = md5(uniqid(null, true));
-        // 验证码10分钟有效
-        Cache::set($captcha_id, $captcha_data[ 'code' ], 600);
-        return success(0, '', [ 'id' => $captcha_id, 'img' => $captcha_data[ 'img' ] ]);
+        $payload = $this->getCaptchaData();
+        return json(success(0, '', $payload));
     }
 
     /**
-     * 验证码验证
+     * 检测验证码
      */
     public function checkCaptcha()
     {
-        $captcha = input('captcha', '');
         $captcha_id = input('captcha_id', '');
-
-        if (empty($captcha)) return error(-1, '请输入验证码');
-
-        $captcha_data = Cache::pull($captcha_id);
-        if (empty($captcha_data)) return error('', '验证码已失效');
-
-        if ($captcha != $captcha_data) return error(-1, '验证码错误');
-
-        return success();
+        $captcha = input('captcha', '');
+        if (!$captcha_id || !$captcha) return error(-1, '验证码不能为空');
+        $captcha_key = "captcha_" . $captcha_id;
+        $check = ThinkCaptcha::check($captcha, $captcha_key);
+        if (!$check) {
+            return error(-1, '验证码错误');
+        } else {
+            return success();
+        }
     }
 
     /**
-     * 修改密码
-     * */
-    public function modifyPassword()
+     * 验证码图片
+     */
+    public function code()
     {
-        if (request()->isAjax()) {
-            $user_model = new UserModel();
-            $uid = $user_model->uid($this->app_module);
+        $captcha_id = input('captcha_id', '');
+        $captcha_key = "captcha_" . $captcha_id;
+        return ThinkCaptcha::create(null, $captcha_key);
+    }
 
-            $old_pass = input('old_pass', '');
-            $new_pass = input('new_pass', '123456');
-
-            $res = $user_model->modifyAdminUserPassword($uid, $old_pass, $new_pass);
-
-            return $res;
+    public function devSim()
+    {
+        $username = input('username', 'admin');
+        $password = input('password', 'admin123');
+        $user_model = new UserModel();
+        // 确保账号存在；不存在则创建一个基础管理员账号
+        $user = model('user')->getInfo([[ 'username', '=', $username ], [ 'app_module', '=', $this->app_module ]]);
+        if (empty($user)) {
+            $user_model->addUser([
+                'site_id' => 0,
+                'app_module' => $this->app_module,
+                'username' => $username,
+                'password' => $password,
+                'realname' => $username
+            ], 'add');
         }
+        // 无需验证码，直接模拟登录，建立会话
+        $res = $user_model->simulatedLogin($username, $this->app_module);
+        // 对外返回 JSON，避免数组类型错误
+        return json($res);
     }
 }

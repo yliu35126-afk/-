@@ -87,5 +87,16 @@ class Request extends \think\Request
         $addon = $this->addon() ? $this->addon() . '://' : '';
         return $addon.$this->module().'/'.$this->controller().'/'.$this->action();
     }
+
+    /**
+     * 当前站点ID（用于少量辅助函数）
+     * 优先返回 0，若模块设置了站点上下文可在此扩展。
+     * @return int
+     */
+    public function siteid(): int
+    {
+        // 目前系统大多数场景平台为 0；如需站点上下文，请在 BaseShop/BaseAdmin 中设置并同步到这里。
+        return 0;
+    }
     
 }

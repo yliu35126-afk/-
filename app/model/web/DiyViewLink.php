@@ -54,6 +54,7 @@ class DiyViewLink extends BaseModel
                         $parent = $parent_menu_info['name'];
                         $level  = $parent_menu_info['level'] + 1;
                     } else {
+                        $parent = '';
                         $level = 1;
                     }
                 }
@@ -87,18 +88,18 @@ class DiyViewLink extends BaseModel
 
     /**
      * 菜单树转化为列表
-     * @param unknown $tree
-     * @param unknown $module
-     * @param unknown $port
+     * @param mixed $tree
+     * @param mixed $module
+     * @param mixed $port
      * @param string $pid
-     * @param number $level
+     * @param int $level
      */
     private function linkTreeToList($tree, $addon = '', $parent = '', $level = 1)
     {
         if (is_array($tree)) {
             foreach ($tree as $key => $value) {
                 $item  = [
-
+    
                     'addon_name'       => $addon,
                     'name'             => $value['name'],
                     'title'            => $value['title'],

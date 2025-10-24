@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>接口错误码说明</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto;line-height:1.6;margin:0;background:#f9fafb;color:#111}
+    header{background:#111827;color:#fff;padding:16px 20px}
+    main{max-width:900px;margin:20px auto;background:#fff;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+    h1,h2{margin:0}
+    .section{padding:20px;border-top:1px solid #eee}
+    .section:first-child{border-top:none}
+    table{width:100%;border-collapse:collapse}
+    th,td{border:1px solid #e5e7eb;padding:8px;text-align:left;font-size:14px}
+    th{background:#f3f4f6}
+    code,pre{font-family:Consolas,Menlo,monospace}
+    pre{background:#0f172a;color:#e5e7eb;border-radius:6px;padding:12px;overflow:auto;font-size:12px}
+    .tip{background:#fef3c7;border:1px solid #f59e0b;color:#92400e;padding:8px;border-radius:6px;margin:10px 0}
+    a{color:#2563eb;text-decoration:none}
+  </style>
+</head>
+<body>
+<header>
+  <h1>接口错误码说明 · 统一契约</h1>
+</header>
+<main>
+  <div class="section">
+    <h2>统一响应结构</h2>
+    <pre><code>{
+  "code": 1,        // 成功=1，失败=0
+  "data": { ... },  // 业务数据
+  "msg": "ok"      // 说明信息
+}</code></pre>
+    <div class="tip">与前端 <code>clients/miniapp/src/miniprogram/config/api.js</code> 中的 <code>responseFormat</code> 保持一致。</div>
+  </div>
+
+  <div class="section">
+    <h2>错误码定义</h2>
+    <table>
+      <thead>
+        <tr><th>code</th><th>说明</th><th>典型场景</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td>成功</td><td>业务处理成功</td></tr>
+        <tr><td>0</td><td>失败</td><td>通用错误（参数非法、库存不足、风控拦截）</td></tr>
+        <tr><td>-1</td><td>参数错误</td><td>必填字段缺失、类型不匹配</td></tr>
+        <tr><td>-2</td><td>权限不足</td><td>用户未授权、角色不匹配</td></tr>
+        <tr><td>401</td><td>Token 过期</td><td>登录态过期、需刷新 Token</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>错误响应示例</h2>
+    <pre><code>// 参数缺失
+{ "code": -1, "data": null, "msg": "tier_id 必填" }
+
+// 登录过期
+{ "code": 401, "data": null, "msg": "token 过期，请重新登录" }
+
+// 库存不足
+{ "code": 0, "data": { "goods_id": 1001 }, "msg": "库存不足" }</code></pre>
+  </div>
+
+  <div class="section">
+    <h2>接口对接注意事项</h2>
+    <ul>
+      <li>所有接口返回结构遵循统一格式，前端以 <code>code</code> 判断成功与否。</li>
+      <li>分页、列表类接口建议返回 <code>list</code>、<code>total</code> 字段。</li>
+      <li>支付、抽奖等异步流程需结合 WebSocket 或轮询获取结果。</li>
+      <li>错误信息 <code>msg</code> 应可直接在前端提示给用户。</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h2>关联文档</h2>
+    <p><a href="/api-contract.html">接口契约轻量文档</a> · 包含端点与响应示例</p>
+  </div>
+</main>
+</body>
+</html>

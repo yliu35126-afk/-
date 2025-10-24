@@ -1,54 +1,24 @@
 <?php
-/**
- * Niushop商城系统 - 团队十年电商经验汇集巨献!
- * =========================================================
- * Copy right 2019-2029 上海牛之云网络科技有限公司, 保留所有权利。
- * ----------------------------------------------
- * 官方网址: https://www.niushop.com
- * 这不是一个自由软件！您只能在不用于商业目的的前提下对程序代码进行修改和使用。
- * 任何企业和个人不允许对程序代码以任何形式任何目的再发布。
- * =========================================================
- */
-
 namespace addon\turntable\api\controller;
 
 use app\api\controller\BaseApi;
-use app\model\games\Games;
-use app\model\games\Record;
+use addon\turntable\model\Lottery as LotteryModel;
 
-/**
- * 幸运抽奖
- */
 class Turntable extends BaseApi
 {
-
-	/**
-	 * 基础信息
-	 */
-	public function info()
-	{
-        $site_id = isset($this->params[ 'site_id' ]) ? $this->params[ 'site_id' ] : 0;
-	    $game_id = $this->params['id'] ?? 0;
-        $game = new Games();
-        $info = $game->getGamesInfo([ ['game_id', '=', $game_id], ['site_id', '=', $site_id ], ['game_type', '=', 'turntable'] ], 'game_id,game_name,points,start_time,end_time,status,remark,no_winning_desc,no_winning_img,is_show_winner,level_id,level_name,join_type,join_frequency');
-        if (!empty($info['data'])) {
-            // 奖项
-            $game_ward = $game->getGameAward([ ['game_id', '=', $game_id] ], 'award_id,award_name,award_img');
-            $game_ward = $game_ward['data'];
-            $not_winning = [  'award_id' => -1, 'award_name' => '谢谢参与', 'award_img' => $info['data']['no_winning_img'] ];
-            if (count($game_ward) < 7) {
-                $num = 8 - count($game_ward);
-                for ($i = 0; $i < $num; $i ++) {
-                    array_push($game_ward, $not_winning);
-                }
-                shuffle($game_ward);
-            } else {
-                array_push($game_ward, $not_winning);
-            }
-            $info['data']['award'] = $game_ward;
-            // 中奖名单
+    /**
+     * 获取游戏详情
+     */
+    public function info()
+    {
+        $game = new \app\model\games\Games();
+        $game_id = $this->params['game_id'] ?? 0;
+        $site_id = $this->params['site_id'] ?? 0;
+        $info = $game->getGamesDetail($site_id, $game_id);
+        if ($info['code'] == 0) {
+            // 抽奖记录
             if ($info['data']['is_show_winner']) {
-                $record = new Record();
+                $record = new \app\model\games\Record();
                 $record_data = $record->getGamesDrawRecordPageList([ ['game_id', '=', $game_id], ['is_winning', '=', 1] ], 1, 10, 'create_time desc', 'member_nick_name,award_name,create_time');
                 $info['data']['draw_record'] = $record_data['data']['list'];
             }
@@ -64,17 +34,187 @@ class Turntable extends BaseApi
     }
 
     /**
-     * 抽奖
-     * @return false|string
+     * 16格抽奖：奖品列表
      */
-    public function lottery(){
+    public function prizeList()
+    {
+        $lottery = new LotteryModel();
+        $site_id   = $this->params['site_id'] ?? 0;
+        $device_sn = $this->params['device_sn'] ?? '';
+        $device_id = $this->params['device_id'] ?? 0;
+        $board_id  = $this->params['board_id'] ?? 0;
+
+        // 兼容 device_id
+        if (!$device_sn && $device_id) {
+            $device = model('device_info')->getInfo([['device_id', '=', $device_id]], '*');
+            if (!empty($device)) {
+                $device_sn = $device['device_sn'];
+                $board_id = $board_id ?: ($device['board_id'] ?? 0);
+            }
+        }
+
+        $res = $lottery->prizeList([
+            'site_id'   => $site_id,
+            'device_sn' => $device_sn,
+            'device_id' => $device_id,
+            'board_id'  => $board_id,
+        ]);
+        return $this->response($res);
+    }
+
+    /**
+     * 16格抽奖：抽一次
+     */
+    public function draw()
+    {
         $token = $this->checkToken();
         if ($token['code'] < 0) return $this->response($token);
-        $site_id = isset($this->params[ 'site_id' ]) ? $this->params[ 'site_id' ] : 0;
-        $game_id = $this->params['id'];
+        $lottery = new LotteryModel();
+        $site_id   = $this->params['site_id'] ?? 0;
+        $device_sn = $this->params['device_sn'] ?? '';
+        $device_id = $this->params['device_id'] ?? 0;
+        $board_id  = $this->params['board_id'] ?? 0;
+        $tier_id   = $this->params['tier_id'] ?? 0;
 
-        $game = new Games();
-        $res = $game->lottery($game_id, $this->member_id, $site_id);
+        // 兼容 device_id
+        if (!$device_sn && $device_id) {
+            $device = model('device_info')->getInfo([['device_id', '=', $device_id]], '*');
+            if (!empty($device)) {
+                $device_sn = $device['device_sn'];
+                $board_id = $board_id ?: ($device['board_id'] ?? 0);
+            }
+        }
+
+        $res = $lottery->draw([
+            'member_id' => $this->member_id,
+            'site_id'   => $site_id,
+            'device_sn' => $device_sn,
+            'device_id' => $device_id,
+            'board_id'  => $board_id,
+            'tier_id'   => $tier_id,
+        ]);
+        return $this->response($res);
+    }
+
+    /**
+     * 收件信息填写
+     */
+    public function address()
+    {
+        $token = $this->checkToken();
+        if ($token['code'] < 0) return $this->response($token);
+
+        $record_id = $this->params['record_id'] ?? 0;
+        if (!$record_id) return $this->response($this->error('', '缺少 record_id'));
+
+        // 收件信息（最小必填）
+        $addr = [
+            'name'         => $this->params['name'] ?? '',
+            'mobile'       => $this->params['mobile'] ?? '',
+            'province_id'  => intval($this->params['province_id'] ?? 0),
+            'city_id'      => intval($this->params['city_id'] ?? 0),
+            'district_id'  => intval($this->params['district_id'] ?? 0),
+            'address'      => $this->params['address'] ?? '',
+            'full_address' => $this->params['full_address'] ?? '',
+            'longitude'    => $this->params['longitude'] ?? '',
+            'latitude'     => $this->params['latitude'] ?? '',
+        ];
+        if (!$addr['name'] || !$addr['mobile'] || !$addr['address']) {
+            return $this->response($this->error('', '地址信息不完整'));
+        }
+
+        $record = model('lottery_record')->getInfo([['record_id', '=', $record_id], ['member_id', '=', $this->member_id]], '*');
+        if (empty($record)) return $this->response($this->error('', '记录不存在'));
+        if (($record['prize_type'] ?? 'thanks') !== 'goods') {
+            return $this->response($this->error('', '非实物奖品无需填写地址'));
+        }
+
+        // 写入扩展信息
+        $ext = json_decode($record['ext'] ?: '{}', true);
+        $ext['shipping_address'] = $addr;
+        model('lottery_record')->update(['ext' => json_encode($ext, JSON_UNESCAPED_UNICODE)], [['record_id', '=', $record_id]]);
+
+        return $this->response($this->success(['record_id' => $record_id]));
+    }
+
+    /**
+     * 到店核销：校验核销码，更新奖励单状态为 verified
+     */
+    public function verify()
+    {
+        $token = $this->checkToken();
+        if ($token['code'] < 0) return $this->response($token);
+
+        $record_id  = intval($this->params['record_id'] ?? 0);
+        $verify_code = strtoupper(trim($this->params['verify_code'] ?? ''));
+        if (!$record_id || !$verify_code) return $this->response($this->error('', '缺少参数'));
+
+        $record = model('lottery_record')->getInfo([['record_id', '=', $record_id], ['member_id', '=', $this->member_id]], '*');
+        if (empty($record)) return $this->response($this->error('', '记录不存在'));
+        if (($record['prize_type'] ?? 'thanks') !== 'goods') return $this->response($this->error('', '非实物奖品无需核销'));
+
+        $ext = json_decode($record['ext'] ?: '{}', true);
+        $order = $ext['order'] ?? [];
+        if (empty($order) || strtoupper($order['verify_code'] ?? '') !== $verify_code) {
+            return $this->response($this->error('', '核销码不正确'));
+        }
+        if (($order['status'] ?? '') === 'verified') {
+            return $this->response($this->success(['record_id' => $record_id, 'status' => 'verified']));
+        }
+        $order['status'] = 'verified';
+        $ext['order'] = $order;
+        model('lottery_record')->update(['ext' => json_encode($ext, JSON_UNESCAPED_UNICODE)], [['record_id', '=', $record_id]]);
+
+        return $this->response($this->success(['record_id' => $record_id, 'status' => 'verified']));
+    }
+
+    /**
+     * 抽奖记录：返回当前会员或指定设备的抽奖分页列表
+     * 路由：GET /addons/turntable/api/record?page=&page_size=&device_id=
+     */
+    public function record()
+    {
+        $lottery   = new LotteryModel();
+        $page      = intval($this->params['page'] ?? 1);
+        $page_size = intval($this->params['page_size'] ?? 10);
+        $device_id = intval($this->params['device_id'] ?? 0);
+
+        // token 可选：有则按会员筛选；无则仅允许按 device_id 或返回空列表以保护隐私
+        $member_id = 0;
+        $token = $this->checkToken();
+        if ($token['code'] == 0) {
+            $member_id = $this->member_id;
+        }
+
+        $res = $lottery->record([
+            'member_id' => $member_id,
+            'device_id' => $device_id,
+            'page'      => $page,
+            'page_size' => $page_size,
+        ]);
+
+        if ($res['code'] == 0) {
+            $data = $res['data'];
+            $list = $data['list'] ?? [];
+            $safe_list = [];
+            foreach ($list as $row) {
+                $ext = json_decode($row['ext'] ?? '{}', true);
+                $order = $ext['order'] ?? [];
+                $row['order'] = $order;
+                $row['shipping_address'] = $ext['shipping_address'] ?? [];
+                $row['verify_status'] = (($order['status'] ?? '') === 'verified') ? 'verified' : 'pending';
+                $safe_list[] = $row;
+            }
+            // 未登录且未按设备筛选，则不返回公共数据
+            if ($member_id == 0 && $device_id == 0) {
+                $data['list'] = [];
+                $data['count'] = 0;
+            } else {
+                $data['list'] = $safe_list;
+            }
+            $res = $this->success($data);
+        }
+
         return $this->response($res);
     }
 }

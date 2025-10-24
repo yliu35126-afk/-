@@ -1,0 +1,124 @@
+{extend name="app/admin/view/base.html"/}
+{block name="main"}
+<div class="layui-collapse ns-tips">
+  <div class="layui-colla-item">
+    <h2 class="layui-colla-title">操作提示</h2>
+    <ul class="layui-colla-content layui-show">
+      <li>已彻底改为按系统用户组结算；仅填写用户组分润。</li>
+      <li>这里计算与展示方式按金额填写（单位：元），新增用户组自动出现。</li>
+      <li>总比例不能超过 100%（按各组金额/价档金额校验）。</li>
+    </ul>
+  </div>
+</div>
+
+<div class="layui-form ns-form">
+  <div class="layui-form-item">
+    <label class="layui-form-label">标题</label>
+    <div class="layui-input-block">
+      <input type="text" name="title" placeholder="请输入价档标题" class="layui-input" autocomplete="off" />
+    </div>
+  </div>
+
+  <div class="layui-form-item">
+    <label class="layui-form-label">金额</label>
+    <div class="layui-input-block">
+      <input type="number" step="0.01" min="0" name="price" placeholder="请输入金额(元)" class="layui-input" autocomplete="off" />
+    </div>
+  </div>
+
+  <div class="layui-form-item">
+    <label class="layui-form-label">状态</label>
+    <div class="layui-input-block">
+      <input type="radio" name="status" value="1" title="启用" checked />
+      <input type="radio" name="status" value="0" title="禁用" />
+    </div>
+  </div>
+
+
+  <!-- 动态系统角色（用户组）同步展示 -->
+  <fieldset class="layui-elem-field">
+    <legend>系统角色分润</legend>
+    <div class="layui-field-box">
+      {volist name="group_list" id="group"}
+      <div class="layui-form-item">
+        <label class="layui-form-label">{$group.group_name}</label>
+        <div class="layui-input-inline">
+          <input type="number" step="0.01" min="0" class="layui-input role-rate" data-group-id="{$group.group_id}" placeholder="请输入金额(元)" />
+        </div>
+        <div class="layui-form-mid">金额(元)</div>
+      </div>
+      {/volist}
+    </div>
+  </fieldset>
+
+  <!-- 隐藏字段：最终提交的 JSON -->
+  <input type="hidden" name="profit_json" />
+
+  <div class="layui-form-item">
+    <div class="layui-input-block">
+      <button class="layui-btn ns-bg-color" lay-submit lay-filter="save">保存</button>
+      <button type="button" class="layui-btn layui-btn-primary" onclick="history.back()">返回</button>
+    </div>
+  </div>
+</div>
+{/block}
+
+{block name="script"}
+<script>
+layui.use(['form'], function(){
+  var form = layui.form;
+  form.render();
+
+  function collectProfitMap(){
+    var map = {};
+    // 核心角色
+    $('.role-rate[data-role-key]').each(function(){
+      var key = $(this).data('role-key');
+      var val = $(this).val();
+      if (val !== '' && !isNaN(val)) map[key] = parseFloat(val);
+    });
+    // 仅系统角色（用户组）
+    $('.role-rate[data-group-id]').each(function(){
+      var gid = $(this).data('group-id');
+      var val = $(this).val();
+      if (val !== '' && !isNaN(val)) map['group_' + gid] = parseFloat(val);
+    });
+    return map;
+  }
+
+  function validateTotalNotExceedPrice(){
+    var price = parseFloat($('input[name="price"]').val() || '0');
+    var sum = 0;
+    $('.role-rate[data-group-id]').each(function(){
+      var v = parseFloat($(this).val() || '0');
+      if (!isNaN(v)) sum += v;
+    });
+    if (price > 0 && (sum - price) > 1e-6) {
+      layer.msg('各用户组金额合计不可超过价档金额');
+      return false;
+    }
+    return true;
+  }
+
+  form.on('submit(save)', function(data){
+    if (!validateTotalNotExceedPrice()) return false;
+    var profit = collectProfitMap();
+    data.field.profit_json = JSON.stringify(profit);
+    // 提交
+    $.ajax({
+      url: ns.url('turntable://admin/pricetier/add'),
+      data: data.field,
+      dataType: 'json',
+      type: 'POST',
+      success: function(res){
+        layer.msg(res.message);
+        if(res.code === 0){
+          location.href = ns.url('turntable://admin/pricetier/lists');
+        }
+      }
+    });
+    return false;
+  });
+});
+</script>
+{/block}

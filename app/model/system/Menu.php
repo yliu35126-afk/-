@@ -124,25 +124,24 @@ class Menu extends BaseModel
      * @param $addon
      * @return array
      */
-	public function refreshMenu($app_module, $addon)
-	{
-		if (empty($addon)) {
-			$tree_name = 'config/menu_' . $app_module . '.php';
-		} else {
-			$tree_name = 'addon/' . $addon . '/config/menu_' . $app_module . '.php';
-			
-		}
-		$tree = require $tree_name;
-		$list = $this->getAddonMenuList($tree, $app_module, $addon);
-		if (!empty($list)) {
-			model('menu')->delete([ [ 'app_module', "=", $app_module ], [ 'addon', "=", $addon ] ]);
-			$res = model('menu')->addList($list);
-			return $this->success($res);
-		} else {
-			return $this->success();
-		}
-		
-	}
+    public function refreshMenu($app_module, $addon)
+    {
+        if (empty($addon)) {
+            // 使用绝对路径，避免在 public 目录作为工作目录时 require 失败
+            $tree_name = root_path() . 'config/menu_' . $app_module . '.php';
+        } else {
+            $tree_name = root_path() . 'addon/' . $addon . '/config/menu_' . $app_module . '.php';
+        }
+        $tree = require $tree_name;
+        $list = $this->getAddonMenuList($tree, $app_module, $addon);
+        if (!empty($list)) {
+            model('menu')->delete([ [ 'app_module', "=", $app_module ], [ 'addon', "=", $addon ] ]);
+            $res = model('menu')->addList($list);
+            return $this->success($res);
+        } else {
+            return $this->success();
+        }
+    }
 
     /**
      * 删除菜单

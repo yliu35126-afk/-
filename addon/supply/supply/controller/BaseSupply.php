@@ -62,8 +62,11 @@ class BaseSupply extends Controller
         //检测基础登录
         $user_model      = new UserModel();
         $this->uid       = $user_model->uid($this->app_module);
-        $this->url       = request()->parseUrl();
-        $this->addon     = request()->addon() ? request()->addon() : '';
+        /** @var \app\Request $req */
+        $req = request();
+        $this->url       = $req->parseUrl();
+        $this->addon     = $req->addon() ? $req->addon() : '';
+
         $this->user_info = $user_model->userInfo($this->app_module);
         $this->assign("user_info", $this->user_info);
         $this->supply_id   = $this->user_info["site_id"] ?? 0;
@@ -138,7 +141,7 @@ class BaseSupply extends Controller
             } else {
                 //选择了应用下的某个插件，则移除【应用管理】菜单，显示该插件下的菜单，并且标题名称改为插件名称
                 $addon_model = new Addon();
-                $addon_info  = $addon_model->getAddonInfo([['name', '=', request()->addon()]], 'name,title');
+                $addon_info  = $addon_model->getAddonInfo([[ 'name', '=', $this->addon ]], 'name,title');
                 $addon_info  = $addon_info['data'];
                 foreach ($init_menu as $k => $v) {
                     if ($v['selected']) {

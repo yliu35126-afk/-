@@ -232,10 +232,15 @@ Page({
         if (res.confirm) {
           const app = getApp<IAppOption>();
           if (app.globalData.socketTask) {
-            app.globalData.socketTask?.close?.({
-              code: 1000,
-              reason: '用户主动断开'
-            });
+            const st = app.globalData.socketTask as any;
+            if (st && typeof st.close === 'function') {
+              st.close({
+                code: 1000,
+                reason: '用户主动断开'
+              });
+            } else if (st && typeof st.disconnect === 'function') {
+              st.disconnect();
+            }
             
             // 清理全局状态
             app.globalData.socketTask = undefined;

@@ -26,3 +26,8 @@ web.config
 /clients/*/dist/
 /clients/*/build/
 /clients/*/node_modules/
+
+# Ignore static images in app views
+/public/app/*/view/public/img/
+# Optional: ignore built map files
+/public/app/*/view/public/css/*.map

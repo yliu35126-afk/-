@@ -149,8 +149,9 @@ class BaseApi
     private function getLang()
     {
         $default_lang = config("lang.default_lang");
-        $addon = request()->addon();
-        $addon = isset($addon) ? $addon : '';
+        /** @var \app\Request $req */
+        $req = request();
+        $addon = $req->addon() ?: '';
         $cache_common = Cache::get("lang_app/api/lang/" . $default_lang);
         if (empty($cache_common)) {
             $cache_common = include 'app/api/lang/' . $default_lang . '.php';
@@ -193,8 +194,9 @@ class BaseApi
      */
     private function getCode()
     {
-        $addon = request()->addon();
-        $addon = isset($addon) ? $addon : '';
+        /** @var \app\Request $req */
+        $req = request();
+        $addon = $req->addon() ?: '';
         $cache_common = Cache::get("lang_code_app/api/lang");
 
         if (!empty($addon)) {

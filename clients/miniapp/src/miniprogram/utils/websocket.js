@@ -1,5 +1,6 @@
 // utils/websocket.js
 const config = require('../config/api.js');
+const env = require('../config/environment.js');
 
 class WebSocketManager {
   constructor() {
@@ -7,58 +8,78 @@ class WebSocketManager {
     this.isConnected = false;
     this.reconnectTimer = null;
     this.reconnectCount = 0;
-    this.maxReconnectCount = 5;
+    this.manualClose = false;
+    this.isConnecting = false;
+    this.heartbeatTimer = null;
+    this.watchdogTimer = null;
+    this.lastMessageAt = 0;
+    this.listeners = {};
+    this.maxReconnectCount = (config.websocket && config.websocket.maxReconnectAttempts) || 5;
+    this.baseReconnectInterval = (config.websocket && config.websocket.reconnectInterval) || 3000;
   }
   
   // 连接WebSocket
   connect() {
+    // 防止并发连接和重复连接
+    if (this.isConnecting || this.isConnected) return;
+    this.manualClose = false;
+    this.isConnecting = true;
     const token = wx.getStorageSync('token');
     if (!token) {
       console.log('未登录，无法连接WebSocket');
+      this.isConnecting = false;
       return;
     }
-    
+    const base = env.getWebSocketUrl();
+    const url = `${base}&token=${encodeURIComponent(token)}`;
     this.socket = wx.connectSocket({
-      url: `${config.wsUrl}?token=${token}`,
-      success: () => {
-        console.log('WebSocket连接成功');
-      },
-      fail: (error) => {
-        console.error('WebSocket连接失败:', error);
-      }
+      url,
+      success: () => { console.log('WebSocket连接发起'); },
+      fail: (error) => { console.error('WebSocket连接失败:', error); this.isConnecting = false; }
     });
+    if (this.socket && typeof this.socket.onOpen === 'function') {
+      this.socket.onOpen(() => {
+        console.log('WebSocket已打开');
+        this.isConnected = true;
+        this.isConnecting = false;
+        this.reconnectCount = 0;
+        this.lastMessageAt = Date.now();
+        this.startHeartbeat();
+      });
+    }
     
-    this.socket?.onOpen?.(() => {
-      console.log('WebSocket已打开');
-      this.isConnected = true;
-      this.reconnectCount = 0;
-      
-      // 发送心跳
-      this.startHeartbeat();
-    });
+    if (this.socket && typeof this.socket.onMessage === 'function') {
+      this.socket.onMessage((message) => {
+        try {
+          const data = JSON.parse(message.data);
+          this.lastMessageAt = Date.now();
+          this.handleMessage(data);
+        } catch (error) {
+          console.error('解析WebSocket消息失败:', error);
+        }
+      });
+    }
     
-    this.socket?.onMessage?.((message) => {
-      try {
-        const data = JSON.parse(message.data);
-        this.handleMessage(data);
-      } catch (error) {
-        console.error('解析WebSocket消息失败:', error);
-      }
-    });
+    if (this.socket && typeof this.socket.onClose === 'function') {
+      this.socket.onClose(() => {
+        console.log('WebSocket连接关闭');
+        this.isConnected = false;
+        this.isConnecting = false;
+        this.stopHeartbeat();
+        if (this.manualClose) {
+          console.log('手动关闭，不进行重连');
+          return;
+        }
+        this.reconnect();
+      });
+    }
     
-    this.socket?.onClose?.(() => {
-      console.log('WebSocket连接关闭');
-      this.isConnected = false;
-      this.stopHeartbeat();
-      
-      // 自动重连
-      this.reconnect();
-    });
-    
-    this.socket?.onError?.((error) => {
-      console.error('WebSocket错误:', error);
-      this.isConnected = false;
-    });
+    if (this.socket && typeof this.socket.onError === 'function') {
+      this.socket.onError((error) => {
+        console.error('WebSocket错误:', error);
+        this.isConnected = false;
+      });
+    }
   }
   
   // 处理接收到的消息
@@ -70,7 +91,10 @@ class WebSocketManager {
     }
     
     const { type, payload } = data;
-    
+    // 事件分发
+    if (type && this.listeners[type]) {
+      try { this.listeners[type].forEach(fn => { try { fn(payload); } catch(_){} }); } catch(_) {}
+    }
     switch (type) {
       case 'lottery_result':
         // 抽奖结果通知
@@ -83,6 +107,10 @@ class WebSocketManager {
       case 'system_message':
         // 系统消息
         this.handleSystemMessage(payload);
+        break;
+      case 'pong':
+        // 服务器心跳响应
+        this.lastMessageAt = Date.now();
         break;
       default:
         console.log('未知消息类型:', type);
@@ -121,8 +149,8 @@ class WebSocketManager {
   
   // 发送消息
   send(data) {
-    if (this.isConnected && this.socket) {
-      this.socket?.send?.({
+    if (this.isConnected && this.socket && typeof this.socket.send === 'function') {
+      this.socket.send({
         data: JSON.stringify(data)
       });
     }
@@ -130,17 +158,26 @@ class WebSocketManager {
   
   // 心跳
   startHeartbeat() {
-    this.heartbeatTimer = setInterval(() => {
-      if (this.isConnected) {
-        this.send({ type: 'ping' });
+    // 看门狗：长时间未收到消息则重连
+    if (this.watchdogTimer) { clearInterval(this.watchdogTimer); this.watchdogTimer = null; }
+    this.watchdogTimer = setInterval(() => {
+      if (!this.isConnected) return;
+      const diff = Date.now() - (this.lastMessageAt || 0);
+      if (diff > 90000) { // 90秒无消息视为断线
+        console.warn('心跳超时，触发重连');
+        this.socket && typeof this.socket.close === 'function' && this.socket.close();
       }
-    }, 30000); // 30秒心跳
+    }, 30000);
   }
-  
   stopHeartbeat() {
     if (this.heartbeatTimer) {
       clearInterval(this.heartbeatTimer);
       this.heartbeatTimer = null;
+    }
+    // 额外清理看门狗，避免遗留定时器
+    if (this.watchdogTimer) {
+      clearInterval(this.watchdogTimer);
+      this.watchdogTimer = null;
     }
   }
   
@@ -151,27 +188,39 @@ class WebSocketManager {
       return;
     }
     
+    const base = this.baseReconnectInterval;
+    const cap = 30000;
+    const exp = Math.min(base * Math.pow(2, this.reconnectCount), cap);
+    const jitter = Math.floor(Math.random() * 500);
+    const delay = exp + jitter;
     this.reconnectTimer = setTimeout(() => {
       console.log(`WebSocket重连第${this.reconnectCount + 1}次`);
       this.reconnectCount++;
       this.connect();
-    }, 3000);
+    }, delay);
   }
   
   // 断开连接
   disconnect() {
+    this.manualClose = true;
     this.isConnected = false;
+    this.isConnecting = false;
     this.stopHeartbeat();
-    
-    if (this.reconnectTimer) {
-      clearTimeout(this.reconnectTimer);
-      this.reconnectTimer = null;
-    }
-    
-    if (this.socket) {
-      this.socket?.close?.();
-      this.socket = null;
-    }
+    if (this.reconnectTimer) { clearTimeout(this.reconnectTimer); this.reconnectTimer = null; }
+    const st = this.socket;
+    if (st && typeof st.close === 'function') { st.close(); }
+    else if (st && typeof st.disconnect === 'function') { st.disconnect(); }
+    this.socket = null;
+  }
+  // 事件注册/注销
+  on(type, handler) {
+    if (!type || typeof handler !== 'function') return;
+    this.listeners[type] = this.listeners[type] || [];
+    this.listeners[type].push(handler);
+  }
+  off(type, handler) {
+    const arr = this.listeners[type] || [];
+    this.listeners[type] = handler ? arr.filter(fn => fn !== handler) : [];
   }
 }
 

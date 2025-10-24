@@ -44,17 +44,44 @@
   "libVersion": "2.25.4",
   "packOptions": {
     "ignore": [
-      { "type": "glob", "value": "miniprogram/**/*_backup.ts" },
-      { "type": "glob", "value": "miniprogram/**/*_backup_*.ts" },
-      { "type": "glob", "value": "miniprogram/**/*_old.ts" },
-      { "type": "glob", "value": "miniprogram/**/*_bak.ts" },
-      { "type": "glob", "value": "miniprogram/**/__MACOSX/**" }
+      {
+        "value": "miniprogram/**/*_backup.ts",
+        "type": "glob"
+      },
+      {
+        "value": "miniprogram/**/*_backup_*.ts",
+        "type": "glob"
+      },
+      {
+        "value": "miniprogram/**/*_old.ts",
+        "type": "glob"
+      },
+      {
+        "value": "miniprogram/**/*_bak.ts",
+        "type": "glob"
+      },
+      {
+        "value": "miniprogram/**/__MACOSX/**",
+        "type": "glob"
+      }
     ],
     "include": [
-      { "type": "glob", "value": "miniprogram/**/*" },
-      { "type": "glob", "value": "typings/**/*" },
-      { "type": "glob", "value": "package.json" },
-      { "type": "glob", "value": "tsconfig.json" }
+      {
+        "value": "miniprogram/**/*",
+        "type": "glob"
+      },
+      {
+        "value": "typings/**/*",
+        "type": "glob"
+      },
+      {
+        "value": "package.json",
+        "type": "glob"
+      },
+      {
+        "value": "tsconfig.json",
+        "type": "glob"
+      }
     ]
   },
   "appid": "wxef836aa4e178fbe2"

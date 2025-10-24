@@ -23,17 +23,17 @@ return [
             // 服务器地址
             'hostname'          => '127.0.0.1',
             // 数据库名
-            'database'          => 'b2b2c503',
+            'database'          => 'niushop',
             // 用户名
-            'username'          => 'root',
+            'username'          => 'niushop',
             // 密码
-            'password'          => '123456',
+            'password'          => 'niushop',
             // 端口
-            'hostport'          => '3306',
+            'hostport'          => '3307',
             // 数据库连接参数
             'params'            => [],
             // 数据库编码默认采用utf8
-            'charset'           => 'utf8',
+            'charset'           => 'utf8mb4',
             // 数据库表前缀
             'prefix'            => '',
 

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>接口契约轻量文档</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto;line-height:1.6;margin:0;background:#f7f7f7;color:#222}
+    header{background:#20232a;color:#fff;padding:16px 20px}
+    header h1{margin:0;font-size:18px}
+    main{max-width:980px;margin:20px auto;background:#fff;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+    .section{padding:20px;border-top:1px solid #eee}
+    .section:first-child{border-top:none}
+    h2{font-size:16px;margin:0 0 12px;color:#111}
+    .endpoint{border:1px solid #e5e7eb;border-radius:6px;padding:12px;margin:10px 0;background:#fafafa}
+    .endpoint .path{font-family:Consolas,Menlo,monospace;background:#eef2ff;color:#1f2937;padding:2px 6px;border-radius:4px}
+    .meta{color:#666;font-size:12px}
+    pre{background:#0f172a;color:#e5e7eb;border-radius:6px;padding:12px;overflow:auto;font-size:12px}
+    code{font-family:Consolas,Menlo,monospace}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+    .tag{display:inline-block;font-size:12px;padding:2px 6px;border-radius:4px;background:#e5e7eb;color:#111;margin-right:6px}
+    .ws{background:#dcfce7}
+    .post{background:#fde68a}
+    .get{background:#bfdbfe}
+    .tip{background:#fef3c7;border:1px solid #f59e0b;color:#92400e;padding:8px;border-radius:6px}
+    footer{padding:16px;color:#666;text-align:center}
+    a{color:#2563eb;text-decoration:none}
+  </style>
+</head>
+<body>
+<header>
+  <h1>接口契约轻量文档 · MiniApp 与后端对齐</h1>
+</header>
+<main>
+  <div class="section">
+    <h2>环境与基准</h2>
+    <div class="tip">说明：接口基于当前项目配置文件（clients/miniapp/src/miniprogram/config/api.js 与 config/database.php）。如切换环境，请同步更新前端环境与后端域名。</div>
+    <p class="meta">参考：api 基础地址通过 <code>deriveBaseUrl</code> 提取；WebSocket 地址由 <code>wsUrl</code> 提供。</p>
+  </div>
+
+  <div class="section">
+    <h2>设备接口</h2>
+    <div class="endpoint">
+      <span class="tag get">GET</span>
+      <span class="path">device/profitconfig</span>
+      <div class="meta">获取设备分润配置</div>
+      <div class="grid">
+        <div>
+          <div class="meta">响应示例</div>
+          <pre><code>{
+  "code": 1,
+  "data": {
+    "device_id": 10086,
+    "tiers": [
+      { "tier_id": 1, "price": 2.00, "template": "basic", "profit_json": "{...}" }
+    ]
+  },
+  "msg": "ok"
+}</code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>支付接口</h2>
+    <div class="endpoint">
+      <span class="tag post">POST</span>
+      <span class="path">pay/notify</span>
+      <div class="meta">支付结果通知</div>
+      <div class="grid">
+        <div>
+          <div class="meta">响应示例</div>
+          <pre><code>{
+  "code": 1,
+  "data": { "order_id": 123456, "status": "paid" },
+  "msg": "success"
+}</code></pre>
+        </div>
+      </div>
+    </div>
+    <div class="endpoint">
+      <span class="tag post">POST</span>
+      <span class="path">pay/create</span>
+      <div class="meta">创建支付订单</div>
+      <pre><code>{
+  "code": 1,
+  "data": { "order_id": 123456, "amount": 2.00, "pay_params": { /* prepay info */ } },
+  "msg": "ok"
+}</code></pre>
+    </div>
+    <div class="endpoint">
+      <span class="tag post">POST</span>
+      <span class="path">pay/query</span>
+      <div class="meta">查询并同步订单支付状态</div>
+      <pre><code>{
+  "code": 1,
+  "data": { "order_id": 123456, "status": "paid" },
+  "msg": "ok"
+}</code></pre>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>抽奖接口</h2>
+    <div class="endpoint">
+      <span class="tag post">POST</span>
+      <span class="path">device/smartLottery</span>
+      <div class="meta">智能抽奖：请求 { device_id, tier_id }</div>
+      <div class="grid">
+        <div>
+          <div class="meta">响应示例</div>
+          <pre><code>{
+  "code": 1,
+  "data": {
+    "record_id": 98765,
+    "result": "hit",
+    "prize_type": "physical",
+    "goods_id": 1001,
+    "amount": 2.00
+  },
+  "msg": "ok"
+}</code></pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="endpoint">
+      <span class="tag get">GET</span>
+      <span class="path">lottery/result</span>
+      <div class="meta">获取抽奖结果</div>
+      <pre><code>{
+  "code": 1,
+  "data": { "record_id": 98765, "result": "hit", "order_id": 123456, "ext": { /* 扩展 */ } },
+  "msg": "ok"
+}</code></pre>
+    </div>
+
+    <div class="endpoint">
+      <span class="tag post">POST</span>
+      <span class="path">addons/turntable/api/turntable/draw</span>
+      <div class="meta">Turntable 插件抽一次</div>
+      <pre><code>{
+  "code": 1,
+  "data": { "record_id": 555, "slot_id": 8, "goods_id": 1001 },
+  "msg": "ok"
+}</code></pre>
+    </div>
+
+    <div class="endpoint">
+      <span class="tag get">GET</span>
+      <span class="path">addons/turntable/api/turntable/record</span>
+      <div class="meta">抽奖记录查询</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>资源与分享</h2>
+    <div class="endpoint">
+      <span class="tag get">GET</span>
+      <span class="path">device/profitprizes</span>
+      <div class="meta">指定金额奖品列表</div>
+    </div>
+    <div class="endpoint">
+      <span class="tag get">GET</span>
+      <span class="path">device/shareContent</span>
+      <div class="meta">获取分享内容（文案与图片）</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>WebSocket 契约</h2>
+    <div class="endpoint">
+      <span class="tag ws">WS</span>
+      <span class="path">wsUrl (来自 config.api.js)</span>
+      <div class="meta">消息类型：lottery_result | notification | system_message</div>
+      <pre><code>// 心跳（前端）
+{ "type": "heartbeat", "ts": 1710000000 }
+
+// 抽奖结果（服务端 -> 客户端）
+{
+  "type": "lottery_result",
+  "payload": {
+    "record_id": 98765,
+    "result": "hit",
+    "goods_id": 1001,
+    "amount": 2.00
+  }
+}
+
+// 通知消息（服务端 -> 客户端）
+{ "type": "notification", "payload": { "level": "info", "text": "欢迎体验" } }</code></pre>
+      <div class="tip">断线重连策略：指数退避，心跳看门狗（建议 30s 超时），手动断开不触发自动重连。</div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>统一响应格式</h2>
+    <pre><code>{
+  "code": 1,          // 成功=1，失败=0
+  "data": { ... },    // 业务数据
+  "msg": "ok"        // 描述信息
+}
+// 额外：401 表示 Token 过期（参考 config.api.js responseFormat）</code></pre>
+  </div>
+
+  <footer>
+    <div>若需补充，请联动前端 config/api.js 与后端控制器路由文档。</div>
+    <div>文档版本：轻量 | 生成时间：<span id="ts"></span></div>
+  </footer>
+</main>
+<script>
+  document.getElementById('ts').textContent = new Date().toLocaleString();
+</script>
+</body>
+</html>

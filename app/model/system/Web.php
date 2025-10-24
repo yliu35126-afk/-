@@ -24,14 +24,26 @@ class Web extends BaseModel
     public function news()
     {
         $cache = Cache::get("new_day");
-        if (!empty($cache)) return $cache;
+        if (!empty($cache) && is_array($cache)) return $cache;
 
         $result = $this->doPost('/api/article/companynews', []);
         $res = json_decode($result, true);
-        if ($res[ "code" ] >= 0) {
-            Cache::set("new_day", $res, 86400);
+
+        // 兼容外网不可达或返回异常的情况，避免 500 错误
+        if (is_array($res) && isset($res['code'])) {
+            if ($res['code'] >= 0) {
+                Cache::set("new_day", $res, 86400);
+            }
+            return $res;
         }
-        return $res;
+
+        return [
+            'code' => -1,
+            'message' => '官方资讯接口不可用',
+            'data' => [
+                'list' => []
+            ]
+        ];
     }
 
     /**
@@ -39,8 +51,27 @@ class Web extends BaseModel
      */
     private function doPost($post_url, $post_data)
     {
-        $httpClient = new HttpClient();
-        $res = $httpClient->post($this->url . $post_url, $post_data);
-        return $res;
+        $url = $this->url . $post_url;
+        // 如果未启用 curl 扩展，使用 PHP 流上下文作为回退方案
+        if (function_exists('curl_init')) {
+            $httpClient = new HttpClient();
+            return $httpClient->post($url, $post_data);
+        } else {
+            $opts = [
+                'http' => [
+                    'method' => 'POST',
+                    'header' => 'Content-Type: application/x-www-form-urlencoded',
+                    'content' => http_build_query($post_data),
+                    'timeout' => 10,
+                ]
+            ];
+            $context = stream_context_create($opts);
+            $res = @file_get_contents($url, false, $context);
+            return $res !== false ? $res : json_encode([
+                'code' => -1,
+                'message' => 'request failed',
+                'data' => ['list' => []]
+            ]);
+        }
     }
 }

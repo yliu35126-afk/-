@@ -257,4 +257,40 @@ class Order extends BaseApi
         $result = $order_model->extendTakeDelivery($take_condition);
         return $this->response($result);
     }
+
+    /**
+     * 抽奖退款接口：若已核销不可退款；否则回滚库存
+     * 路径：/api/order/refund
+     */
+    public function refund()
+    {
+        $token = $this->checkToken();
+        if ($token['code'] < 0) return $this->response($token);
+
+        $order_id = intval($this->params['order_id'] ?? 0);
+        if ($order_id <= 0) return $this->response($this->error('', '缺少 order_id'));
+
+        // 已核销的订单不可退款（分润已结算）
+        $exists = \think\facade\Db::name('ns_lottery_profit')->where(['order_id' => $order_id, 'status' => 'settled'])->find();
+        if (!empty($exists)) {
+            return $this->response($this->error('', '订单已核销，不可退款'));
+        }
+
+        // 回滚库存：对命中记录恢复库存
+        $records = \think\facade\Db::name('lottery_record')->where('order_id', $order_id)->select()->toArray();
+        foreach ($records as $r) {
+            if (($r['result'] ?? 'miss') === 'hit' && ($r['prize_type'] ?? '') === 'goods') {
+                $slot_id = intval($r['slot_id'] ?? 0);
+                if ($slot_id > 0) {
+                    $slot = \think\facade\Db::name('lottery_slot')->where('slot_id', $slot_id)->find();
+                    if (!empty($slot)) {
+                        $new_inv = intval($slot['inventory'] ?? 0) + 1;
+                        \think\facade\Db::name('lottery_slot')->where('slot_id', $slot_id)->update(['inventory' => $new_inv]);
+                    }
+                }
+            }
+        }
+
+        return $this->response($this->success(['status' => 'success', 'message' => 'Refund processed']));
+    }
 }

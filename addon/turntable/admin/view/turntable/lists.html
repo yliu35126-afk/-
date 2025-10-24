@@ -132,6 +132,29 @@
 		table = new Table({
 			elem: '#cards_list',
 			url: ns.url("turntable://admin/turntable/lists"),
+			// 兼容后端返回结构，确保 data 为对象数组，避免 LAY_TABLE_INDEX 异常
+			parseData: function(res) {
+				var list = [];
+				if (res && res.data && Array.isArray(res.data.list)) {
+					list = res.data.list.filter(function(row){ return typeof row === 'object' && row !== null; });
+				} else if (res && res.data && res.data.list && typeof res.data.list === 'object' && res.data.list !== null) {
+					list = [res.data.list];
+				} else {
+					list = [];
+				}
+				var count = 0;
+				if (res && res.data && typeof res.data.count === 'number') {
+					count = res.data.count;
+				} else {
+					count = Array.isArray(list) ? list.length : 0;
+				}
+				return {
+					code: res.code,
+					msg: res.message,
+					count: count,
+					data: list
+				};
+			},
 			cols: [
 				[{
 			    	field:'game_name',

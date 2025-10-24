@@ -60,16 +60,18 @@ class Config extends BaseModel
     public function getCaptchaConfig()
     {
         $config = new ConfigModel();
-        $res = $config->getConfig([ [ 'site_id', '=', 0 ], [ 'app_module', '=', 'admin' ], [ 'config_key', '=', 'CAPTCHA_CONFIG'] ]);
-        if (empty($res[ 'data' ][ 'value' ])) {
-            $res[ 'data' ][ 'value' ] = [
+        $res = $config->getConfig([[ 'site_id', '=', 0 ], [ 'app_module', '=', 'admin' ], [ 'config_key', '=', 'CAPTCHA_CONFIG' ]]);
+        // 防御空值，避免 "Trying to access array offset on value of type null"
+        if (empty($res['data']) || empty($res['data']['value'])) {
+            $res['data'] = $res['data'] ?? [];
+            $res['data']['value'] = [
                 'shop_login' => 1,
-                'admin_login' => 1,
+                'admin_login' => 0,
                 'store_login' => 1,
                 'supply_login' => 1,
                 'city_login' => 1,
                 'shop_reception_login' => 1,
-                'shop_pc_reception_login'   => 1
+                'shop_pc_reception_login' => 1
             ];
         }
         return $res;
@@ -100,17 +102,20 @@ class Config extends BaseModel
     {
         $config = new ConfigModel();
         $res = $config->getConfig([ [ 'site_id', '=', 0 ], [ 'app_module', '=', 'admin' ], [ 'config_key', '=', 'DEFAULT_IMAGE' ] ]);
-        if (empty($res[ 'data' ][ 'value' ])) {
-            $res[ 'data' ][ 'value' ] = [
-                "default_goods_img" => "upload/default/default_img/goods.png",
-                "default_headimg" => "upload/default/default_img/head.png",
-                "default_shop_img" => "upload/default/default_img/shop.png",
-                "default_city_img" => "upload/default/default_img/city.png",
-                "default_supply_img" => "upload/default/default_img/supply.png",
-                "default_store_img" => "upload/default/default_img/store.png",
-                "default_category_img" => "upload/default/default_img/category.png",
-                "default_brand_img" => "upload/default/default_img/brand.png"
-            ];
+        // 兼容 data/value 为空的情况，避免对 null 做数组下标访问
+        $defaults = [
+            "default_goods_img" => "upload/default/default_img/goods.png",
+            "default_headimg" => "upload/default/default_img/head.png",
+            "default_shop_img" => "upload/default/default_img/shop.png",
+            "default_city_img" => "upload/default/default_img/city.png",
+            "default_supply_img" => "upload/default/default_img/supply.png",
+            "default_store_img" => "upload/default/default_img/store.png",
+            "default_category_img" => "upload/default/default_img/category.png",
+            "default_brand_img" => "upload/default/default_img/brand.png"
+        ];
+        if (empty($res['data']) || empty($res['data']['value'])) {
+            $res['data'] = $res['data'] ?? [];
+            $res['data']['value'] = $defaults;
         }
         return $res;
     }
@@ -130,23 +135,26 @@ class Config extends BaseModel
     public function getCopyright()
     {
         $config = new ConfigModel();
-        $res = $config->getConfig([ [ 'site_id', '=', 0 ], [ 'app_module', '=', 'admin' ], [ 'config_key', '=', 'COPYRIGHT' ] ]);
-        if (empty($res[ 'data' ][ 'value' ])) {
-            $res[ 'data' ][ 'value' ] = [
-                'logo' => '',
-                'company_name' => '',
-                'copyright_link' => '',
-                'copyright_desc' => '',
-                'icp' => '',
-                'gov_record' => '',
-                'gov_url' => '',
-                'market_supervision_url' => ''
-            ];
+        $res = $config->getConfig([[ 'site_id', '=', 0 ], [ 'app_module', '=', 'admin' ], [ 'config_key', '=', 'COPYRIGHT' ]]);
+
+        // 统一空值兼容，防止对 null 做数组下标访问
+        $defaults = [
+            'logo' => '',
+            'company_name' => '',
+            'copyright_link' => '',
+            'copyright_desc' => '',
+            'icp' => '',
+            'gov_record' => '',
+            'gov_url' => '',
+            'market_supervision_url' => ''
+        ];
+
+        if (empty($res['data']) || empty($res['data']['value'])) {
+            $res['data'] = $res['data'] ?? [];
+            $res['data']['value'] = $defaults;
         } else {
-                $res[ 'data' ][ 'value' ][ 'logo' ] = '';
-                $res[ 'data' ][ 'value' ][ 'company_name' ] = '';
-                $res[ 'data' ][ 'value' ][ 'copyright_link' ] = '';
-                $res[ 'data' ][ 'value' ][ 'copyright_desc' ] = '';
+            // 保留已有值同时补齐缺失字段
+            $res['data']['value'] = array_merge($defaults, (array)$res['data']['value']);
         }
         return $res;
     }

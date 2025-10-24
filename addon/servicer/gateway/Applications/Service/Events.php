@@ -79,6 +79,52 @@ class Events
      */
     public static function onMessage($client_id, $message)
     {
+        $data = @json_decode($message, true);
+        if (is_array($data) && isset($data['cmd'])) {
+            switch ($data['cmd']) {
+                case 'bind_device':
+                    $device_id = intval($data['device_id'] ?? 0);
+                    $ts = intval($data['ts'] ?? 0);
+                    $sign = strval($data['sign'] ?? '');
+                    if (!$device_id || !$ts || !$sign) {
+                        \GatewayWorker\Lib\Gateway::sendToClient($client_id, json_encode(['cmd' => 'bind_fail', 'reason' => 'params']));
+                        \GatewayWorker\Lib\Gateway::closeClient($client_id);
+                        return;
+                    }
+                    if (abs(time() - $ts) > 180) {
+                        \GatewayWorker\Lib\Gateway::sendToClient($client_id, json_encode(['cmd' => 'bind_fail', 'reason' => 'ts_expired']));
+                        \GatewayWorker\Lib\Gateway::closeClient($client_id);
+                        return;
+                    }
+
+                    // 查询设备密钥
+                    $rows = @self::$db->query("SELECT device_secret FROM " . self::$prefix . "device_info WHERE device_id = $device_id LIMIT 1");
+                    $device_secret = '';
+                    if (is_array($rows) && !empty($rows)) {
+                        $device_secret = strval($rows[0]['device_secret'] ?? '');
+                    }
+                    if (empty($device_secret)) {
+                        \GatewayWorker\Lib\Gateway::sendToClient($client_id, json_encode(['cmd' => 'bind_fail', 'reason' => 'no_secret']));
+                        \GatewayWorker\Lib\Gateway::closeClient($client_id);
+                        return;
+                    }
+                    $calc = hash_hmac('sha256', $device_id . '|' . $ts, $device_secret);
+                    if (!hash_equals($calc, $sign)) {
+                        \GatewayWorker\Lib\Gateway::sendToClient($client_id, json_encode(['cmd' => 'bind_fail', 'reason' => 'bad_sign']));
+                        \GatewayWorker\Lib\Gateway::closeClient($client_id);
+                        return;
+                    }
+
+                    $uid = 'ns_device_' . $device_id;
+                    \GatewayWorker\Lib\Gateway::bindUid($client_id, $uid);
+                    $_SESSION['device_id'] = $device_id;
+                    \GatewayWorker\Lib\Gateway::sendToClient($client_id, json_encode(['cmd' => 'bind_ok', 'uid' => $uid]));
+                    break;
+                default:
+                    // 忽略未识别的命令
+                    break;
+            }
+        }
         // 向所有人发送
         // Gateway::sendToAll("$client_id said $message\r\n");
     }

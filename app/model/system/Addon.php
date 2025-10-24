@@ -102,8 +102,17 @@ class Addon extends BaseModel
         foreach ($temp_auth_addon_list as $key => $val) {
             $auth_addon_list[$val['code']] = $val;
         }
+        // 使用项目根路径定位 addon 目录，避免在 docroot=public 下相对路径失效
+        $root = root_path();
         //存在的插件
-        $existed_addons = array_map('basename', glob('addon/*', GLOB_ONLYDIR));
+        $addonRoot = rtrim($root, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'addon' . DIRECTORY_SEPARATOR;
+        $existed_addons = [];
+        if (is_dir($addonRoot)) {
+            foreach (scandir($addonRoot) as $d) {
+                if ($d === '.' || $d === '..') continue;
+                if (is_dir($addonRoot . $d)) $existed_addons[] = $d;
+            }
+        }
         //已安装的插件
         $installed_addon_array = model('addon')->getColumn([], 'name');
         //初始化数据
@@ -128,9 +137,10 @@ class Addon extends BaseModel
         }
         //获取已下载插件 区分已安装和为安装 是否需要升级 是否已授权
         foreach ($existed_addons as $key => $val) {
-            $info_file_path = 'addon/' . $val . '/config/info.php';
+            $info_file_path = $root . 'addon/' . $val . '/config/info.php';
             if (file_exists($info_file_path)) {
                 $info = include_once $info_file_path;
+                // 输出路径仍保留相对形式，便于 img() 生成 URL
                 $info['icon'] = 'addon/' . $val . '/icon.png';
                 $info['download'] = 0;
                 $info['auth'] = isset($auth_addon_list[$val]) ? true : false;
@@ -157,12 +167,21 @@ class Addon extends BaseModel
     public function getUninstallAddonList()
     {
 
-        $dirs = array_map('basename', glob('addon/*', GLOB_ONLYDIR));
+        // 使用项目根路径定位 addon 目录，避免在 docroot=public 下相对路径失效
+        $root = root_path();
+        $addonRoot = rtrim($root, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR . 'addon' . DIRECTORY_SEPARATOR;
+        $dirs = [];
+        if (is_dir($addonRoot)) {
+            foreach (scandir($addonRoot) as $d) {
+                if ($d === '.' || $d === '..') continue;
+                if (is_dir($addonRoot . $d)) $dirs[] = $d;
+            }
+        }
         $addon_names = model('addon')->getColumn([], 'name');
         $addons = [];
         foreach ($dirs as $key => $value) {
             if (!in_array($value, $addon_names)) {
-                $info_name = 'addon/' . $value . '/config/info.php';
+                $info_name = $root . 'addon/' . $value . '/config/info.php';
                 if (file_exists($info_name)) {
                     $info = include_once $info_name;
                     $info['icon'] = 'addon/' . $value . '/icon.png';
@@ -248,9 +267,20 @@ class Addon extends BaseModel
         return $this->success();
     }
 
+
+    /**
+     * 插件修复安装：仅执行预安装事件（不写入插件表）
+     * @param string $addon_name
+     * @return array
+     */
+    public function repairInstall($addon_name)
+    {
+        return $this->preInstall($addon_name);
+    }
+
     /**
      * 安装插件菜单
-     * @param $addon
+     * @param $addon_name
      * @return array
      */
     private function installMenu($addon)

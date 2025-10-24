@@ -1,6 +1,7 @@
 package com.example.myapplication.network
 
 import com.example.myapplication.api.PrizeApiService
+import com.example.myapplication.api.TurntableApiService
 import com.google.gson.GsonBuilder
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -40,6 +41,9 @@ object ApiManager {
     
     // API服务
     val apiService: PrizeApiService = retrofit.create(PrizeApiService::class.java)
+
+    // Turntable 插件服务
+    val turntableService: TurntableApiService = retrofit.create(TurntableApiService::class.java)
 
     // 备用 BASE_URL 与 Retrofit，用于 404 时进行路径前缀回退
     val fallbackBaseUrl: String = NetworkConfig.alternateBaseUrl()

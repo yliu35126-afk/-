@@ -5,25 +5,40 @@
 	<meta http-equiv="X-UA-COMPATIBLE" content="IE=edge,chrome=1" />
 	<title>{$menu_info['title']|default=""} - {$website['title']|default="Niushop开源商城"}</title>
 	<meta name="keywords" content="{$website['keywords']|default='Niushop开源商城'}">
-	<meta name="description" content="{$website['desc']|default='描述'}}">
+	<meta name="description" content="{$website['desc']|default='描述'}">
 	<link rel="icon" type="image/x-icon" href="__STATIC__/img/bitbug_favicon.ico" />
 	<link rel="stylesheet" type="text/css" href="STATIC_CSS/iconfont.css" />
 	<link rel="stylesheet" type="text/css" href="__STATIC__/ext/layui/css/layui.css" />
 	<link rel="stylesheet" type="text/css" href="__STATIC__/loading/msgbox.css"/>
 	<link rel="stylesheet" type="text/css" href="ADMIN_CSS/common.css" />
+	<!-- 预连接与 DNS 预取，加速阿里字体域名解析 -->
+	<link rel="dns-prefetch" href="//at.alicdn.com" />
+	<link rel="preconnect" href="https://at.alicdn.com" crossorigin />
+	<!-- 预加载常用 iconfont，提升首屏渲染速度 -->
+	<link rel="preload" as="font" type="font/woff2" href="https://at.alicdn.com/t/c/font_1542419_kvjrlhc4ot.woff2?t=1677293407282" crossorigin>
+	<link rel="preload" as="font" type="font/woff2" href="https://at.alicdn.com/t/font_1566119_ygzomlwycq.woff2?t=1598608027111" crossorigin>
+    <link rel="stylesheet" href="__STATIC__/ext/layui/css/modules/laydate/default/laydate.css?v=5.0.9" />
 	<script src="__STATIC__/js/jquery-3.1.1.js"></script>
 	<script src="__STATIC__/js/jquery.cookie.js"></script>
-	<script src="__STATIC__/ext/layui/layui.js"></script>
+	<script src="__STATIC__/ext/layui/layui.all.js"></script>
+    <!-- 提前注入 regexp 配置，避免后续脚本读取为空 -->
+    <script id="regexp-config" type="application/json">{:json_encode(config('regexp'), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)}</script>
 	<script>
-		layui.use(['layer', 'upload', 'element'], function() {});
-		var nsColor = '#4685FD';
-		window.ns_url = {
-			baseUrl: "ROOT_URL/",
-			route: ['{:request()->module()}', '{:request()->controller()}', '{:request()->action()}'],
-			IMGPATH:"ADMIN_IMG/"
-		};
-		window.regexp_config = {:json_encode(config('regexp'))};
-	</script>
+// @ts-nocheck
+ 		layui.use(['layer', 'upload', 'element'], function() {});
+ 		var nsColor = '#4685FD';
+ 		window.ns_url = {
+ 			baseUrl: "ROOT_URL/",
+ 			route: ['{:request()->module()}', '{:request()->controller()}', '{:request()->action()}'],
+ 			IMGPATH:"ADMIN_IMG/"
+ 		};
+        // 安全读取 JSON（容错空节点/解析异常）
+        window.regexp_config = (function(){
+            var el = document.getElementById('regexp-config');
+            try { return el ? JSON.parse(el.textContent || '{}') : {}; } catch(e){ return {}; }
+        })();
+ 	</script>
+
 	<script src="__STATIC__/js/common.js?time=20240516"></script>
 	<script src="ADMIN_JS/common.js"></script>
 	<style>
@@ -57,6 +72,7 @@
 		<!-- 一级菜单 -->
 		<ul class="layui-nav layui-layout-left">
 			{php}$second_menu = [];{/php}
+			{notempty name="$menu"}
 			{foreach $menu as $menu_k => $menu_v}
 			<li class="layui-nav-item {if $menu_v.selected} layui-this{/if}">
 				<a href="{$menu_v.url}">{$menu_v.title}</a>
@@ -67,6 +83,7 @@
 				{/php}
 			{/if}
 			{/foreach}
+			{/notempty}
 		</ul>
 		<ul class="layui-nav layui-layout-right">
 			<li class="layui-nav-item">
@@ -74,7 +91,7 @@
 					<div class="ns-img-box">
 						<img src="ADMIN_IMG/default_headimg.png" alt="">
 					</div>
-					{$user_info['username']}
+					{$user_info['username']|default=''}
 				</a>
 				<dl class="layui-nav-child">
 					<dd class="ns-reset-pass" onclick="resetPassword();">
@@ -95,7 +112,7 @@
 	{notempty name="$second_menu"}
 	<div class="layui-side">
 		<div class="layui-side-scroll">
-			<span class="ns-side-title">{$crumbs[0]['title']}</span>
+			<span class="ns-side-title">{$crumbs[0]['title']|default=''}</span>
 			<!-- 二三级菜单-->
 			<ul class="layui-nav layui-nav-tree"  lay-filter="test">
 				{foreach $second_menu as $menu_second_k => $menu_second_v}
@@ -108,6 +125,14 @@
 							<a href="{$menu_third_v.url}">{$menu_third_v.title}</a>
 						</dd>
 						{/foreach}
+						{if condition="isset($forth_menu) && !empty($forth_menu)"}
+						<!-- 在左侧同时展示四级菜单 -->
+							{volist name="$forth_menu" id="menu"}
+							<dd class="{if $menu.selected == 1} layui-this{/if}">
+								<a href="{$menu.parse_url}">{$menu.title}</a>
+							</dd>
+							{/volist}
+						{/if}
 					</dl>
 					{/notempty}
 				</li>
@@ -123,12 +148,8 @@
 		{if count($second_menu) > 0}
 		<div class="ns-crumbs{empty name='$second_menu'} child_no_exit{/empty}">
 		<span class="layui-breadcrumb" lay-separator="-">
-			{foreach $crumbs as $crumbs_k => $crumbs_v}
-			{if count($crumbs) == ($crumbs_k + 1)}
+			{foreach $crumbs as $crumbs_v}
 			<a href="{$crumbs_v.url}"><cite>{$crumbs_v.title}</cite></a>
-			{else/}
-			<a href="{$crumbs_v.url}">{$crumbs_v.title}</a>
-			{/if}
 			{/foreach}
 		</span>
 		</div>
@@ -196,7 +217,8 @@
 	function clearCache () {
 		$.ajax({
 			type: 'post',
-			url: ns.url("admin/Login/clearCache"),
+			url: ns.url("admin/system/cache"),
+			data: { key: 'all' },
 			dataType: 'JSON',
 			success: function(res) {
 				layer.msg(res.message);
@@ -214,17 +236,13 @@
             type:1,
             content:$('#reset_pass'),
             offset: 'auto',
-            area: ['650px']
+            area: ['650px', '675px']
         });
 
 		setTimeout(function() {
 			$(".ns-reset-pass").removeClass('layui-this');
 		}, 1000);
     }
-
-	// $(".ns-reset-pass").on('click', function() {
-	// 	$(this).removeClass('layui-this');
-	// })
 
     var repeat_flag = false;
     function repass(){

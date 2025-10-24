@@ -22,4 +22,7 @@ return [
     'taglib_begin'  => '{',
     // 标签库标签结束标记
     'taglib_end'    => '}',
+    // 允许跨模块模板路径解析，例如 app/admin/view/base.html
+    // 设置模板基础路径为项目根目录
+    'view_base'     => dirname(__DIR__) . DIRECTORY_SEPARATOR,
 ];

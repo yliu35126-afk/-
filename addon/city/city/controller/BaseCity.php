@@ -52,8 +52,10 @@ class BaseCity extends Controller
         //检测基础登录
         $this->uid = $user->uid($this->app_module);
 
-        $this->url = request()->parseUrl();
-        $this->addon = request()->addon() ? request()->addon() : '';
+        /** @var \app\Request $req */
+        $req = request();
+        $this->url = $req->parseUrl();
+        $this->addon = $req->addon() ? $req->addon() : '';
         $this->user_info = $user->userInfo($this->app_module);
         $this->site_id = $this->user_info[ "site_id" ]??'';
         $this->assign("user_info", $this->user_info);
@@ -172,6 +174,45 @@ class BaseCity extends Controller
     }
 
     /**
+     * 获取菜单
+     */
+    private function getMenuList()
+    {
+        $menu_model = new Menu();
+        if (empty($this->group_info) || !isset($this->group_info['is_system'])) {
+            return [];
+        }
+        if ($this->group_info['is_system'] == 1) {
+            $menus = $menu_model->getMenuList([
+                [ 'app_module', '=', $this->app_module ],
+                [ 'is_show', '=', 1 ]
+            ], '*', 'sort asc');
+        } else {
+            $menu_array = isset($this->group_info['menu_array']) ? $this->group_info['menu_array'] : [];
+            if (empty($menu_array)) {
+                return [];
+            }
+            $menus = $menu_model->getMenuList([
+                [ 'name', 'in', $menu_array ],
+                [ 'is_show', '=', 1 ],
+                [ 'app_module', '=', $this->app_module ]
+            ], '*', 'sort asc');
+        }
+        return $menus['data'] ?? [];
+    }
+
+    /**
+     * 获取顶级菜单
+     */
+    protected function getTopMenu()
+    {
+        $list = array_filter($this->menus, function($v) {
+            return $v['parent'] == '0';
+        });
+        return $list;
+    }
+
+    /**
      * 获取当前用户的用户组
      */
     private function getGroupInfo()
@@ -200,65 +241,5 @@ class BaseCity extends Controller
         $user_model = new UserModel();
         $res = $user_model->checkAuth($this->url, $this->app_module, $this->group_info);
         return $res;
-    }
-
-    /**
-     * 获取菜单
-     */
-    private function getMenuList()
-    {
-        $menu_model = new Menu();
-        if ($this->group_info[ 'is_system' ] == 1) {
-            $menus = $menu_model->getMenuList([ [ 'app_module', "=", $this->app_module ], [ 'is_show', "=", 1 ] ], '*', 'sort asc');
-        } else {
-            $menus = $menu_model->getMenuList([ [ 'name', 'in', $this->group_info[ 'menu_array' ] ], [ 'is_show', "=", 1 ], [ 'app_module', "=", $this->app_module ] ], '*', 'sort asc');
-        }
-
-        return $menus[ 'data' ];
-    }
-
-    /**
-     * 获取顶级菜单
-     */
-    protected function getTopMenu()
-    {
-        $list = array_filter($this->menus, function($v) {
-            return $v[ 'parent' ] == '0';
-        });
-        return $list;
-    }
-
-    /**
-     * 四级菜单
-     * @param unknown $params
-     */
-    protected function forthMenu($params = [])
-    {
-        $url = strtolower($this->url);
-        $menu_model = new Menu();
-        $menu_info = $menu_model->getMenuInfo([ [ 'url', "=", $url ], [ 'level', '=', 4 ] ], 'parent');
-        if (!empty($menu_info[ 'data' ])) {
-            $menus = $menu_model->getMenuList([ [ 'app_module', "=", $this->app_module ], [ 'is_show', "=", 1 ], [ 'parent', '=', $menu_info[ 'data' ][ 'parent' ] ] ], '*', 'sort asc');
-            foreach ($menus[ 'data' ] as $k => $v) {
-                $menus[ 'data' ][ $k ][ 'parse_url' ] = addon_url($menus[ 'data' ][ $k ][ 'url' ], $params);
-                if ($menus[ 'data' ][ $k ][ 'url' ] == $url) {
-                    $menus[ 'data' ][ $k ][ 'selected' ] = 1;
-                } else {
-                    $menus[ 'data' ][ $k ][ 'selected' ] = 0;
-                }
-            }
-            $this->assign('forth_menu', $menus[ 'data' ]);
-        }
-    }
-
-    /**
-     * 添加日志
-     * @param string $action_name
-     * @param array $data
-     */
-    protected function addLog($action_name, $data = [])
-    {
-        $user = new User();
-        $user->addUserLog($this->uid, $this->user_info[ 'username' ], $this->site_id, $action_name, $data);
     }
 }

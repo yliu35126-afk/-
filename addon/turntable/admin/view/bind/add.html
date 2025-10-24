@@ -1,0 +1,64 @@
+{extend name="app/admin/view/base.html"/}
+{block name="main"}
+<form class="layui-form" lay-filter="bind_form">
+  <div class="layui-form-item">
+    <label class="layui-form-label">设备ID</label>
+    <div class="layui-input-block">
+      <input type="text" name="device_id" value="{$device_id}" required lay-verify="required" placeholder="设备ID" class="layui-input" />
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">价档ID</label>
+    <div class="layui-input-block">
+      <input type="text" name="tier_id" required lay-verify="required" placeholder="价档ID" class="layui-input" />
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">开始时间</label>
+    <div class="layui-input-block">
+      <input type="text" name="start_time" placeholder="YYYY-MM-DD HH:mm:ss，不填默认当前" class="layui-input" />
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">结束时间</label>
+    <div class="layui-input-block">
+      <input type="text" name="end_time" placeholder="YYYY-MM-DD HH:mm:ss，可不填表示长期" class="layui-input" />
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">状态</label>
+    <div class="layui-input-block">
+      <input type="checkbox" name="status" lay-skin="switch" lay-text="启用|禁用" checked />
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <div class="layui-input-block">
+      <button class="layui-btn" lay-submit lay-filter="save">保存</button>
+    </div>
+  </div>
+</form>
+{/block}
+{block name="script"}
+<script>
+layui.use(['form'], function(){
+  var form = layui.form;
+  form.on('submit(save)', function(data){
+    // switch 返回 'on'，兼容成 1/0
+    data.field.status = data.field.status ? 1 : 0;
+    $.ajax({
+      url: ns.url('turntable://admin/bind/add'),
+      data: data.field,
+      dataType: 'json',
+      type: 'POST',
+      success: function(res){
+        layer.msg(res.message);
+        if(res.code===0){
+          location.href = ns.url('turntable://admin/bind/lists', { device_id: data.field.device_id });
+        }
+      }
+    });
+    return false;
+  });
+});
+</script>
+{/block}

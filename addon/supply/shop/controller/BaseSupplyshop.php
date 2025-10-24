@@ -42,8 +42,11 @@ class BaseSupplyshop extends Controller
         //检测基础登录
         $user_model = new UserModel();
         $this->uid = $user_model->uid($this->app_module);
-        $this->url = request()->parseUrl();
-        $this->addon = request()->addon() ? request()->addon() : '';
+        /** @var \app\Request $req */
+        $req = request();
+        $this->url = $req->parseUrl();
+        $this->addon = $req->addon() ? $req->addon() : '';
+
         $this->user_info = $user_model->userInfo($this->app_module);
         $this->assign("user_info", $this->user_info);
         $this->site_id = $this->user_info["site_id"] ?? 0;

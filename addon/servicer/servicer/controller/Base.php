@@ -46,8 +46,11 @@ class Base extends Controller
     {
         parent::__construct();
 
-        $this->url   = request()->parseUrl();
-        $this->addon = request()->addon() ?: '';
+        /** @var \app\Request $req */
+        $req = request();
+        $this->url   = $req->parseUrl();
+        $this->addon = $req->addon() ?: '';
+
     }
 
 

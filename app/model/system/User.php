@@ -297,7 +297,8 @@ class User extends BaseModel
      */
     public function checkAuth($url, $app_module, $group_info)
     {
-        if ($group_info[ 'is_system' ] == 1) {
+        $is_system = (is_array($group_info) && isset($group_info['is_system'])) ? (int)$group_info['is_system'] : 0;
+        if ($is_system === 1) {
             return true;
         }
         $auth_control = event("AuthControl", [ 'url' => $url, 'app_module' => $app_module ], 1);
@@ -310,7 +311,7 @@ class User extends BaseModel
         $menu_info = $menu_model->getMenuInfoByUrl($url, $app_module);
         if (!empty($menu_info[ 'data' ])) {
             //权限组
-            if (empty($group_info)) {
+            if (!is_array($group_info) || !isset($group_info['menu_array']) || empty($group_info['menu_array'])) {
                 return false;
             }
             if (strpos(',' . $group_info[ 'menu_array' ] . ',', ',' . $menu_info[ 'data' ][ 'name' ] . ',') !== false) {
@@ -441,6 +442,22 @@ class User extends BaseModel
         //填写日志
         Session::set($app_module . "." . "uid", $user_info[ 'uid' ]);
         Session::set($app_module . "." . "user_info", $auth);
+        // 调试日志：记录登录成功后的域名/端口/URL/会话信息
+        $req = request();
+        $session_name = session_name();
+        $cookie_sid = isset($_COOKIE[$session_name]) ? $_COOKIE[$session_name] : '';
+        $debug_data = [
+            'debug' => 'admin_login_success',
+            'app_module' => $app_module,
+            'host' => method_exists($req, 'host') ? $req->host() : ($_SERVER['HTTP_HOST'] ?? ''),
+            'domain' => method_exists($req, 'domain') ? $req->domain() : '',
+            'url' => method_exists($req, 'url') ? $req->url(true) : ($_SERVER['REQUEST_URI'] ?? ''),
+            'root_url' => defined('ROOT_URL') ? ROOT_URL : '',
+            'sid' => session_id(),
+            'cookie_sid' => $cookie_sid,
+            'admin_uid_session' => \think\facade\Session::get($app_module . ".uid"),
+        ];
+        $this->addUserLog($user_info['uid'], $user_info['username'], $user_info['site_id'], "登录成功调试", $debug_data);
         $this->addUserLog($user_info[ 'uid' ], $user_info[ 'username' ], $user_info[ 'site_id' ], "用户登录", []); //添加日志
         return $this->success();
     }
@@ -506,10 +523,27 @@ class User extends BaseModel
                 'group_id' => $user_info[ "group_id" ],
                 'site_id' => $user_info[ "site_id" ],
                 'app_group' => $user_info[ "app_group" ],
+                'is_admin' => $user_info[ 'is_admin' ]
             );
             //填写日志
             Session::set($app_module . "." . "uid", $user_info[ 'uid' ]);
             Session::set($app_module . "." . "user_info", $auth);
+            // 调试日志：模拟登录成功后的域名/端口/URL/会话信息
+            $req = request();
+            $session_name = session_name();
+            $cookie_sid = isset($_COOKIE[$session_name]) ? $_COOKIE[$session_name] : '';
+            $debug_data = [
+                'debug' => 'admin_simulated_login_success',
+                'app_module' => $app_module,
+                'host' => method_exists($req, 'host') ? $req->host() : ($_SERVER['HTTP_HOST'] ?? ''),
+                'domain' => method_exists($req, 'domain') ? $req->domain() : '',
+                'url' => method_exists($req, 'url') ? $req->url(true) : ($_SERVER['REQUEST_URI'] ?? ''),
+                'root_url' => defined('ROOT_URL') ? ROOT_URL : '',
+                'sid' => session_id(),
+                'cookie_sid' => $cookie_sid,
+                'admin_uid_session' => \think\facade\Session::get($app_module . ".uid"),
+            ];
+            $this->addUserLog($user_info['uid'], $user_info['username'], $user_info['site_id'], "模拟登录调试", $debug_data);
             $this->addUserLog($user_info[ 'uid' ], $user_info[ 'username' ], $user_info[ 'site_id' ], "用户登录", []); //添加日志
             return $this->success();
         } else {
@@ -555,8 +589,10 @@ class User extends BaseModel
     public function addUserLog($uid, $username, $site_id, $action_name, $data = [])
     {
 
-        $url = request()->parseUrl();
-        $ip = request()->ip();
+        /** @var \app\Request $req */
+        $req = request();
+        $url = method_exists($req, 'parseUrl') ? $req->parseUrl() : '';
+        $ip = $req->ip();
         $log = array (
             "uid" => $uid,
             "username" => $username,

@@ -11,6 +11,7 @@
 namespace app\api\controller;
 
 use app\model\system\Addon as AddonModel;
+use think\facade\Db;
 
 /**
  * 插件管理
@@ -77,4 +78,42 @@ class Addon extends BaseApi
         return $this->response($this->success($res));
     }
 
+    /**
+     * 修复安装：仅触发插件 Install 事件
+     */
+    public function repair()
+    {
+        $name = $this->params['name'] ?? '';
+        if (empty($name)) {
+            return $this->response($this->error('', '缺少参数 name'));
+        }
+        try {
+            $addon = new AddonModel();
+            $res = $addon->repairInstall($name);
+            return $this->response($res);
+        } catch (\Throwable $e) {
+            try {
+                $logFile = app()->getRuntimePath() . 'ping.log';
+                @file_put_contents($logFile, '[repair] '.date('c').' '.$e->getMessage()."\n", FILE_APPEND);
+            } catch (\Throwable $ignore) {}
+            return $this->response($this->error(-1, 'repair 异常: '.$e->getMessage()));
+        }
+    }
+
+    /**
+     * 数据库连接检查
+     */
+    public function ping()
+    {
+        try {
+            $res = Db::query('SELECT 1');
+            return $this->response($this->success(['ok' => true, 'res' => $res]));
+        } catch (\Throwable $e) {
+            try {
+                $logFile = app()->getRuntimePath() . 'ping.log';
+                @file_put_contents($logFile, '[ping] '.date('c').' '.$e->getMessage()."\n", FILE_APPEND);
+            } catch (\Throwable $ignore) {}
+            return $this->response($this->error(-1, 'DB 连接失败: '.$e->getMessage()));
+        }
+    }
 }

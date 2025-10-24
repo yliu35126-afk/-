@@ -80,14 +80,14 @@ class BaseModel
         $default_lang = config("lang.default_lang");
         $cache_common = Cache::get("lang_app/lang/" . $default_lang . '/model.php');
         if (empty($cache_common)) {
-            $cache_common = include 'app/lang/' . $default_lang . '/model.php';
+            $cache_common = include root_path() . 'app/lang/' . $default_lang . '/model.php';
             Cache::tag("lang")->set("lang_app/lang/" . $default_lang, $cache_common);
         }
         $lang_path = isset($this->lang) ? $this->lang : '';
         if (!empty($lang_path)) {
             $cache_path = Cache::get("lang_" . $lang_path . "/" . $default_lang . '/model.php');
             if (empty($cache_path)) {
-                $cache_path = include $lang_path . "/" . $default_lang . '/model.php';
+                $cache_path = include root_path() . $lang_path . "/" . $default_lang . '/model.php';
                 Cache::tag("lang")->set("lang_" . $lang_path . "/" . $default_lang, $cache_path);
             }
             $lang = array_merge($cache_common, $cache_path);
