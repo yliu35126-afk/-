@@ -1,160 +1,145 @@
 <?php
+/**
+ * 分润明细可视化（Turntable 插件）
+ */
 namespace addon\turntable\admin\controller;
 
 use app\admin\controller\BaseAdmin;
-use app\model\system\Group as GroupModel;
+use think\facade\Db;
 
 class Profit extends BaseAdmin
 {
-    /**
-     * 分润账单列表
-     */
+    /** 列表页 */
     public function lists()
     {
         if (request()->isAjax()) {
-            $condition = [ ['site_id', '=', $this->site_id] ];
-            $device_id = input('device_id', 0);
-            $tier_id   = input('tier_id', 0);
-            $start_time = input('start_time', '');
-            $end_time   = input('end_time', '');
-            $settle_status = input('settle_status', ''); // pending | verified | settled
+            $page      = (int)input('page', 1);
+            $page_size = (int)input('page_size', PAGE_LIST_ROWS);
+            $device_id = (int)input('device_id', 0);
+            $start_ts  = (int)input('start_time', 0);
+            $end_ts    = (int)input('end_time', 0);
 
-            if ($device_id) $condition[] = ['device_id', '=', $device_id];
-            if ($tier_id)   $condition[] = ['tier_id', '=', $tier_id];
-            if ($start_time && $end_time) {
-                $condition[] = ['create_time', 'between', [ date_to_time($start_time), date_to_time($end_time) ] ];
-            } elseif (!$start_time && $end_time) {
-                $condition[] = ['create_time', '<=', date_to_time($end_time) ];
-            } elseif ($start_time && !$end_time) {
-                $condition[] = ['create_time', '>=', date_to_time($start_time) ];
+            $where = [];
+            if ($device_id > 0) $where[] = ['device_id', '=', $device_id];
+            if ($start_ts > 0) $where[] = ['create_time', '>=', $start_ts];
+            if ($end_ts > 0) $where[] = ['create_time', '<=', $end_ts];
+
+            // 优先读取统一分润表 ns_lottery_profit 并按 record_id 聚合
+            $base = Db::name('ns_lottery_profit')->where($where);
+            // 分组计数（记录数）
+            $count = (int)Db::name('ns_lottery_profit')->where($where)->group('record_id')->count();
+            $groups = Db::name('ns_lottery_profit')
+                ->where($where)
+                ->group('record_id')
+                ->field('record_id, max(create_time) as create_time')
+                ->order('create_time desc')
+                ->page($page, $page_size)
+                ->select()
+                ->toArray();
+
+            $list = [];
+            if ($count > 0) {
+                foreach ($groups as $g) {
+                    $rid = (int)($g['record_id'] ?? 0);
+                    if ($rid <= 0) continue;
+                    $rows = Db::name('ns_lottery_profit')->where('record_id', $rid)->select()->toArray();
+                    $row = [
+                        'record_id' => $rid,
+                        'device_id' => 0,
+                        'site_id' => 0,
+                        'amount_total' => 0.0,
+                        'platform_money' => 0.0,
+                        'supplier_money' => 0.0,
+                        'promoter_money' => 0.0,
+                        'installer_money'=> 0.0,
+                        'owner_money'    => 0.0,
+                        'merchant_money' => 0.0,
+                        'agent_money'    => 0.0,
+                        'member_money'   => 0.0,
+                        'city_money'     => 0.0,
+                        'create_time'    => (int)($g['create_time'] ?? 0),
+                    ];
+                    foreach ($rows as $pr) {
+                        $amt = floatval($pr['amount'] ?? 0);
+                        $role = strval($pr['role'] ?? '');
+                        switch ($role) {
+                            case 'platform': $row['platform_money'] += $amt; break;
+                            case 'supplier': $row['supplier_money'] += $amt; break;
+                            case 'promoter': $row['promoter_money'] += $amt; break;
+                            case 'installer':$row['installer_money']+= $amt; break;
+                            case 'owner':    $row['owner_money']    += $amt; break;
+                            case 'merchant': $row['merchant_money'] += $amt; break;
+                            case 'agent':    $row['agent_money']    += $amt; break;
+                            case 'member':   $row['member_money']   += $amt; break;
+                            case 'city':     $row['city_money']     += $amt; break;
+                            default: break;
+                        }
+                        $row['amount_total'] += $amt;
+                        if (!$row['device_id'] && isset($pr['device_id'])) $row['device_id'] = (int)$pr['device_id'];
+                        if (!$row['site_id'] && isset($pr['site_id'])) $row['site_id'] = (int)$pr['site_id'];
+                    }
+                    // 附加占位状态与角色快照
+                    $settle = Db::name('lottery_settlement')->where('record_id', $rid)->find();
+                    $row['settlement_status'] = strval($settle['status'] ?? '');
+                    $ext = Db::name('lottery_record')->where('record_id', $rid)->value('ext');
+                    $roles = [];
+                    try { $j = json_decode($ext ?: '{}', true); $roles = $j['profit_roles'] ?? []; } catch (\Throwable $e) { $roles = []; }
+                    $row['roles'] = $roles;
+                    $list[] = $row;
+                }
+            } else {
+                // 兼容回退旧占位表结构
+                $query = Db::name('lottery_profit')->where($where)->order('create_time desc');
+                $count = (int)$query->count();
+                $list  = $query->page($page, $page_size)->select()->toArray();
+                foreach ($list as &$row) {
+                    $rid = (int)($row['record_id'] ?? 0);
+                    $settle = Db::name('lottery_settlement')->where('record_id', $rid)->find();
+                    $row['settlement_status'] = strval($settle['status'] ?? '');
+                    $ext = Db::name('lottery_record')->where('record_id', $rid)->value('ext');
+                    $roles = [];
+                    try { $j = json_decode($ext ?: '{}', true); $roles = $j['profit_roles'] ?? []; } catch (\Throwable $e) { $roles = []; }
+                    $row['roles'] = $roles;
+                }
             }
 
-            $page = input('page', 1);
-            $page_size = input('page_size', PAGE_LIST_ROWS);
-            $list = model('lottery_profit')->pageList($condition, 'id desc', '*', $page, $page_size);
-
-            // 补充派发/核销状态（从抽奖记录ext.order派生）与结算标记（ext.profit_settle）以及分组分润明细（ext.profit_groups）
-            $rows = $list['data']['list'] ?? [];
-            $filtered = [];
-            foreach ($rows as $row) {
-                $record = model('lottery_record')->getInfo([ ['record_id', '=', $row['record_id']] ], 'ext');
-                $ext = [];
-                if (!empty($record)) {
-                    $ext = json_decode($record['ext'] ?? '{}', true);
-                }
-                $order = $ext['order'] ?? [];
-                $verified = (strtolower($order['status'] ?? '') === 'verified');
-                $settled = (strtolower($ext['profit_settle'] ?? '') === 'settled');
-                $row['settle_status'] = $settled ? 'settled' : ($verified ? 'verified' : 'pending');
-                // 透出简化订单核销信息
-                $row['verify_code'] = $order['verify_code'] ?? '';
-                $row['order_status'] = $order['status'] ?? 'pending';
-                // 注入用户组分润明细
-                $row['group_profit'] = $ext['profit_groups'] ?? [];
-
-                if ($settle_status === '' || $row['settle_status'] === $settle_status) {
-                    $filtered[] = $row;
-                }
-            }
-            $list['data']['list'] = $filtered;
-            $list['data']['count'] = count($filtered);
-
-            return $list;
+            return success(0, '', [ 'list' => $list, 'count' => $count ]);
         } else {
-            // 下拉数据源：设备、价档（移除不存在的 device_name 字段）
-            $devices = model('device_info')->getList([ ['site_id', '=', $this->site_id] ], 'device_id,device_sn');
-            $tiers   = model('lottery_price_tier')->getList([], 'tier_id,title');
-            $this->assign('devices', $devices['data'] ?? []);
-            $this->assign('tiers', $tiers['data'] ?? []);
-            // 用户组集合用于动态列选择
-            $groupModel = new GroupModel();
-            $groupList = $groupModel->getGroupList([], 'group_id,group_name', 'group_id asc');
-            $this->assign('groups', $groupList['data'] ?? []);
             return $this->fetch('profit/lists');
         }
     }
 
-    /**
-     * 标记分润账单为已结算（写入 lottery_record.ext.profit_settle=settled）
-     */
-    public function settle()
+    /** 重新触发某条记录的结算事件 */
+    public function retrigger()
     {
-        $id = intval(input('id', 0));
-        if (!$id) return $this->error('', '缺少参数');
-        $info = model('lottery_profit')->getInfo([ ['id', '=', $id], ['site_id', '=', $this->site_id] ], '*');
-        if (empty($info)) return $this->error('', '账单不存在');
-        $record = model('lottery_record')->getInfo([ ['record_id', '=', $info['record_id']] ], '*');
-        if (empty($record)) return $this->error('', '关联抽奖记录不存在');
-        $ext = json_decode($record['ext'] ?? '{}', true);
-        $ext['profit_settle'] = 'settled';
-        model('lottery_record')->update([ 'ext' => json_encode($ext, JSON_UNESCAPED_UNICODE) ], [ ['record_id', '=', $record['record_id']] ]);
-        return $this->success([ 'id' => $id ]);
-    }
-
-    /**
-     * 导出当前筛选页的CSV（前端触发下载）
-     */
-    public function export()
-    {
-        // 复用 lists 的筛选
-        $condition = [ ['site_id', '=', $this->site_id] ];
-        $device_id = input('device_id', 0);
-        $tier_id   = input('tier_id', 0);
-        $start_time = input('start_time', '');
-        $end_time   = input('end_time', '');
-        $settle_status = input('settle_status', '');
-        if ($device_id) $condition[] = ['device_id', '=', $device_id];
-        if ($tier_id)   $condition[] = ['tier_id', '=', $tier_id];
-        if ($start_time && $end_time) {
-            $condition[] = ['create_time', 'between', [ date_to_time($start_time), date_to_time($end_time) ] ];
-        } elseif (!$start_time && $end_time) {
-            $condition[] = ['create_time', '<=', date_to_time($end_time) ];
-        } elseif ($start_time && !$end_time) {
-            $condition[] = ['create_time', '>=', date_to_time($start_time) ];
-        }
-        $page = input('page', 1);
-        $page_size = input('page_size', PAGE_LIST_ROWS);
-        $list = model('lottery_profit')->pageList($condition, 'id desc', '*', $page, $page_size);
-        $rows = $list['data']['list'] ?? [];
-
-        // 加载用户组名称映射
-        $groupNames = [];
-        $groupModel = new GroupModel();
-        $gl = $groupModel->getGroupList([], 'group_id,group_name', 'group_id asc');
-        if (!empty($gl['data'])) {
-            foreach ($gl['data'] as $g) {
-                $groupNames[$g['group_id']] = $g['group_name'];
+        if (!request()->isAjax()) return success(-1, '仅支持Ajax', null);
+        $record_id = (int)input('record_id', 0);
+        if ($record_id <= 0) return success(-1, '参数错误', null);
+        try {
+            $exists = Db::name('lottery_settlement')->where('record_id', $record_id)->find();
+            if (empty($exists)) {
+                Db::name('lottery_settlement')->insert([
+                    'record_id'   => $record_id,
+                    'source_type' => 'manual',
+                    'status'      => 'pending',
+                    'payload'     => json_encode(['from' => 'admin_manual'], JSON_UNESCAPED_UNICODE),
+                    'create_time' => time(),
+                    'update_time' => time(),
+                ]);
+            } else {
+                $cur_status = strval($exists['status'] ?? '');
+                if ($cur_status !== 'pending') {
+                    return success(-1, '已结算单不允许重复触发', null);
+                }
+                Db::name('lottery_settlement')->where('record_id', $record_id)->update([
+                    'status' => 'pending',
+                    'update_time' => time(),
+                ]);
             }
+            event('turntable_settlement', ['record_id' => $record_id]);
+        } catch (\Throwable $e) {
+            return success(-1, '触发失败: '.$e->getMessage(), null);
         }
-
-        // 简单CSV（UTF-8），首行表头：改为用户组分润明细
-        $csv = "ID,记录ID,设备ID,价档ID,订单金额,用户组分润,创建时间\n";
-        foreach ($rows as $r) {
-            // 读取关联抽奖记录 ext 中的分组分润
-            $record = model('lottery_record')->getInfo([ ['record_id', '=', $r['record_id']] ], 'ext');
-            $ext = [];
-            if (!empty($record)) {
-                $ext = json_decode($record['ext'] ?? '{}', true);
-            }
-            $groups = $ext['profit_groups'] ?? [];
-            // 支持两种键：纯数字group_id或以 group_ 前缀的键
-            $parts = [];
-            foreach ($groups as $k => $amt) {
-                $gid = 0;
-                if (is_numeric($k)) { $gid = intval($k); }
-                elseif (strpos($k, 'group_') === 0) { $gid = intval(substr($k, 6)); }
-                $name = $groupNames[$gid] ?? ('组'.$gid);
-                $parts[] = $name . ':' . $amt;
-            }
-            $groupStr = implode(';', $parts);
-
-            $csv .= implode(',', [
-                $r['id'], $r['record_id'], $r['device_id'], $r['tier_id'],
-                $r['amount_total'], $groupStr,
-                date('Y-m-d H:i:s', $r['create_time'] ?? time())
-            ]) . "\n";
-        }
-        // 输出文本响应，由前端触发下载
-        return $this->success([ 'filename' => 'profit_page_' . $page . '.csv', 'content' => $csv ]);
+        return success(0, '已触发结算', null);
     }
 }

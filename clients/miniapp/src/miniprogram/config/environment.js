@@ -57,6 +57,30 @@ function getCurrentConfig() {
   }
 }
 
+// 切换环境并持久化到本地存储（供设置页/调试入口调用）
+function setEnv(mode, opts) {
+  try {
+    // 允许的取值：online / localhost / lan
+    const allowed = ['online', 'localhost', 'lan'];
+    const next = allowed.includes(mode) ? mode : 'localhost';
+    wx.setStorageSync(KEY_ENV_MODE, next);
+
+    if (next === 'lan') {
+      const ip = (opts && opts.ip) || getStored(KEY_ENV_LAN_IP, '192.168.1.2');
+      wx.setStorageSync(KEY_ENV_LAN_IP, ip);
+    }
+
+    const cur = getCurrentConfig();
+    console.log(`[ENV] 已切换到: ${cur.name}`);
+    console.log(`[ENV] WebSocket: ${cur.websocketUrl}`);
+    console.log(`[ENV] API地址: ${cur.apiBaseUrl}`);
+    return cur;
+  } catch (e) {
+    console.warn('[ENV] setEnv 失败:', e && e.message);
+    return getCurrentConfig();
+  }
+}
+
 // 生成用于 Socket.IO 握手的完整 wsUrl（附加 Engine.IO 必需参数）
 function getWebSocketUrl(deviceCode) {
   const cfg = getCurrentConfig();

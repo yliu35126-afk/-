@@ -348,6 +348,124 @@
 
 					<div class="layui-card-body">
 
+                        {if !empty($turntable_tier_list)}
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">转盘价档：</label>
+                            <div class="layui-input-block">
+                                <input type="checkbox" value="1" lay-skin="switch" name="turntable_enable" lay-filter="turntable_enable" title="启用">
+                                <div class="layui-input-inline ns-len-mid" style="margin-left:20px;">
+                                    <select name="turntable_tier_ids[]" id="turntable_tier_id" multiple disabled>
+                                        {foreach name="$turntable_tier_list" item="vo"}
+                                        <option value="{$vo.tier_id}">
+                                            {$vo.title}
+                                            {if isset($vo.min_price) && isset($vo.max_price) && ($vo.min_price>0 || $vo.max_price>0)}（供货￥{$vo.min_price}-{$vo.max_price}）{/if}
+                                        </option>
+                                        {/foreach}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="ns-word-aux">启用后，该商品可作为转盘奖品，并按所选价档范围校验供货价。</div>
+                            <!-- Turntable hidden fields for backend -->
+                            <input type="hidden" name="lottery_participation" value="0">
+                            <input type="hidden" name="lottery_tier_ids" value="">
+                            <input type="hidden" name="supply_price" value="">
+                        </div>
+                        <script>
+                        layui.use(['form'], function(){
+                            var form = layui.form;
+                            var enable = parseInt('{:isset($turntable_bind["enable"]) ? $turntable_bind["enable"] : 0}');
+                            var tierIdsJson = '{:isset($turntable_bind["tier_ids"]) ? $turntable_bind["tier_ids"] : ""}';
+                            var fallbackTierId = '{:isset($turntable_bind["tier_id"]) ? $turntable_bind["tier_id"] : ""}';
+                            var enableElem = document.querySelector('input[name="turntable_enable"]');
+                            var sel = document.getElementById('turntable_tier_id');
+                            var tiers = {};
+                            try {
+                                var _tierArr = JSON.parse('{:json_encode($turntable_tier_list)}');
+                                if (_tierArr && _tierArr.forEach) {
+                                    _tierArr.forEach(function(vo){
+                                        tiers[String(vo.tier_id)] = {
+                                            min: parseFloat(vo.min_price || 0),
+                                            max: parseFloat(vo.max_price || 0)
+                                        };
+                                    });
+                                }
+                            } catch (e) {}
+                            if(enable === 1){
+                                enableElem.checked = true;
+                                sel.disabled = false;
+                                try {
+                                    var arr = tierIdsJson ? JSON.parse(tierIdsJson) : [];
+                                    if ((!arr || arr.length===0) && fallbackTierId) { arr = [String(fallbackTierId)]; }
+                                    if (arr && arr.length){
+                                        Array.prototype.forEach.call(sel.options, function(o){ if(arr.indexOf(String(o.value))>-1){ o.selected = true; } });
+                                    }
+                                } catch(e) {
+                                    if (fallbackTierId) { Array.prototype.forEach.call(sel.options, function(o){ if(String(o.value)===String(fallbackTierId)){ o.selected = true; } }); }
+                                }
+                            }
+                            form.render();
+                            form.on('switch(turntable_enable)', function(data){
+                                sel.disabled = !data.elem.checked;
+                                form.render('select');
+                            });
+                            // 提交校验（与新增一致）：启用时要求供货价同时落入所有被选价档范围
+                            var formEl = document.querySelector('form.layui-form');
+                            if (formEl) {
+                                formEl.addEventListener('submit', function(e){
+                                    var enableC = document.querySelector('input[name="turntable_enable"]');
+                                    if (enableC && enableC.checked) {
+                                        var selected = Array.prototype.slice.call(sel.options).filter(function(o){return o.selected;}).map(function(o){return o.value;});
+                                        // 填充隐藏字段
+                                        var lp = document.querySelector('input[name="lottery_participation"]');
+                                        if (lp) lp.value = 1;
+                                        var lti = document.querySelector('input[name="lottery_tier_ids"]');
+                                        if (lti) lti.value = JSON.stringify(selected);
+
+                                        // 供货价：单规格取成本价，多规格取所有SKU成本价的最小值
+                                        var cost = 0;
+                                        var singleCost = document.querySelector('.js-single-spec input[name="cost_price"]');
+                                        if (singleCost) {
+                                            cost = parseFloat(singleCost.value || '0');
+                                        } else {
+                                            var skuCosts = document.querySelectorAll('table.sku-table input[name="cost_price"], .sku-list input[name="cost_price"]');
+                                            var minCost = null;
+                                            for (var i=0;i<skuCosts.length;i++){
+                                                var v = parseFloat(skuCosts[i].value || '0');
+                                                if (!isNaN(v) && v > 0) { if (minCost===null || v<minCost) minCost = v; }
+                                            }
+                                            cost = (minCost===null)?0:minCost;
+                                        }
+                                        var sp = document.querySelector('input[name="supply_price"]');
+                                        if (sp) sp.value = isNaN(cost) ? '' : cost.toFixed(2);
+
+                                        if (selected.length === 0) return; // let backend handle
+                                        // 以下为前端范围校验
+                                        if (isNaN(cost) || cost <= 0) return; // skip if no cost
+                                        var allOk = true;
+                                        for (var i=0;i<selected.length;i++){
+                                            var t = tiers[selected[i]] || {min:0,max:0};
+                                            if (!(t.min===0 && t.max===0)) {
+                                                if (!(cost>=t.min && (t.max==0 || cost<=t.max))) { allOk = false; break; }
+                                            }
+                                        }
+                                        if (!allOk) {
+                                            layer.msg('供货价需同时满足所有所选价档的范围');
+                                            e.preventDefault();
+                                            return false;
+                                        }
+                                    } else {
+                                        // 未启用则重置隐藏字段
+                                        var lp0 = document.querySelector('input[name="lottery_participation"]');
+                                        if (lp0) lp0.value = 0;
+                                        var lti0 = document.querySelector('input[name="lottery_tier_ids"]');
+                                        if (lti0) lti0.value = '';
+                                    }
+                                }, true);
+                            }
+                        });
+                        </script>
+                        {/if}
+
 						<div class="layui-form-item">
 							<label class="layui-form-label">限购：</label>
 							<div class="layui-input-block">
@@ -467,6 +585,7 @@
 						</div>
 					</div>
 				</div>
+				<script>window.UEDITOR_HOME_URL = "__STATIC__/ext/ueditor/"; window.UEDITOR_SERVER_URL = "/admin/ueditor/index";</script>
 				<script type="text/javascript" charset="utf-8" src="__STATIC__/ext/ueditor/ueditor.config.js"></script>
 				<script type="text/javascript" charset="utf-8" src="__STATIC__/ext/ueditor/ueditor.all.js"> </script>
 				<script type="text/javascript" charset="utf-8" src="__STATIC__/ext/ueditor/lang/zh-cn/zh-cn.js"></script>

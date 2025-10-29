@@ -76,6 +76,41 @@ class Config extends BaseApi
     }
 
     /**
+     * WebSocket 设置
+     * 返回统一的 wsUrl 以及拆分的 host/port/scheme/path，供前端动态读取
+     */
+    public function ws()
+    {
+        // 先尝试系统配置覆盖（数据库），不存在则走 config/app.php 默认值
+        $sys = new ConfigSystemModel();
+        $db = $sys->getConfig([[ 'site_id', '=', 0 ], [ 'app_module', '=', 'admin' ], [ 'config_key', '=', 'WS_CONFIG' ]]);
+        $dbVal = $db['data']['value'] ?? [];
+
+        $app = config('app');
+        $host   = (string)($dbVal['ws_host']   ?? ($app['ws_host']   ?? '127.0.0.1'));
+        $port   = (int)   ($dbVal['ws_port']   ?? ($app['ws_port']   ?? 3001));
+        $scheme = (string)($dbVal['ws_scheme'] ?? ($app['ws_scheme'] ?? 'ws'));
+        $path   = (string)($dbVal['ws_path']   ?? ($app['ws_path']   ?? '/socket.io/'));
+
+        // 规范 path
+        if ($path === '' || $path[0] !== '/') $path = '/' . $path;
+        if (substr($path, -1) !== '/') $path .= '/';
+
+        // wss 默认不暴露端口（443 反代场景），其余协议保留端口
+        $hasPort = !in_array(strtolower($scheme), ['wss']) || ($port && $port !== 443);
+        $url = ($hasPort ? sprintf('%s://%s:%d%s', $scheme, $host, $port, $path) : sprintf('%s://%s%s', $scheme, $host, $path));
+
+        $data = [
+            'host'   => $host,
+            'port'   => $port,
+            'scheme' => $scheme,
+            'path'   => $path,
+            'wsUrl'  => $url
+        ];
+        return $this->response($this->success($data));
+    }
+
+    /**
      * 获取验证码配置
      */
     public function getCaptchaConfig()

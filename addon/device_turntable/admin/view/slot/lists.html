@@ -1,0 +1,320 @@
+{extend name="app/admin/view/base.html"/}
+{block name="resources"}
+<style>
+  .layui-table-view td:last-child>div{overflow: inherit;}
+  .operation-wrap{position: relative;}
+  .layui-table-box{overflow: inherit;}
+  .layui-table-body{overflow: inherit;}
+
+  /* Grid 视图样式 */
+  .slot-grid-wrap { margin-top: 10px; }
+  .grid-actions { margin-bottom: 10px; }
+  .slot-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-gap: 12px; }
+  .slot-card { position: relative; border: 1px solid #e6e6e6; border-radius: 6px; padding: 10px; background: #fff; min-height: 120px; cursor: pointer; }
+  .slot-card.empty { border-style: dashed; color: #bbb; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .slot-card .pos { position: absolute; left: 8px; top: 6px; font-size: 12px; color: #999; }
+  .slot-card .status-dot { position: absolute; right: 8px; top: 8px; width: 8px; height: 8px; border-radius: 50%; }
+  .slot-card .status-dot.on { background: #16b777; }
+  .slot-card .status-dot.off { background: #999; }
+  .slot-card .cover { width: 100%; height: 64px; border-radius: 4px; object-fit: cover; background: #f7f7f7; }
+  .slot-card .title { margin-top: 6px; font-size: 14px; line-height: 20px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .slot-card .type { margin-top: 2px; font-size: 12px; color: #666; }
+  .slot-card .more { position: absolute; right: 6px; bottom: 6px; font-size: 16px; color: #999; }
+  .slot-card.dragging { opacity: 0.6; }
+</style>
+{/block}
+{block name="main"}
+<div class="layui-collapse ns-tips">
+  <div class="layui-colla-item">
+    <h2 class="layui-colla-title">操作提示</h2>
+    <ul class="layui-colla-content layui-show">
+      <li>管理抽奖盘的16个格子及奖品信息。</li>
+    </ul>
+  </div>
+</div>
+
+<!-- 搜索框 -->
+<div class="ns-single-filter-box">
+  <button class="layui-btn ns-bg-color" onclick="add()">添加格子</button>
+  <div class="layui-form">
+    <div class="layui-input-inline">
+      <input type="text" name="board_id" value="{$board_id|default=''}" placeholder="盘ID(可选)" class="layui-input" autocomplete="off">
+      <button type="button" class="layui-btn layui-btn-primary" lay-filter="search" lay-submit>
+        <i class="layui-icon">&#xe615;</i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="layui-tab ns-table-tab" lay-filter="slot_tab">
+  <ul class="layui-tab-title">
+    <li class="layui-this" data-tab="table" data-status="">全部</li>
+    <li data-tab="table" data-status="1">启用</li>
+    <li data-tab="table" data-status="0">禁用</li>
+    <li data-tab="grid">宫格视图</li>
+  </ul>
+  <div class="layui-tab-content">
+    <div id="table_view">
+      <table id="slot_list" lay-filter="slot_list"></table>
+    </div>
+    <div id="grid_view" class="slot-grid-wrap" style="display:none;">
+      <div class="grid-actions">
+        <button class="layui-btn" id="save_moves">保存调整</button>
+        <button class="layui-btn layui-btn-primary" id="reload_grid">刷新</button>
+      </div>
+      <div class="slot-grid" id="slot_grid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 状态 -->
+<script type="text/html" id="statusTpl">
+  {{#  if(d.status == 1){  }}
+  启用
+  {{#  }else{  }}
+  禁用
+  {{#  }  }}
+</script>
+
+<!-- 操作 -->
+<script type="text/html" id="action">
+  <div class="ns-table-btn">
+    <a class="layui-btn" lay-event="edit">编辑</a>
+    <a class="layui-btn" lay-event="del">删除</a>
+  </div>
+</script>
+{/block}
+
+{block name="script"}
+<script>
+layui.use(['form','element'], function(){
+  var form = layui.form,
+      element = layui.element,
+      table;
+  form.render();
+
+  var SLOT_STORE = { byPos: {}, byId: {}, moves: {} };
+  var DEFAULT_IMG = ns.img('app/admin/view/public/img/default_goods.png');
+
+  function buildEmptyCard(pos){
+    return '<div class="slot-card empty" data-position="'+pos+'" draggable="true">'
+      + '<div class="pos">#'+pos+'</div>'
+      + '<div>空位，点击新增</div>'
+      + '</div>';
+  }
+  function buildCard(item){
+    var img = item.img || DEFAULT_IMG;
+    var typeMap = { goods: '商品', thanks: '谢谢参与', coupon: '优惠券', balance: '余额', point: '积分' };
+    var typeText = typeMap[item.prize_type] || item.prize_type;
+    var statusCls = item.status == 1 ? 'on' : 'off';
+    return '<div class="slot-card" data-position="'+item.position+'" data-slot-id="'+item.slot_id+'" draggable="true">'
+      + '<div class="pos">#'+item.position+'</div>'
+      + '<div class="status-dot '+statusCls+'"></div>'
+      + '<img class="cover" src="'+img+'" onerror="this.src=\''+DEFAULT_IMG+'\'"/>'
+      + '<div class="title">'+(item.title||'未命名')+'</div>'
+      + '<div class="type">'+typeText+'</div>'
+      + '<div class="more">⋮</div>'
+      + '</div>';
+  }
+
+  function renderGrid(list){
+    SLOT_STORE.byPos = {}; SLOT_STORE.byId = {}; // reset
+    list.forEach(function(item){ SLOT_STORE.byPos[item.position] = item; SLOT_STORE.byId[item.slot_id] = item; });
+    var html = '';
+    for (var i=0;i<16;i++){
+      if (SLOT_STORE.byPos[i]) html += buildCard(SLOT_STORE.byPos[i]);
+      else html += buildEmptyCard(i);
+    }
+    $('#slot_grid').html(html);
+    bindGridEvents();
+  }
+
+  function fetchGrid(){
+    var bid = $('input[name="board_id"]').val() || '{$board_id|default=""}';
+    $.ajax({
+      url: ns.url('device_turntable://admin/slot/lists'),
+      type: 'GET', dataType: 'json',
+      data: { board_id: bid, page: 1, page_size: 50 },
+      success: function(res){
+        if (res.code === 0 && res.data){ var list = res.data.list || res.data; renderGrid(list || []); }
+        else { layer.msg(res.message || '加载失败'); }
+      },
+      error: function(xhr){ console.error('[grid fetch] error', xhr.status, xhr.responseText); layer.msg('加载失败，请稍后重试'); }
+    });
+  }
+
+  function openMenu(e, pos){
+    var item = SLOT_STORE.byPos[pos];
+    var content = '<div style="padding:10px 16px;">'
+      + (item ? '<button class="layui-btn layui-btn-xs" id="menu_copy">复制到位置</button> ' : '')
+      + (item ? '<button class="layui-btn layui-btn-danger layui-btn-xs" id="menu_clear">清空此格</button> ' : '')
+      + '<button class="layui-btn layui-btn-primary layui-btn-xs" id="menu_cancel">取消</button>'
+      + '</div>';
+    var index = layer.open({ type: 1, shade: 0, area: ['220px'], content: content });
+    $('#menu_cancel').on('click', function(){ layer.close(index); });
+    if (item) {
+      $('#menu_clear').on('click', function(){ layer.close(index); clearSlot(item.slot_id); });
+      $('#menu_copy').on('click', function(){
+        layer.prompt({ title: '复制到位置(0-15)', formType: 0 }, function(value, i){
+          var toPos = parseInt(value, 10);
+          layer.close(i); layer.close(index);
+          if (isNaN(toPos) || toPos<0 || toPos>15) return layer.msg('位置需在0-15');
+          copySlotToPos(item, toPos);
+        });
+      });
+    }
+  }
+
+  function clearSlot(slotId){
+    layer.confirm('确定清空该位置吗？', function(){
+      $.ajax({ url: ns.url('device_turntable://admin/slot/delete'), type: 'POST', dataType: 'json', data: { slot_id: slotId },
+        success: function(res){ layer.msg(res.message); if(res.code===0){ fetchGrid(); } },
+        error: function(){ layer.msg('操作失败'); }
+      });
+    });
+  }
+
+  function copySlotToPos(item, toPos){
+    var bid = $('input[name="board_id"]').val() || item.board_id;
+    if (SLOT_STORE.byPos[toPos]) return layer.msg('目标位置已被占用');
+    var data = {
+      board_id: bid,
+      position: toPos,
+      prize_type: item.prize_type,
+      title: item.title,
+      img: item.img,
+      goods_id: item.goods_id,
+      sku_id: item.sku_id,
+      inventory: item.inventory,
+      weight: item.weight,
+      value: item.value
+    };
+    $.ajax({ url: ns.url('device_turntable://admin/slot/add'), type: 'POST', dataType: 'json', data: data,
+      success: function(res){ layer.msg(res.message); if(res.code===0){ fetchGrid(); } },
+      error: function(){ layer.msg('复制失败'); }
+    });
+  }
+
+  function bindGridEvents(){
+    var dragSrcPos = null;
+    $('#slot_grid .slot-card')
+      .on('click', function(){
+        var pos = parseInt(this.getAttribute('data-position'),10);
+        var item = SLOT_STORE.byPos[pos];
+        var bid = $('input[name="board_id"]').val();
+        if (item) location.href = ns.url('device_turntable://admin/slot/edit', { slot_id: item.slot_id });
+        else location.href = ns.url('device_turntable://admin/slot/add', { board_id: bid, position: pos });
+      })
+      .on('contextmenu', function(e){ e.preventDefault(); var pos = parseInt(this.getAttribute('data-position'),10); openMenu(e, pos); })
+      .on('dragstart', function(e){ dragSrcPos = parseInt(this.getAttribute('data-position'),10); this.classList.add('dragging'); })
+      .on('dragend', function(e){ this.classList.remove('dragging'); })
+      .on('dragover', function(e){ e.preventDefault(); })
+      .on('drop', function(e){
+        e.preventDefault();
+        var toPos = parseInt(this.getAttribute('data-position'),10);
+        if (isNaN(dragSrcPos) || dragSrcPos === toPos) return;
+        var fromItem = SLOT_STORE.byPos[dragSrcPos];
+        var toItem = SLOT_STORE.byPos[toPos];
+        if (!fromItem) return;
+        if (toItem) {
+          SLOT_STORE.moves[fromItem.slot_id] = toPos;
+          SLOT_STORE.moves[toItem.slot_id] = dragSrcPos;
+          fromItem.position = toPos; toItem.position = dragSrcPos;
+          SLOT_STORE.byPos[toPos] = fromItem; SLOT_STORE.byPos[dragSrcPos] = toItem;
+        } else {
+          SLOT_STORE.moves[fromItem.slot_id] = toPos;
+          fromItem.position = toPos;
+          SLOT_STORE.byPos[toPos] = fromItem; delete SLOT_STORE.byPos[dragSrcPos];
+        }
+        renderGrid(Object.values(SLOT_STORE.byPos));
+      });
+  }
+
+  function saveMoves(){
+    var ids = Object.keys(SLOT_STORE.moves);
+    if (!ids.length) return layer.msg('无调整需要保存');
+    var bid = $('input[name="board_id"]').val() || '{$board_id|default=""}';
+    var queue = ids.map(function(id){
+      var item = SLOT_STORE.byId[id];
+      var newPos = SLOT_STORE.moves[id];
+      var data = {
+        slot_id: item.slot_id,
+        position: newPos,
+        prize_type: item.prize_type,
+        title: item.title,
+        img: item.img,
+        goods_id: item.goods_id,
+        sku_id: item.sku_id,
+        inventory: item.inventory,
+        weight: item.weight,
+        value: item.value,
+        status: item.status
+      };
+      return $.ajax({ url: ns.url('device_turntable://admin/slot/edit'), type: 'POST', dataType: 'json', data: data });
+    });
+    $.when.apply($, queue).done(function(){
+      layer.msg('调整已保存');
+      SLOT_STORE.moves = {}; fetchGrid();
+    }).fail(function(){
+      layer.msg('保存失败，请检查后重试');
+    });
+  }
+
+  $('#save_moves').on('click', saveMoves);
+  $('#reload_grid').on('click', fetchGrid);
+
+  element.on('tab(slot_tab)', function(){
+    var tab = this.getAttribute('data-tab');
+    var status = this.getAttribute('data-status');
+    if (tab === 'grid') {
+      $('#table_view').hide(); $('#grid_view').show(); fetchGrid();
+    } else {
+      $('#grid_view').hide(); $('#table_view').show();
+      table.reload({ page: { curr: 1 }, where: { 'status': status } });
+    }
+  });
+
+  table = new Table({
+    elem: '#slot_list',
+    url: ns.url('device_turntable://admin/slot/lists'),
+    where: { board_id: '{$board_id|default=""}' },
+    cols: [[
+      { field: 'board_id', title: '盘ID', width: '10%' },
+      { field: 'position', title: '位置(0-15)', width: '12%' },
+      { field: 'title', title: '标题', width: '20%' },
+      { field: 'prize_type', title: '类型' },
+      { field: 'weight', title: '权重' },
+      { field: 'inventory', title: '库存/次数' },
+      { field: 'value', title: '面值' },
+      { title: '状态', templet: '#statusTpl' },
+      { title: '操作', toolbar: '#action', width: '18%' }
+    ]]
+  });
+
+  form.on('submit(search)', function(data){
+    table.reload({ page: { curr: 1 }, where: { board_id: data.field.board_id } });
+    if ($('#grid_view').is(':visible')) fetchGrid();
+    return false;
+  });
+
+  window.add = function(){
+    var bid = $('input[name="board_id"]').val();
+    location.href = ns.url('device_turntable://admin/slot/add', { board_id: bid });
+  };
+
+  table.tool(function(obj){
+    var data = obj.data;
+    if (obj.event === 'edit') {
+      location.href = ns.url('device_turntable://admin/slot/edit', { slot_id: data.slot_id });
+    } else if (obj.event === 'del') {
+      layer.confirm('确定删除该格子吗？', function(){
+        $.ajax({ url: ns.url('device_turntable://admin/slot/delete'), data: { slot_id: data.slot_id }, dataType: 'json', type: 'POST',
+          success: function(res){ layer.msg(res.message); if(res.code === 0){ table.reload(); if($('#grid_view').is(':visible')) fetchGrid(); } },
+          error: function(xhr){ console && console.error && console.error('[slot.delete] ajax error', xhr && xhr.status, xhr && xhr.responseText); layer && layer.msg && layer.msg('删除失败，请稍后重试'); }
+        });
+      });
+    }
+  });
+});
+</script>
+{/block}

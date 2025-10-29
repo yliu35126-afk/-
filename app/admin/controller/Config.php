@@ -148,6 +148,7 @@ class Config extends BaseAdmin
                 'city_login' => input('city_login', 0),//城市分站登录是否启用 1：启用 0：不启用,
                 'shop_reception_login' => (int)input('shop_reception_login', 0),//H5会员登录注册验证码
                 'shop_pc_reception_login' => (int)input('shop_pc_reception_login', 0),//PC会员登录注册验证码
+                'weapp_login' => (int)input('weapp_login', 0),//小程序登录验证码开关 1：启用 0：不启用
             ];
             return $config_model->setCaptchaConfig($data);
         } else {

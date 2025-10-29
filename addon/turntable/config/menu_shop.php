@@ -12,11 +12,11 @@ return [
 		'sort' => 100,
 		'child_list' => [
 			[
-				'name' => 'PROMOTION_TURNTABLE_LIST',
-				'title' => '幸运抽奖列表',
-				'url' => 'turntable://shop/turntable/lists',
-				'is_show' => 1,
-				'child_list' => [
+		'name' => 'PROMOTION_TURNTABLE_LIST',
+		'title' => '幸运抽奖列表',
+		'url' => 'turntable://shop/turntable/lists',
+		'is_show' => 0,
+		'child_list' => [
 					[
 						'name' => 'PROMOTION_TURNTABLE_ADD',
 						'title' => '添加活动',

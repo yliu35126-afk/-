@@ -102,6 +102,24 @@ object NetworkConfig {
         }
     }
 
+    /**
+     * 插件接口 BASE_URL（去掉 /api/ 前缀，使用 /index.php/）
+     * 用于 /addons/... 路由，避免拼接成 /index.php/api/addons/... 导致 404
+     */
+    fun pluginBaseUrl(): String {
+        val primary = baseUrl()
+        return when {
+            primary.contains("/index.php/api/") -> primary.replace("/index.php/api/", "/index.php/")
+            primary.contains("/api.php/") -> primary.replace("/api.php/", "/index.php/")
+            primary.contains("/api/") -> primary.replace("/api/", "/index.php/")
+            primary.contains("/index.php/") -> primary
+            else -> {
+                val tail = if (primary.endsWith("/")) "" else "/"
+                primary + tail + "index.php/"
+            }
+        }
+    }
+
     fun socketPath(): String {
         val path = BuildConfig.SOCKET_PATH
         return if (path.isNullOrBlank()) "/socket.io/" else path

@@ -5,6 +5,7 @@
 namespace addon\turntable\admin\controller;
 
 use app\admin\controller\BaseAdmin;
+use think\facade\Db;
 
 class Device extends BaseAdmin
 {
@@ -26,7 +27,8 @@ class Device extends BaseAdmin
             $page = (int)input('page', 1);
             $page_size = (int)input('page_size', PAGE_LIST_ROWS);
             $model = model('device_info');
-            $result = $model->pageList($condition, '*', 'id desc', $page, $page_size);
+            // 按设备主键倒序
+            $result = $model->pageList($condition, '*', 'device_id desc', $page, $page_size);
             return success(0, '', $result);
         } else {
             return $this->fetch('device/lists');
@@ -72,18 +74,34 @@ class Device extends BaseAdmin
             $device_sn = input('device_sn', '');
             $board_id = (int)input('board_id', 0);
             $status = (int)input('status', 1);
+            // 归属角色字段
+            $site_id     = (int)input('site_id', 0);
+            $supplier_id = (int)input('supplier_id', 0);
+            $promoter_id = (int)input('promoter_id', 0);
+            $installer_id= (int)input('installer_id', 0);
+            $owner_id    = (int)input('owner_id', 0);
+            $agent_code  = input('agent_code', '');
             if ($device_sn === '') return success(-1, '设备SN不能为空', null);
             $data = [
                 'device_sn' => $device_sn,
                 'board_id' => $board_id,
                 'status' => $status,
+                // 归属角色字段写入
+                'site_id' => $site_id,
+                'supplier_id' => $supplier_id,
+                'promoter_id' => $promoter_id,
+                'installer_id'=> $installer_id,
+                'owner_id'    => $owner_id,
+                'agent_code'  => $agent_code,
                 'update_time' => time(),
             ];
-            $res = $model->update($data, [['id', '=', $id], ['site_id', '=', $this->site_id]]);
+            // 依据设备主键更新
+            $res = $model->update($data, [['device_id', '=', $id], ['site_id', '=', $this->site_id]]);
             if ($res) return success(0, '修改成功', null);
             return success(-1, '修改失败', null);
         } else {
-            $info = $model->getInfo([['id', '=', $id], ['site_id', '=', $this->site_id]]);
+            // 获取设备详情
+            $info = $model->getInfo([['device_id', '=', $id], ['site_id', '=', $this->site_id]]);
 
             // 额外查询：当前绑定盘信息
             $board_info = [];
@@ -105,11 +123,12 @@ class Device extends BaseAdmin
             $bind_where_effect[] = ['start_time', '<=', $now];
             // 结束时间为0表示长期有效
             // ThinkPHP条件无法直接表达 or，这里先尝试取两类并择其一
-            $bind_info = model('device_price_bind')->getInfo($bind_where_effect, '*', 'id desc');
+            // 选最近创建的绑定记录
+            $bind_info = model('device_price_bind')->getInfo($bind_where_effect, '*', 'create_time desc');
             if (empty($bind_info)) {
                 $bind_where_open = $bind_where;
                 $bind_where_open[] = ['end_time', '=', 0];
-                $bind_info = model('device_price_bind')->getInfo($bind_where_open, '*', 'id desc');
+                $bind_info = model('device_price_bind')->getInfo($bind_where_open, '*', 'create_time desc');
             } else {
                 // 若存在，且有结束时间需校验
                 if (!empty($bind_info['end_time']) && $bind_info['end_time'] > 0 && $bind_info['end_time'] <= $now) {
@@ -125,10 +144,17 @@ class Device extends BaseAdmin
                 ]);
             }
 
+            // 提供商家站点下拉选项（site_id, site_name）
+            $shop_options = [];
+            try {
+                $shop_options = Db::name('shop')->field('site_id,site_name')->order('site_id asc')->select();
+            } catch (\Throwable $e) {}
+
             $this->assign('info', $info);
             $this->assign('board_info', $board_info);
             $this->assign('bind_info', $bind_info);
             $this->assign('tier_info', $tier_info);
+            $this->assign('shop_options', $shop_options);
             return $this->fetch('device/edit');
         }
     }
@@ -142,7 +168,8 @@ class Device extends BaseAdmin
             $id = (int)input('id', 0);
             if ($id <= 0) return success(-1, '参数错误', null);
             $model = model('device_info');
-            $res = $model->delete([['id', '=', $id], ['site_id', '=', $this->site_id]]);
+            // 按主键删除
+            $res = $model->delete([['device_id', '=', $id], ['site_id', '=', $this->site_id]]);
             if ($res) return success(0, '删除成功', null);
             return success(-1, '删除失败', null);
         }

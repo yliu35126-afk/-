@@ -71,26 +71,26 @@
 			if (repeat_flag) return false;
 			repeat_flag = true;
 
-			$.ajax({
-				type: "POST",
-				url: "{:url('admin/login/login')}",
-				data: data.field,
-				dataType: "JSON",
-				contentType: "application/x-www-form-urlencoded; charset=UTF-8",
-				headers: { 'X-Requested-With': 'XMLHttpRequest' },
-				timeout: 8000,
-				success: function(res) {
-					if (res.code == 0) {
-						layer.msg('登录成功',{anim: 5,time: 500},function () {
-							window.location = "{:url('admin/index/index')}";
-						})
-					} else {
-						layer.msg(res.message);
-						repeat_flag = false;
-						if (ADMIN_CAPTCHA_ON == 1) verificationCode();
-					}
-				},
-				error: function(xhr, status, err) {
+            $.ajax({
+                type: "POST",
+                url: "/index.php/admin/login/login",
+                data: data.field,
+                dataType: "JSON",
+                contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                timeout: 8000,
+                success: function(res) {
+                    if (res.code == 0) {
+                        layer.msg('登录成功',{anim: 5,time: 500},function () {
+                            window.location = "/index.php/admin/index/index";
+                        })
+                    } else {
+                        layer.msg(res.message);
+                        repeat_flag = false;
+                        if (ADMIN_CAPTCHA_ON == 1) verificationCode();
+                    }
+                },
+                error: function(xhr, status, err) {
 					var msg = '网络或服务器错误，尝试快速修复...';
 					var payload = data.field || {};
 					// 优先读取后端返回的错误消息
@@ -103,31 +103,31 @@
 					// 友好提示
 					layer.msg(msg);
 					// 尝试DEV模拟登录，避免环境未配置数据库导致无法进入后台
-					$.ajax({
-						type: "POST",
-						url: "{:url('admin/login/devSim')}",
-						data: { username: payload.username || 'admin', password: payload.password || 'admin123' },
-						dataType: "JSON",
-						contentType: "application/x-www-form-urlencoded; charset=UTF-8",
-						headers: { 'X-Requested-With': 'XMLHttpRequest' },
-						timeout: 5000,
-						success: function(devRes) {
-							if (devRes && devRes.code == 0) {
-								layer.msg('已进入后台（开发模拟登录）',{anim:5,time:600},function(){
-									window.location = "{:url('admin/index/index')}";
-								});
-							} else {
-								repeat_flag = false;
-								if (ADMIN_CAPTCHA_ON == 1) verificationCode();
-							}
-						},
-						error: function(){
-							repeat_flag = false;
-							if (ADMIN_CAPTCHA_ON == 1) verificationCode();
-						}
-					});
-				} 
-			});
+                    $.ajax({
+                        type: "POST",
+                        url: "/index.php/admin/login/devSim",
+                        data: { username: payload.username || 'admin', password: payload.password || 'admin123' },
+                        dataType: "JSON",
+                        contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        timeout: 5000,
+                        success: function(devRes) {
+                            if (devRes && devRes.code == 0) {
+                                layer.msg('已进入后台（开发模拟登录）',{anim:5,time:600},function(){
+                                    window.location = "/index.php/admin/index/index";
+                                });
+                            } else {
+                                repeat_flag = false;
+                                if (ADMIN_CAPTCHA_ON == 1) verificationCode();
+                            }
+                        },
+                        error: function(){
+                            repeat_flag = false;
+                            if (ADMIN_CAPTCHA_ON == 1) verificationCode();
+                        }
+                    });
+                } 
+            });
 
 			// 阻止默认提交，避免页面跳转
 			return false;
@@ -166,17 +166,17 @@
 	 * 验证码
 	 */
 	function verificationCode(){
-		$.ajax({
-			type: "get",
-			url: "{:url('admin/login/captcha')}",
-			dataType: "JSON",
-			async: false,
-			success: function (res) {
-				var data = res.data;
-				$("#verify_img").attr("src",data.img);
-				$("input[name='captcha_id']").val(data.id);
-			}
-		});
-	}
+        $.ajax({
+            type: "get",
+            url: "/index.php/admin/login/captcha",
+            dataType: "JSON",
+            async: false,
+            success: function (res) {
+                var data = res.data;
+                $("#verify_img").attr("src",data.img);
+                $("input[name='captcha_id']").val(data.id);
+            }
+        });
+    }
 </script>
 {/block}

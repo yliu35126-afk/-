@@ -122,6 +122,11 @@ class Goods extends BaseModel
                 'timer_off' => $data[ 'timer_off' ] ?? 0,//定时下线
                 'commission_rate' => $commission_rate,
                 'is_consume_discount' => $data['is_consume_discount'] ?? 0,
+                // Turntable新增字段（仅goods表持有）
+                'supply_price' => $data['supply_price'] ?? 0,
+                'lottery_participation' => $data['lottery_participation'] ?? 0,
+                'lottery_tier_ids' => $data['lottery_tier_ids'] ?? null,
+                'source_type' => $data['source_type'] ?? 'merchant',
             );
 
             $goods_data[ 'category_name' ] = $category_name;
@@ -216,6 +221,32 @@ class Goods extends BaseModel
             //添加统计
             $stat = new Stat();
             $stat->addShopStat([ 'add_goods_count' => 1, 'site_id' => $data[ 'site_id' ] ]);
+
+            // 处理抽奖价池绑定（lottery_goods_tier）
+            if (function_exists('addon_is_exit') && addon_is_exit('turntable')) {
+                try {
+                    if (!empty($data['lottery_tier_ids'])) {
+                        $tier_ids = $data['lottery_tier_ids'];
+                        if (is_string($tier_ids)) {
+                            $tier_ids = json_decode($tier_ids, true) ?: [];
+                        }
+                        if (!empty($tier_ids)) {
+                            \think\facade\Db::name('lottery_goods_tier')->where([
+                                ['site_id', '=', $data['site_id']],
+                                ['goods_id', '=', $goods_id]
+                            ])->delete();
+                            \think\facade\Db::name('lottery_goods_tier')->insert([
+                                'site_id' => $data['site_id'],
+                                'goods_id' => $goods_id,
+                                'tier_ids' => json_encode(array_values($tier_ids)),
+                                'create_time' => time(),
+                            ]);
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    // 忽略绑定异常
+                }
+            }
             model('goods')->commit();
 
             return $this->success($goods_id);
@@ -297,6 +328,11 @@ class Goods extends BaseModel
                 'timer_off' => $data[ 'timer_off' ],
                 'commission_rate' => $commission_rate,//佣金比率
                 'is_consume_discount' => $data['is_consume_discount'] ?? 0,
+                // Turntable新增字段（仅goods表持有）
+                'supply_price' => $data['supply_price'] ?? 0,
+                'lottery_participation' => $data['lottery_participation'] ?? 0,
+                'lottery_tier_ids' => $data['lottery_tier_ids'] ?? null,
+                'source_type' => $data['source_type'] ?? 'merchant',
             );
 
             $goods_data[ 'category_name' ] = $category_name;
@@ -491,7 +527,30 @@ class Goods extends BaseModel
             }
 
             event('GoodsEdit', [ 'goods_id' => $goods_id, 'site_id' => $data[ 'site_id' ] ]);
-
+            // 同步抽奖价池绑定（lottery_goods_tier）
+            if (function_exists('addon_is_exit') && addon_is_exit('turntable')) {
+                try {
+                    // 清除后重建（避免残留）
+                    \think\facade\Db::name('lottery_goods_tier')->where([
+                        ['site_id', '=', $data['site_id']],
+                        ['goods_id', '=', $goods_id]
+                    ])->delete();
+                    if (!empty($data['lottery_tier_ids'])) {
+                        $tier_ids = $data['lottery_tier_ids'];
+                        if (is_string($tier_ids)) {
+                            $tier_ids = json_decode($tier_ids, true) ?: [];
+                        }
+                        if (!empty($tier_ids)) {
+                            \think\facade\Db::name('lottery_goods_tier')->insert([
+                                'site_id' => $data['site_id'],
+                                'goods_id' => $goods_id,
+                                'tier_ids' => json_encode(array_values($tier_ids)),
+                                'create_time' => time(),
+                            ]);
+                        }
+                    }
+                } catch (\Throwable $e) { }
+            }
             model('goods')->commit();
             return $this->success($goods_id);
         } catch (\Exception $e) {

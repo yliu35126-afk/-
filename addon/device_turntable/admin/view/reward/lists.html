@@ -1,0 +1,65 @@
+{extend name="app/admin/view/base.html"/}
+{block name="resources"}
+{/block}
+{block name="main"}
+
+<!-- 搜索框 -->
+<div class="ns-single-filter-box">
+  <div class="layui-form">
+    <div class="layui-inline">
+      <div class="layui-input-inline">
+        <input type="number" name="member_id" placeholder="会员ID" class="layui-input" autocomplete="off">
+      </div>
+    </div>
+    <div class="layui-inline">
+      <div class="layui-input-inline">
+        <input type="number" name="goods_id" placeholder="商品ID" class="layui-input" autocomplete="off">
+      </div>
+      <button class="layui-btn layui-btn-primary" lay-submit lay-filter="search">搜索</button>
+    </div>
+  </div>
+</div>
+
+<div class="layui-tab ns-table-tab" lay-filter="reward_tab">
+  <div class="layui-tab-content">
+    <table id="reward_list" lay-filter="reward_list"></table>
+  </div>
+</div>
+
+{/block}
+
+{block name="script"}
+<script>
+layui.use(['form', 'element'], function() {
+  var table,
+      form = layui.form,
+      element = layui.element;
+  form.render();
+
+  table = new Table({
+    elem: '#reward_list',
+    url: ns.url('device_turntable://admin/reward/lists'),
+    cols: [
+      [{
+        field:'record_id', title: '记录ID', unresize: 'false', width:'10%'
+      }, {
+        field:'member_id', title: '会员ID', unresize: 'false', width:'12%'
+      }, {
+        field:'goods_id', title: '商品ID', unresize: 'false', width:'12%'
+      }, {
+        field:'verify_code', title: '核销码', unresize: 'false', width:'20%'
+      }, {
+        field:'order_status', title: '状态', unresize: 'false', width:'15%', templet: function(data){ return data.order_status || ''; }
+      }, {
+        title: '创建时间', unresize: 'false', width: '20%', templet: function(data){ return ns.time_to_date(data.create_time); }
+      }]
+    ]
+  });
+
+  // 搜索
+  form.on('submit(search)', function(data) {
+    table.reload({ page: { curr: 1 }, where: data.field });
+  });
+});
+</script>
+{/block}

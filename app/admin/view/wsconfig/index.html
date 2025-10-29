@@ -1,0 +1,85 @@
+{extend name="base" /}
+{block name="resources"}
+<link rel="stylesheet" href="{ADMIN_CSS}/set/config.css" />
+<script src="{ADMIN_JS}/vue.js"></script>
+<script src="{ADMIN_JS}/axios.min.js"></script>
+{/block}
+
+{block name="main"}
+<div class="ns-content" id="wsconfig-app">
+    <div class="ns-single-file">
+        <div class="ns-card">
+            <div class="ns-card-title">WebSocket 配置（数据库优先，环境变量兜底）</div>
+            <div class="ns-card-body">
+                <div class="ns-form-row"><label>WS 端口</label><input v-model="form.WS_PORT" type="number" min="1024" max="65535" placeholder="建议 9502"/></div>
+                <div class="ns-form-row"><label>API 基础地址</label><input v-model="form.API_BASE_URL" type="text" placeholder="例如：http://127.0.0.1:8000/index.php/api"/></div>
+                <div class="ns-form-row"><label>WS 签名密钥</label><input v-model="form.WS_SECRET" type="text" maxlength="128" placeholder="用于回调验签"/></div>
+                <div class="ns-form-row"><label>WS 接入令牌</label><input v-model="form.WS_TOKEN" type="text" maxlength="128" placeholder="设备接入可选"/></div>
+                <div class="ns-form-row"><label>设备分组</label><input v-model="form.WS_DEVICE_GROUP" type="text" maxlength="64" placeholder="如：test / dev / prod"/></div>
+
+                <div class="ns-form-row" style="color:#666; line-height:1.6;">
+                    <span>说明：入口位置在「系统设置 → WS 配置」。DB 配置优先于环境变量；如 DB 未设置则按环境变量只读回显。</span>
+                </div>
+
+                <div class="ns-form-row">
+                    <button class="layui-btn" @click="save">保存</button>
+                    <span v-if="msg" style="margin-left:10px;">{{ msg }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="ns-card">
+            <div class="ns-card-title">环境变量回显（只读）</div>
+            <div class="ns-card-body">
+                <div class="ns-form-row"><label>WS 端口</label><span>{{ env.WS_PORT || '-' }}</span></div>
+                <div class="ns-form-row"><label>API 基础地址</label><span>{{ env.API_BASE_URL || '-' }}</span></div>
+                <div class="ns-form-row"><label>WS 签名密钥</label><span>{{ env.WS_SECRET ? '***' : '-' }}</span></div>
+                <div class="ns-form-row"><label>WS 接入令牌</label><span>{{ env.WS_TOKEN ? '***' : '-' }}</span></div>
+                <div class="ns-form-row"><label>设备分组</label><span>{{ env.WS_DEVICE_GROUP || '-' }}</span></div>
+            </div>
+        </div>
+    </div>
+ </div>
+
+ <script>
+ // 以字符串 JSON 注入并再解析，最大化兼容各类模板/语法高亮器
+ window.__WSCONF__ = JSON.parse('{:json_encode($conf ?? [], JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)}');
+ window.__WSENV__  = JSON.parse('{:json_encode($env  ?? [], JSON_UNESCAPED_UNICODE|JSON_UNESCAPED_SLASHES)}');
+
+ new Vue({
+   el: '#wsconfig-app',
+   data: {
+     form: {
+       WS_PORT: parseInt((window.__WSCONF__['WS_PORT'] ?? 9502)),
+       API_BASE_URL: (window.__WSCONF__['API_BASE_URL'] ?? ''),
+       WS_SECRET: (window.__WSCONF__['WS_SECRET'] ?? ''),
+       WS_TOKEN: (window.__WSCONF__['WS_TOKEN'] ?? ''),
+       WS_DEVICE_GROUP: (window.__WSCONF__['WS_DEVICE_GROUP'] ?? ''),
+     },
+     env: {
+       WS_PORT: parseInt((window.__WSENV__['WS_PORT'] ?? 0)),
+       API_BASE_URL: (window.__WSENV__['API_BASE_URL'] ?? ''),
+       WS_SECRET: (window.__WSENV__['WS_SECRET'] ?? ''),
+       WS_TOKEN: (window.__WSENV__['WS_TOKEN'] ?? ''),
+       WS_DEVICE_GROUP: (window.__WSENV__['WS_DEVICE_GROUP'] ?? ''),
+     },
+     msg: ''
+   },
+   methods: {
+     save() {
+       this.msg = '';
+       const p = this.form.WS_PORT|0;
+       if (p < 1024 || p > 65535) { this.msg = 'WS_PORT 范围 1024-65535'; return; }
+       if (!/^https?:\/\//i.test(this.form.API_BASE_URL)) { this.msg = 'API_BASE_URL 必须是 http/https'; return; }
+       axios.post('/index.php/api/wsconfig/set', this.form).then(res => {
+         if (res && res.data && res.data.code === 0 || (res.data && res.data.data && res.data.data.code === 0)) {
+           this.msg = '保存成功';
+         } else {
+           this.msg = '保存失败';
+         }
+       }).catch(() => { this.msg = '保存失败'; });
+     }
+   }
+ });
+</script>
+{/block}

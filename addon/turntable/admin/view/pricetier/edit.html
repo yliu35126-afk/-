@@ -29,6 +29,25 @@
   </div>
 
   <div class="layui-form-item">
+    <label class="layui-form-label">最小供货价</label>
+    <div class="layui-input-block">
+      <input type="number" step="0.01" min="0" name="min_price" value="{$info.min_price|default='0.00'}" placeholder="可选，K下限(元)" class="layui-input" autocomplete="off" />
+    </div>
+  </div>
+
+  <div class="layui-form-item">
+    <label class="layui-form-label">最大供货价</label>
+    <div class="layui-input-block">
+      <input type="number" step="0.01" min="0" name="max_price" value="{$info.max_price|default='0.00'}" placeholder="可选，K上限(元)" class="layui-input" autocomplete="off" />
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <div class="layui-input-block">
+      <div id="tier-range-conflict" class="ns-word-aux" style="color:#FF5722; display:none;"></div>
+    </div>
+  </div>
+
+  <div class="layui-form-item">
     <label class="layui-form-label">状态</label>
     <div class="layui-input-block">
       <input type="radio" name="status" value="1" title="启用" {if $info.status == 1}checked{/if} />
@@ -50,6 +69,50 @@
         <div class="layui-form-mid">金额(元)</div>
       </div>
       {/volist}
+    </div>
+  </fieldset>
+
+  <!-- 核心角色（商户/代理）分润：按金额填写，参与结算 -->
+  <fieldset class="layui-elem-field">
+    <legend>核心角色分润（按金额）</legend>
+    <div class="layui-field-box">
+      <div class="layui-form-item">
+        <label class="layui-form-label">商户</label>
+        <div class="layui-input-inline">
+          <input type="number" step="0.01" min="0" class="layui-input role-rate" data-role-key="merchant" placeholder="请输入商户分润金额(元)" />
+        </div>
+        <div class="layui-form-mid">金额(元)</div>
+      </div>
+
+      <div class="layui-form-item">
+        <label class="layui-form-label">代理(省)</label>
+        <div class="layui-input-inline">
+          <input type="number" step="0.01" min="0" class="layui-input role-rate" data-role-key="province" placeholder="请输入省级代理金额(元)" />
+        </div>
+        <div class="layui-form-mid">金额(元)</div>
+      </div>
+
+      <div class="layui-form-item">
+        <label class="layui-form-label">代理(市)</label>
+        <div class="layui-input-inline">
+          <input type="number" step="0.01" min="0" class="layui-input role-rate" data-role-key="city" placeholder="请输入市级代理金额(元)" />
+        </div>
+        <div class="layui-form-mid">金额(元)</div>
+      </div>
+
+      <div class="layui-form-item">
+        <label class="layui-form-label">代理(区/县)</label>
+        <div class="layui-input-inline">
+          <input type="number" step="0.01" min="0" class="layui-input role-rate" data-role-key="district" placeholder="请输入区县代理金额(元)" />
+        </div>
+        <div class="layui-form-mid">金额(元)</div>
+      </div>
+
+      <div class="layui-form-item">
+        <div class="layui-input-block">
+          <div class="ns-word-aux">说明：商户与代理金额参与结算但不参与“各用户组金额合计不可超过价档金额”的校验；请合理配置，结算时如总额超过价档金额将自动缩放。</div>
+        </div>
+      </div>
     </div>
   </fieldset>
 
@@ -85,7 +148,68 @@ layui.use(['form'], function(){
     var k = 'group_' + gid;
     if (profitMap.hasOwnProperty(k)) $(this).val(profitMap[k]);
   });
+  // 预填充：核心角色（商户/代理）
+  $('.role-rate[data-role-key]').each(function(){
+    var key = $(this).data('role-key');
+    var val = '';
+    if (key === 'merchant') {
+      // 支持历史键名兼容：merchant 或 shop
+      if (profitMap.hasOwnProperty('merchant')) val = profitMap['merchant'];
+      else if (profitMap.hasOwnProperty('shop')) val = profitMap['shop'];
+    } else if (key === 'province' || key === 'city' || key === 'district') {
+      if (profitMap.hasOwnProperty(key)) val = profitMap[key];
+    }
+    if (val !== '' && !isNaN(val)) $(this).val(val);
+  });
   form.render();
+
+  // 预加载现有价档用于前端区间重叠提示（排除当前）
+  var existingTiers = [];
+  (function preloadTiers(){
+    $.ajax({
+      url: ns.url('turntable://admin/pricetier/lists'),
+      data: { page: 1, page_size: 1000 },
+      dataType: 'json',
+      type: 'GET',
+      success: function(res){
+        try {
+          var list = (res.data && res.data.list) ? res.data.list : [];
+          var curId = parseInt($('input[name="tier_id"]').val()||'0');
+          existingTiers = list.filter(function(x){ return parseInt(x.tier_id||0) !== curId; });
+        } catch (e) { existingTiers = []; }
+      }
+    });
+  })();
+
+  function normalizeRange(min, max){
+    var m = parseFloat(min || '0');
+    var M = parseFloat(max || '0');
+    if (!(m>0) && !(M>0)) return null; // 未设置
+    var lo = (m>0) ? m : 0.0;
+    var hi = (M>0) ? M : Infinity;
+    return { lo: lo, hi: hi };
+  }
+  function hasOverlap(r1, r2){ if (!r1 || !r2) return false; return Math.max(r1.lo, r2.lo) <= Math.min(r1.hi, r2.hi); }
+  function showConflict(min, max){
+    var cur = normalizeRange(min, max);
+    var msg = '';
+    if (!cur) { $('#tier-range-conflict').hide(); return; }
+    for (var i=0;i<existingTiers.length;i++){
+      var t = existingTiers[i];
+      var r = normalizeRange(t.min_price, t.max_price);
+      if (hasOverlap(cur, r)){
+        var rtext = '区间 ' + ((t.min_price>0)?t.min_price:'0') + '-' + ((t.max_price>0)?t.max_price:'+∞');
+        msg = '与价档【'+ (t.title||('ID'+t.tier_id)) +'】发生区间重叠（'+ rtext +'）';
+        break;
+      }
+    }
+    if (msg) { $('#tier-range-conflict').text(msg).show(); } else { $('#tier-range-conflict').hide(); }
+  }
+  $('input[name="min_price"],input[name="max_price"]').on('input', function(){
+    var min = $('input[name="min_price"]').val();
+    var max = $('input[name="max_price"]').val();
+    showConflict(min, max);
+  });
 
   function collectProfitMap(){
     var map = {};
@@ -122,6 +246,7 @@ layui.use(['form'], function(){
     if (!validateTotalNotExceedPrice()) return false;
     var profit = collectProfitMap();
     data.field.profit_json = JSON.stringify(profit);
+    // 前端冲突提示后仍以服务端强校验为准
     $.ajax({
       url: ns.url('turntable://admin/pricetier/edit'),
       data: data.field,

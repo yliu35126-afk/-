@@ -5,9 +5,10 @@
 return [
     [
         'name' => 'PROMOTION_ADMIN_TURNTABLE',
-        'title' => '设备抽奖（以价档为锚点）',
+        'title' => '设备抽奖',
         'url' => 'turntable://admin/bind/lists',
-        'parent' => 'PROMOTION_MEMBER',
+        // 归类至店铺营销，便于与活动线区分
+        'parent' => 'PROMOTION_SHOP',
         'is_show' => 1,
         'sort' => 100,
         'child_list' => [
@@ -174,7 +175,21 @@ return [
                         'name' => 'PROMOTION_ADMIN_TURNTABLE_DEVICE_PRICE_BIND',
                         'title' => '设备-价档绑定',
                         'url' => 'turntable://admin/bind/lists',
-                        'is_show' => 1
+                        'is_show' => 1,
+                        'child_list' => [
+                            [
+                                'name' => 'PROMOTION_ADMIN_TURNTABLE_DEVICE_PRICE_BIND_ADD',
+                                'title' => '新增绑定',
+                                'url' => 'turntable://admin/bind/add',
+                                'is_show' => 1
+                            ],
+                            [
+                                'name' => 'PROMOTION_ADMIN_TURNTABLE_DEVICE_PRICE_BIND_EDIT',
+                                'title' => '编辑绑定',
+                                'url' => 'turntable://admin/bind/edit',
+                                'is_show' => 0
+                            ]
+                        ]
                     ]
                 ]
             ],

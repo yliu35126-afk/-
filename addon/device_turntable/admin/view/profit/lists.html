@@ -1,0 +1,161 @@
+{extend name="app/admin/view/base.html"/}
+{block name="resources"}
+{/block}
+{block name="main"}
+<!-- 搜索框 -->
+<div class="ns-single-filter-box">
+  <div class="layui-form">
+    <div class="layui-inline">
+      <div class="layui-input-inline">
+        <select name="device_id" lay-search>
+          <option value="">全部设备</option>
+          {notempty name="devices"}
+          {foreach name="devices" item="d"}
+          <option value="{$d.device_id}">[{$d.device_id}] {$d.device_sn|default=''} </option>
+          {/foreach}
+          {/notempty}
+        </select>
+      </div>
+      <div class="layui-input-inline">
+        <select name="settle_status">
+          <option value="">全部状态</option>
+          <option value="pending">待核销/待结算</option>
+          <option value="verified">已核销</option>
+          <option value="settled">已结算</option>
+        </select>
+      </div>
+    </div>
+    <div class="layui-inline">
+      <div class="layui-input-inline">
+        <input type="text" name="start_time" id="start_time" placeholder="开始时间" class="layui-input" autocomplete="off" readonly>
+        <i class="ns-calendar"></i>
+      </div>
+      <div class="layui-input-inline end-time">
+        <input type="text" name="end_time" id="end_time" placeholder="结束时间" class="layui-input" autocomplete="off" readonly>
+        <i class="ns-calendar"></i>
+      </div>
+      <button class="layui-btn layui-btn-primary" lay-submit lay-filter="search">搜索</button>
+      <button class="layui-btn" id="btnExport">导出当前页CSV</button>
+    </div>
+  </div>
+</div>
+
+<div class="layui-tab ns-table-tab">
+  <div class="layui-tab-content">
+    <table id="profit_list" lay-filter="profit_list"></table>
+  </div>
+</div>
+{/block}
+
+{block name="script"}
+<script>
+layui.use(['form','element','laydate'], function(){
+  var table,
+    form = layui.form,
+    laydate = layui.laydate,
+    element = layui.element;
+  form.render();
+
+  // 恢复上次筛选
+  try {
+    var last = JSON.parse(localStorage.getItem('device_turntable_profit_filters')||'{}');
+    setTimeout(function(){
+      if (last.device_id) document.querySelector('select[name="device_id"]').value = last.device_id;
+      if (last.settle_status) document.querySelector('select[name="settle_status"]').value = last.settle_status;
+      if (last.start_time) document.querySelector('#start_time').value = last.start_time;
+      if (last.end_time) document.querySelector('#end_time').value = last.end_time;
+      form.render('select');
+    }, 20);
+  } catch(_) {}
+
+  laydate.render({ elem: '#start_time', done: function(value){ start_time = ns.date_to_time(value); } });
+  laydate.render({ elem: '#end_time', done: function(value){ end_time = ns.date_to_time(value); } });
+
+  function buildCols(){
+    var cols = [
+      {field:'id', title:'ID', width:80},
+      {field:'record_id', title:'记录ID', width:100},
+      {field:'device_id', title:'设备ID', width:100},
+      {field:'amount_total', title:'分润总额', width:120},
+      {field:'platform_money', title:'平台', width:100},
+      {field:'merchant_money', title:'商户', width:100},
+      {field:'supplier_money', title:'供应商', width:100},
+      {field:'promoter_money', title:'推广员', width:100},
+      {field:'installer_money', title:'安装商', width:100},
+      {field:'owner_money', title:'设备主', width:100},
+      {field:'agent_money', title:'代理', width:100},
+      {field:'member_money', title:'会员', width:100},
+      {field:'city_money', title:'城市分站', width:100}
+    ];
+    // 固定列
+    cols.push({title:'创建时间', templet: function(d){ return ns.time_to_date(d.create_time); }});
+    cols.push({title:'状态', templet: function(d){
+      var mp = {pending:'待结算', verified:'已核销', settled:'已结算'};
+      return mp[d.settle_status || 'pending'];
+    }});
+    cols.push({title:'操作', templet: function(d){
+      if (d.settle_status === 'settled') return '<span class="layui-btn layui-btn-disabled">已结算</span>';
+      return '<a class="layui-btn layui-btn-sm" onclick="settle('+d.record_id+')">标记结算</a>';
+    }});
+    return [ cols ];
+  }
+
+  table = new Table({
+    elem: '#profit_list',
+    url: ns.url('device_turntable://admin/profit/lists'),
+    cols: buildCols()
+  });
+
+  form.on('submit(search)', function(data){
+    // 记忆筛选
+    try { localStorage.setItem('device_turntable_profit_filters', JSON.stringify(data.field)); } catch(_) {}
+    table.reload({ page:{curr:1}, where: data.field });
+  });
+
+  document.getElementById('btnExport').addEventListener('click', function(){
+    // 使用当前筛选条件导出本页CSV
+    var fields = {};
+    var devSel = document.querySelector('select[name="device_id"]');
+    var stSel = document.querySelector('select[name="settle_status"]');
+    fields.device_id = devSel && devSel.value || '';
+    fields.settle_status = stSel && stSel.value || '';
+    fields.start_time = document.querySelector('#start_time').value || '';
+    fields.end_time = document.querySelector('#end_time').value || '';
+
+    ns.nsajax({
+      url: ns.url('device_turntable://admin/profit/export'),
+      data: fields,
+      success: function(res){
+        var d = res.data || {};
+        var filename = d.filename || ('profit_page.csv');
+        var content = d.content || '';
+        try {
+          var blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+          var link = document.createElement('a');
+          var url = URL.createObjectURL(blob);
+          link.setAttribute('href', url);
+          link.setAttribute('download', filename);
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+          layui.layer.msg('导出成功');
+        } catch(_) { layui.layer.msg('导出失败'); }
+      }
+    });
+  });
+
+  // 无用户组列面板，改为固定角色列展示
+});
+
+function settle(id){
+  if (!id) return;
+  ns.nsajax({
+    url: ns.url('device_turntable://admin/profit/settle'),
+    data: { id: id },
+    success: function(){ layui.layer.msg('已标记结算'); layui.table.reload('profit_list'); },
+    error: function(){ layui.layer.msg('操作失败'); }
+  });
+}
+</script>
+{/block}

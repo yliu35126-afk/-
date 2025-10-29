@@ -74,7 +74,7 @@ const config = {
   // API接口路径配置（严格按照接口文档）
   api: {
     // 微信登录相关 - 使用API模块
-    wechatLogin: 'wechat/login',                    // POST - 微信登录获取Token
+    wechatLogin: 'login/wechatLogin',               // POST - 微信登录获取Token（修正路径）
     
     // 用户信息相关接口 - 使用API模块
     getUserInfo: 'wechat/getUserInfo',              // GET - 获取用户信息
@@ -87,7 +87,8 @@ const config = {
      * 响应契约：
      * { code: 1, data: { device_id:number, tiers:[{tier_id:number, price:number, template:string, profit_json:string}] }, msg:string }
      */
-    getDeviceConfig: 'device/profitconfig',         // GET - 获取设备分润配置
+    // 说明：后端当前未提供 device/profitconfig，改用 device/profitprizes 以检测设备是否绑定抽奖盘
+    getDeviceConfig: 'device/profitprizes',         // GET - 获取设备奖品（用于兜底检测，修正路径）
 
     // 支付相关接口 - 使用API模块
     createPayOrder: 'pay/create',                   // POST - 创建支付订单

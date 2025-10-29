@@ -80,6 +80,8 @@ layui.use(['form','element'], function(){
     cols: [[
       { field: 'title', title: '价档标题', width: '20%' },
       { field: 'price', title: '金额（元）' },
+      { field: 'min_price', title: '最小K（元）' },
+      { field: 'max_price', title: '最大K（元）' },
       { title: '状态', templet: '#statusTpl' },
       { title: '创建时间', templet: function(d){ return ns.time_to_date(d.create_time); } },
       { title: '更新时间', templet: function(d){ return ns.time_to_date(d.update_time); } },

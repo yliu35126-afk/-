@@ -25,4 +25,22 @@ return [
     // 允许跨模块模板路径解析，例如 app/admin/view/base.html
     // 设置模板基础路径为项目根目录
     'view_base'     => dirname(__DIR__) . DIRECTORY_SEPARATOR,
+
+    // 视图输出字符串内容替换（供模板中使用的静态资源占位符）
+    // 解决 Controller::fetch 合并配置时未定义 'tpl_replace_string' 的报错
+    'tpl_replace_string' => [
+        // 公共静态资源
+        '__STATIC__' => '/public/static',
+        'STATIC_EXT' => '/public/static/ext',
+
+        // 后台静态资源
+        'ADMIN_CSS'  => '/app/admin/view/public/css',
+        'ADMIN_JS'   => '/app/admin/view/public/js',
+        'ADMIN_IMG'  => '/app/admin/view/public/img',
+
+        // 商家端静态资源
+        'SHOP_CSS'   => '/app/shop/view/public/css',
+        'SHOP_JS'    => '/app/shop/view/public/js',
+        'SHOP_IMG'   => '/app/shop/view/public/img',
+    ],
 ];

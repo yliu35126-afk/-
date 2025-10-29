@@ -7,11 +7,11 @@
 {block name="main"}
 <div class="layui-form">
 	<div class="ns-tab layui-tab layui-tab-brief" lay-filter="goods_tab">
-		<ul class="layui-tab-title">
-			<li class="layu1i-this" lay-id="basic">基础设置</li>
-			<li lay-id="detail">商品详情</li>
-			<li lay-id="attr">商品参数</li>
-		</ul>
+			<ul class="layui-tab-title">
+				<li class="layu1i-this" lay-id="basic">基础设置</li>
+				<li lay-id="detail">商品详情</li>
+				<li lay-id="attr">商品参数</li>
+			</ul>
 
 		<div class="layui-tab-content">
 
@@ -25,11 +25,11 @@
 					</div>
 
 					<div class="layui-card-body commodity-type-box" >
-						<div class="commodity-type-item ns-border-color" onclick="location.href = ns.url('shop/goods/addGoods')">
+						<div class="commodity-type-item ns-border-color" data-href="shop/goods/addGoods">
 							<span class="ns-text-color">实物商品</span>
 							<span>(需要物流)</span>
 						</div>
-						<div class="commodity-type-item" onclick="location.href = ns.url('shop/virtualgoods/addGoods')">
+						<div class="commodity-type-item" data-href="shop/virtualgoods/addGoods">
 							<span>虚拟商品</span>
 							<span>(无需物流)</span>
 						</div>
@@ -342,6 +342,7 @@
 
 					<div class="layui-card-body">
 
+
 						<div class="layui-form-item">
 							<label class="layui-form-label">限购：</label>
 							<div class="layui-input-block">
@@ -360,12 +361,110 @@
 							<div class="ns-word-aux">起售数量超出商品库存时，买家无法购买该商品</div>
 						</div>
 
-						<div class="layui-form-item">
-							<label class="layui-form-label">单位：</label>
-							<div class="layui-input-block">
-								<input type="text" name="unit" placeholder="请输入单位" autocomplete="off" class="layui-input ns-len-short">
-							</div>
+					<div class="layui-form-item">
+						<label class="layui-form-label">单位：</label>
+						<div class="layui-input-block">
+							<input type="text" name="unit" placeholder="请输入单位" autocomplete="off" class="layui-input ns-len-short">
 						</div>
+					</div>
+
+                        {if !empty($turntable_tier_list)}
+                        <div class="layui-form-item">
+                            <label class="layui-form-label">转盘价档：</label>
+                            <div class="layui-input-block">
+                                <input type="checkbox" value="1" lay-skin="switch" name="turntable_enable" lay-filter="turntable_enable" title="启用">
+                                <div class="layui-input-inline ns-len-mid" style="margin-left:20px;">
+                                    <select name="turntable_tier_ids[]" id="turntable_tier_id" multiple disabled>
+                                        {foreach name="$turntable_tier_list" item="vo"}
+                                        <option value="{$vo.tier_id}">
+                                            {$vo.title}
+                                            {if isset($vo.min_price) && isset($vo.max_price) && ($vo.min_price>0 || $vo.max_price>0)}（供货￥{$vo.min_price}-{$vo.max_price}）{/if}
+                                        </option>
+                                        {/foreach}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="ns-word-aux">启用后，该商品可作为转盘奖品，并按所选价档范围校验供货价。</div>
+                            <!-- Turntable hidden fields for backend -->
+                            <input type="hidden" name="lottery_participation" value="0">
+                            <input type="hidden" name="lottery_tier_ids" value="">
+                            <input type="hidden" name="supply_price" value="">
+                        </div>
+                        <script>
+                        layui.use(['form'], function(){
+                            var form = layui.form;
+                            var sel = document.getElementById('turntable_tier_id');
+                            var tiers = {};
+                            try {
+                                var _tierArr = JSON.parse('{:json_encode($turntable_tier_list)}');
+                                if (_tierArr && _tierArr.forEach) {
+                                    _tierArr.forEach(function(vo){
+                                        tiers[String(vo.tier_id)] = {
+                                            min: parseFloat(vo.min_price || 0),
+                                            max: parseFloat(vo.max_price || 0)
+                                        };
+                                    });
+                                }
+                            } catch (e) {}
+                            form.on('switch(turntable_enable)', function(data){
+                                sel.disabled = !data.elem.checked;
+                                form.render('select');
+                            });
+                            // 提交校验并填充隐藏字段
+                            var formEl = document.querySelector('form.layui-form');
+                            if (formEl) {
+                                formEl.addEventListener('submit', function(e){
+                                    var enableC = document.querySelector('input[name="turntable_enable"]');
+                                    if (enableC && enableC.checked) {
+                                        var selected = Array.prototype.slice.call(sel.options).filter(function(o){return o.selected;}).map(function(o){return o.value;});
+                                        var lp = document.querySelector('input[name="lottery_participation"]');
+                                        if (lp) lp.value = 1;
+                                        var lti = document.querySelector('input[name="lottery_tier_ids"]');
+                                        if (lti) lti.value = JSON.stringify(selected);
+
+                                        // 供货价：单规格取成本价，多规格取所有SKU成本价的最小值
+                                        var cost = 0;
+                                        var singleCost = document.querySelector('.js-single-spec input[name="cost_price"]');
+                                        if (singleCost) {
+                                            cost = parseFloat(singleCost.value || '0');
+                                        } else {
+                                            var skuCosts = document.querySelectorAll('table.sku-table input[name="cost_price"], .sku-list input[name="cost_price"]');
+                                            var minCost = null;
+                                            for (var i=0;i<skuCosts.length;i++){
+                                                var v = parseFloat(skuCosts[i].value || '0');
+                                                if (!isNaN(v) && v > 0) { if (minCost===null || v<minCost) minCost = v; }
+                                            }
+                                            cost = (minCost===null)?0:minCost;
+                                        }
+                                        var sp = document.querySelector('input[name="supply_price"]');
+                                        if (sp) sp.value = isNaN(cost) ? '' : cost.toFixed(2);
+
+                                        if (selected.length === 0) return; // 让后端拦截
+                                        if (isNaN(cost) || cost <= 0) return; // 无供货价时不前端校验
+                                        var allOk = true;
+                                        for (var i=0;i<selected.length;i++){
+                                            var t = tiers[selected[i]] || {min:0,max:0};
+                                            if (!(t.min===0 && t.max===0)) {
+                                                if (!(cost>=t.min && (t.max==0 || cost<=t.max))) { allOk = false; break; }
+                                            }
+                                        }
+                                        if (!allOk) {
+                                            layer.msg('供货价需同时满足所有所选价档的范围');
+                                            e.preventDefault();
+                                            return false;
+                                        }
+                                    } else {
+                                        var lp0 = document.querySelector('input[name="lottery_participation"]');
+                                        if (lp0) lp0.value = 0;
+                                        var lti0 = document.querySelector('input[name="lottery_tier_ids"]');
+                                        if (lti0) lti0.value = '';
+                                    }
+                                }, true);
+                            }
+                        });
+                        </script>
+                        {/if}
+
 
 <!--						<div class="layui-form-item">-->
 <!--							<label class="layui-form-label">排序：</label>-->
@@ -399,8 +498,8 @@
 								<i class="ns-calendar"></i>
 							</div>
 						</div>
-						<div class="layui-form-item">
-							<label class="layui-form-label">是否参与会员等级折扣：</label>
+					<div class="layui-form-item">
+						<label class="layui-form-label">是否参与会员等级折扣：</label>
 							<div class="layui-input-block">
 								<div class="layui-input-inline">
 									<input type="radio" name="is_consume_discount" value="0" title="不参与" checked>
@@ -423,9 +522,13 @@
 						</div>
 					</div>
 				</div>
-				<script type="text/javascript" charset="utf-8" src="__STATIC__/ext/ueditor/ueditor.config.js"></script>
-				<script type="text/javascript" charset="utf-8" src="__STATIC__/ext/ueditor/ueditor.all.js"> </script>
-				<script type="text/javascript" charset="utf-8" src="__STATIC__/ext/ueditor/lang/zh-cn/zh-cn.js"></script>
+                        <script>
+                            window.UEDITOR_HOME_URL = "__STATIC__/ext/ueditor/";
+                            window.UEDITOR_SERVER_URL = "/admin/ueditor/index";
+                        </script>
+                        <script type="text/javascript" charset="utf-8" src="__STATIC__/ext/ueditor/ueditor.config.js"></script>
+                        <script type="text/javascript" charset="utf-8" src="__STATIC__/ext/ueditor/ueditor.all.js"> </script>
+                        <script type="text/javascript" charset="utf-8" src="__STATIC__/ext/ueditor/lang/zh-cn/zh-cn.js"></script>
 			</div>
 
 			<!-- 商品属性 -->
@@ -783,6 +886,18 @@
 </script>
 {/block}
 {block name="script"}
+<script>
+$(function(){
+    $(document).on('click', '.commodity-type-item[data-href]', function(){
+        var path = $(this).attr('data-href');
+        if (typeof ns !== 'undefined' && typeof ns.url === 'function') {
+            location.href = ns.url(path);
+        } else {
+            location.href = path;
+        }
+    });
+});
+</script>
 <script src="__STATIC__/ext/drag-arrange.js"></script>
 <script src="__STATIC__/ext/video/videojs-ie8.min.js"></script>
 <script src="__STATIC__/ext/video/video.min.js"></script>

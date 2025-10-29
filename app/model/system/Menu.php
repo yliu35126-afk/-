@@ -132,13 +132,21 @@ class Menu extends BaseModel
         } else {
             $tree_name = root_path() . 'addon/' . $addon . '/config/menu_' . $app_module . '.php';
         }
+        // 兼容仅提供某端菜单的插件，若文件不存在则直接跳过
+        if (!file_exists($tree_name)) {
+            return $this->success();
+        }
         $tree = require $tree_name;
         $list = $this->getAddonMenuList($tree, $app_module, $addon);
-        if (!empty($list)) {
+        // 当指定 addon 刷新时，无论新列表是否为空，都应清理数据库中旧的菜单，避免遗留导致重复
+        if (!empty($addon)) {
             model('menu')->delete([ [ 'app_module', "=", $app_module ], [ 'addon', "=", $addon ] ]);
+        }
+        if (!empty($list)) {
             $res = model('menu')->addList($list);
             return $this->success($res);
         } else {
+            // 插件菜单为空时，仅完成清理不再新增
             return $this->success();
         }
     }

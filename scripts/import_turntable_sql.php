@@ -1,90 +1,119 @@
 <?php
-// 将 addon/turntable/data/install.sql 导入到当前数据库（自动替换 {{prefix}}）
+// Simple SQL importer for addon/turntable/data/install.sql using config/database.php
 
-// 兼容直接 include 配置文件时的 app() 辅助函数缺失问题
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
+
+$root = __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR;
+
+// Load DB config
+$configFile = $root . 'config' . DIRECTORY_SEPARATOR . 'database.php';
+// Provide a minimal shim for app()->getRuntimePath() used in config/database.php
 if (!function_exists('app')) {
     function app() {
         return new class {
-            public function getRuntimePath() { return __DIR__ . '/../runtime/'; }
+            public function getRuntimePath() {
+                return __DIR__ . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'runtime' . DIRECTORY_SEPARATOR;
+            }
         };
     }
 }
-
-$root = realpath(__DIR__ . '/..');
-$sqlFile = $root . '/addon/turntable/data/install.sql';
-if (!is_file($sqlFile)) {
-    fwrite(STDERR, "SQL 文件不存在: $sqlFile\n");
+if (!file_exists($configFile)) {
+    fwrite(STDERR, "Database config not found: {$configFile}\n");
+    exit(1);
+}
+$dbConfig = require $configFile;
+$mysql = $dbConfig['connections']['mysql'] ?? null;
+if (!$mysql) {
+    fwrite(STDERR, "MySQL connection config missing in config/database.php\n");
     exit(1);
 }
 
-$cfg = include $root . '/config/database.php';
-$dbc = $cfg['connections'][$cfg['default']] ?? null;
-if (!$dbc) {
-    fwrite(STDERR, "无法读取数据库配置\n");
+$host = $mysql['hostname'] ?? '127.0.0.1';
+$port = $mysql['hostport'] ?? '3306';
+$dbname = $mysql['database'] ?? '';
+$user = $mysql['username'] ?? '';
+$pass = $mysql['password'] ?? '';
+$charset = $mysql['charset'] ?? 'utf8';
+$prefix = $mysql['prefix'] ?? '';
+
+if ($dbname === '') {
+    fwrite(STDERR, "Database name is empty in config/database.php\n");
     exit(1);
 }
 
-$prefix = $dbc['prefix'] ?? '';
-$dsn = sprintf('mysql:host=%s;port=%s;dbname=%s;charset=%s',
-    $dbc['hostname'], $dbc['hostport'], $dbc['database'], $dbc['charset'] ?? 'utf8');
+$dsn = "mysql:host={$host};port={$port};dbname={$dbname};charset={$charset}";
 
 try {
-    $pdo = new PDO($dsn, $dbc['username'], $dbc['password'], [
+    $pdo = new PDO($dsn, $user, $pass, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
     ]);
 } catch (Throwable $e) {
-    fwrite(STDERR, '数据库连接失败: ' . $e->getMessage() . "\n");
+    fwrite(STDERR, "Failed to connect database: " . $e->getMessage() . "\n");
     exit(1);
 }
 
-$raw = file_get_contents($sqlFile);
-// 去除 BOM
-$raw = preg_replace('/^\xEF\xBB\xBF/', '', $raw);
-// 替换表前缀模板
-$raw = str_replace('{{prefix}}', $prefix, $raw);
+// Load SQL file
+$sqlFile = $root . 'addon' . DIRECTORY_SEPARATOR . 'turntable' . DIRECTORY_SEPARATOR . 'data' . DIRECTORY_SEPARATOR . 'install.sql';
+if (!file_exists($sqlFile)) {
+    fwrite(STDERR, "SQL file not found: {$sqlFile}\n");
+    exit(1);
+}
 
-// 移除注释：--、#、/* ... */
-$noBlock = preg_replace('#/\*.*?\*/#s', '', $raw);
-$lines = preg_split('/\r?\n/', $noBlock);
-$clean = [];
-foreach ($lines as $line) {
-    $trim = ltrim($line);
-    if ($trim === '' || strpos($trim, '--') === 0 || strpos($trim, '#') === 0) {
+$sql = file_get_contents($sqlFile);
+if ($sql === false) {
+    fwrite(STDERR, "Failed to read SQL file: {$sqlFile}\n");
+    exit(1);
+}
+
+// Replace prefix placeholder
+$sql = str_replace('{{prefix}}', $prefix, $sql);
+
+// Normalize line endings
+$sql = str_replace(["\r\n", "\r"], "\n", $sql);
+
+// Remove BOM if present
+if (substr($sql, 0, 3) === "\xEF\xBB\xBF") {
+    $sql = substr($sql, 3);
+}
+
+// Split statements by semicolon at line end
+$statements = [];
+$buffer = '';
+foreach (explode("\n", $sql) as $line) {
+    $trim = trim($line);
+    // Skip single-line comments
+    if ($trim === '' || strpos($trim, '-- ') === 0) {
         continue;
     }
-    $clean[] = $line;
-}
-$cleanSql = trim(implode("\n", $clean));
-
-// 按分号切分语句（简单场景足够，当前文件均为建表与 SET NAMES）
-$stmts = array_filter(array_map('trim', explode(';', $cleanSql)), function($s){ return $s !== ''; });
-
-$pdo->exec('SET FOREIGN_KEY_CHECKS=0');
-$succ = 0; $fail = 0; $errors = [];
-foreach ($stmts as $i => $sql) {
-    try {
-        $pdo->exec($sql);
-        $succ++;
-    } catch (Throwable $e) {
-        $fail++;
-        $errors[] = [
-            'index' => $i,
-            'snippet' => mb_substr(preg_replace('/\s+/', ' ', $sql), 0, 120),
-            'error' => $e->getMessage(),
-        ];
+    $buffer .= $line . "\n";
+    if (preg_match('/;\s*$/', $trim)) {
+        $statements[] = trim($buffer);
+        $buffer = '';
     }
 }
-$pdo->exec('SET FOREIGN_KEY_CHECKS=1');
+if (trim($buffer) !== '') {
+    $statements[] = trim($buffer);
+}
 
-$result = [
-    'ok' => $fail === 0,
-    'database' => $dbc['database'],
-    'prefix' => $prefix,
-    'executed' => $succ + $fail,
-    'success' => $succ,
-    'failed' => $fail,
-    'errors' => $errors,
-];
+// Execute
+try {
+    $pdo->exec("SET NAMES {$charset}");
+} catch (Throwable $e) {
+    // ignore
+}
 
-echo json_encode($result, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT), "\n";
+$ok = 0; $fail = 0;
+foreach ($statements as $stmt) {
+    try {
+        $pdo->exec($stmt);
+        $ok++;
+    } catch (Throwable $e) {
+        $fail++;
+        fwrite(STDERR, "Error executing statement: " . $e->getMessage() . "\nStatement:\n{$stmt}\n\n");
+    }
+}
+
+echo "Executed statements: {$ok}, Failed: {$fail}\n";
+exit($fail > 0 ? 2 : 0);

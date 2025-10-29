@@ -1,0 +1,206 @@
+{extend name="app/admin/view/base.html"/}
+{block name="resources"}
+{/block}
+{block name="main"}
+<div class="ns-single-filter-box">
+  <div class="layui-form">
+    <div class="layui-inline">
+      <div class="layui-input-inline" style="width: 120px;">
+        <select name="level">
+          <option value="">全部级别</option>
+          <option value="1">省级</option>
+          <option value="2">市级</option>
+          <option value="3">区县</option>
+        </select>
+      </div>
+      <div class="layui-input-inline" style="width: 120px;">
+        <select name="status">
+          <option value="">全部状态</option>
+          <option value="1">启用</option>
+          <option value="0">停用</option>
+        </select>
+      </div>
+      <div class="layui-input-inline" style="width: 180px;">
+        <input type="text" name="title" placeholder="标题关键词" class="layui-input">
+      </div>
+      <div class="layui-input-inline" style="width: 160px;">
+        <select name="province_id" id="province_id" lay-filter="province_id">
+          <option value="">选择省份</option>
+        </select>
+      </div>
+      <div class="layui-input-inline" style="width: 160px;">
+        <select name="city_id" id="city_id" lay-filter="city_id">
+          <option value="">选择城市</option>
+        </select>
+      </div>
+      <div class="layui-input-inline" style="width: 160px;">
+        <select name="district_id" id="district_id">
+          <option value="">选择区县</option>
+        </select>
+      </div>
+    </div>
+    <div class="layui-inline">
+      <button class="layui-btn ns-bg-color" lay-submit lay-filter="search">筛选</button>
+      <button class="layui-btn" id="btnAdd">新增</button>
+    </div>
+  </div>
+</div>
+
+<div class="layui-tab ns-table-tab" lay-filter="agent_tab">
+  <div class="layui-tab-content">
+    <table id="agent_list" lay-filter="agent_list"></table>
+  </div>
+  <script type="text/html" id="statusTpl">
+    {{#  if(d.status == 1){  }}<span style="color: green">启用</span>{{#  }else{  }}<span style="color: #999">停用</span>{{#  }  }}
+  </script>
+  <script type="text/html" id="regionTpl">
+    {{ d.province_name ? d.province_name : '' }} {{ d.city_name ? d.city_name : '' }} {{ d.district_name ? d.district_name : '' }}
+  </script>
+  <script type="text/html" id="toolbarTpl">
+    <div class="layui-btn-container">
+      <button class="layui-btn layui-btn-sm" lay-event="batchEnable">批量启用</button>
+      <button class="layui-btn layui-btn-sm" lay-event="batchDisable">批量停用</button>
+      <button class="layui-btn layui-btn-sm layui-btn-danger" lay-event="batchDelete">批量删除</button>
+      <button class="layui-btn layui-btn-sm" lay-event="batchCommission">批量设置佣金</button>
+      <button class="layui-btn layui-btn-sm" lay-event="batchValidity">批量设置有效期</button>
+    </div>
+  </script>
+  <script type="text/html" id="actionTpl">
+    <div class="ns-table-btn">
+      {{#  if(d.status == 1){  }}
+      <a class="layui-btn" lay-event="disable">停用</a>
+      {{#  }else{  }}
+      <a class="layui-btn" lay-event="enable">启用</a>
+      {{#  }  }}
+      <a class="layui-btn" lay-event="edit">编辑</a>
+      <a class="layui-btn layui-btn-danger" lay-event="delete">删除</a>
+    </div>
+  </script>
+</div>
+{/block}
+
+{block name="script"}
+<script>
+{literal}
+layui.use(['form','element'], function(){
+  var form = layui.form,
+      element = layui.element,
+      table;
+  form.render();
+
+  // 省份初始化
+  ns.request({url: ns.url('admin/address/getProvince'), data: {}}, function(res){
+    var opts = '<option value="">选择省份</option>';
+    (res || []).forEach(function(p){ opts += '<option value="'+p.id+'">'+p.name+'</option>'; });
+    document.getElementById('province_id').innerHTML = opts;
+    form.render('select');
+  });
+
+  // 联动：城市
+  form.on('select(province_id)', function(data){
+    var pid = data.value || 0;
+    ns.request({url: ns.url('admin/address/getCity'), data: {province_id: pid}}, function(res){
+      var opts = '<option value="">选择城市</option>';
+      (res || []).forEach(function(c){ opts += '<option value="'+c.id+'">'+c.name+'</option>'; });
+      document.getElementById('city_id').innerHTML = opts;
+      document.getElementById('district_id').innerHTML = '<option value="">选择区县</option>';
+      form.render('select');
+    });
+  });
+
+  // 联动：区县
+  form.on('select(city_id)', function(data){
+    var cid = data.value || 0;
+    ns.request({url: ns.url('admin/address/getDistrict'), data: {city_id: cid}}, function(res){
+      var opts = '<option value="">选择区县</option>';
+      (res || []).forEach(function(d){ opts += '<option value="'+d.id+'">'+d.name+'</option>'; });
+      document.getElementById('district_id').innerHTML = opts;
+      form.render('select');
+    });
+  });
+
+  table = new Table({
+    elem: '#agent_list',
+    url: ns.url('agent://admin/agent/lists'),
+    toolbar: '#toolbarTpl',
+    cols: [[
+      { type: 'checkbox', fixed: 'left', width: 40 },
+      { field: 'agent_id', title: 'ID', width: '6%' },
+      { field: 'title', title: '标题', width: '20%' },
+      { field: 'level_name', title: '级别', width: '10%' },
+      { title: '地区', templet: '#regionTpl', width: '20%' },
+      { field: 'commission_rate', title: '佣金(%)', width: '10%' },
+      { field: 'validity_start_date', title: '开始', width: '10%' },
+      { field: 'validity_end_date', title: '结束', width: '10%' },
+      { field: 'agent_contact_name', title: '联系人', width: '8%' },
+      { field: 'agent_phone', title: '电话', width: '10%' },
+      { title: '状态', templet: '#statusTpl', width: '8%' },
+      { title: '操作', toolbar: '#actionTpl', width: '16%' }
+    ]]
+  });
+
+  // 搜索
+  form.on('submit(search)', function(data){
+    table.reload({
+      page: { curr: 1 },
+      where: data.field
+    });
+    return false;
+  });
+
+  // 行事件
+  table.tool(function(obj){
+    var data = obj.data;
+    if (obj.event === 'enable') {
+      ns.request({ url: ns.url('agent://admin/agent/enable'), data: { agent_id: data.agent_id } }, function(){ table.reload(); });
+    } else if (obj.event === 'disable') {
+      ns.request({ url: ns.url('agent://admin/agent/disable'), data: { agent_id: data.agent_id } }, function(){ table.reload(); });
+    } else if (obj.event === 'edit') {
+      location.href = ns.url('agent://admin/agent/edit', { agent_id: data.agent_id });
+    } else if (obj.event === 'delete') {
+      layer.confirm('确认删除该代理吗？', function(){
+        ns.request({ url: ns.url('agent://admin/agent/delete'), data: { agent_id: data.agent_id } }, function(){ table.reload(); });
+      });
+    }
+  });
+
+  // 工具栏事件
+  table.toolbar(function(obj){
+    var check = table.checkStatus();
+    var ids = (check && check.data || []).map(function(r){ return r.agent_id; });
+    if (!ids.length) { return layer.msg('请先勾选数据'); }
+    if (obj.event === 'batchEnable') {
+      ns.request({ url: ns.url('agent://admin/agent/batchEnable'), data: { ids: ids.join(',') } }, function(){ table.reload(); });
+    } else if (obj.event === 'batchDisable') {
+      ns.request({ url: ns.url('agent://admin/agent/batchDisable'), data: { ids: ids.join(',') } }, function(){ table.reload(); });
+    } else if (obj.event === 'batchDelete') {
+      layer.confirm('确认批量删除选中代理吗？', function(){
+        var reqs = ids.map(function(id){ return {agent_id: id}; });
+        // 简化：逐个删除
+        var i = 0; (function next(){
+          if (i >= ids.length) return table.reload();
+          ns.request({ url: ns.url('agent://admin/agent/delete'), data: { agent_id: ids[i++] } }, next);
+        })();
+      });
+    } else if (obj.event === 'batchCommission') {
+      layer.prompt({ title: '输入佣金比例(%)，将覆盖所选', formType: 0 }, function(value, index){
+        layer.close(index);
+        ns.request({ url: ns.url('agent://admin/agent/batchUpdateCommission'), data: { ids: ids.join(','), commission_rate: value } }, function(){ table.reload(); });
+      });
+    } else if (obj.event === 'batchValidity') {
+      var html = '<div style="padding:10px 0">开始：<input type="date" id="bv_start" class="layui-input" style="display:inline-block;width:200px"> 结束：<input type="date" id="bv_end" class="layui-input" style="display:inline-block;width:200px"></div>';
+      layer.open({ title: '批量设置有效期', content: html, btn: ['确定','取消'], yes: function(idx){
+        var s = document.getElementById('bv_start').value; var e = document.getElementById('bv_end').value;
+        layer.close(idx);
+        ns.request({ url: ns.url('agent://admin/agent/batchUpdateValidity'), data: { ids: ids.join(','), validity_start_date: s, validity_end_date: e } }, function(){ table.reload(); });
+      }});
+    }
+  });
+
+  // 新增
+  window.add = function(){ location.href = ns.url('agent://admin/agent/add'); };
+  try { document.getElementById('btnAdd').onclick = window.add; } catch (e) {}
+});
+{/literal}
+</script>
+{/block}

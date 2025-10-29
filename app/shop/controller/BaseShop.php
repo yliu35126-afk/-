@@ -61,6 +61,18 @@ class BaseShop extends Controller
             $currentController = strtolower($req->controller() ?? '');
             // 避免在登录页自身发生重定向循环
             if (!($currentModule === 'shop' && $currentController === 'login')) {
+                // 记录一次简要调试日志，便于定位为何发生跳转
+                try {
+                    $user_model->addUserLog(0, 'guest', 0, 'Shop未登录跳转', [
+                        'url' => method_exists($req, 'url') ? $req->url(true) : '',
+                        'host' => method_exists($req, 'host') ? $req->host() : '',
+                        'domain' => method_exists($req, 'domain') ? $req->domain() : '',
+                        'root_url' => defined('ROOT_URL') ? ROOT_URL : '',
+                        'sid' => session_id(),
+                    ]);
+                } catch (\Throwable $e) {
+                    // 忽略日志异常
+                }
                 $this->redirect(url("shop/login/login"));
                 exit();
             }
@@ -256,6 +268,32 @@ class BaseShop extends Controller
     {
         //验证基础登录
         if (!$this->uid) {
+            // 如果门店端已登录，自动复用门店会话到店铺端，避免误跳登录
+            try {
+                $user_model = new UserModel();
+                $store_uid = $user_model->uid('store');
+                if (!empty($store_uid)) {
+                    $store_info = $user_model->userInfo('store');
+                    \think\facade\Session::set('shop.uid', $store_uid);
+                    \think\facade\Session::set('shop.user_info', $store_info);
+                    $this->uid = $store_uid;
+                    $this->user_info = $store_info;
+                    $this->site_id = $this->user_info["site_id"] ?? 0;
+                    // 记录一次自动复用日志，便于后续排查
+                    try {
+                        $user_model->addUserLog($store_info['uid'] ?? 0, $store_info['username'] ?? 'store_user', $store_info['site_id'] ?? 0, 'store->shop会话复用', [
+                            'from' => 'store',
+                            'to' => 'shop',
+                            'sid' => session_id(),
+                            'url' => request()->url(true)
+                        ]);
+                    } catch (\Throwable $e) {}
+                    return; // 复用成功后不再跳登录
+                }
+            } catch (\Throwable $e) {
+                // 忽略复用异常，走默认登录流程
+            }
+            // 使用框架 URL 生成，避免根目录/子目录切换导致路径偏差
             $this->redirect(url('shop/login/login'));
         }
     }

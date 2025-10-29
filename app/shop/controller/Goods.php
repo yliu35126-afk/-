@@ -236,8 +236,73 @@ class Goods extends BaseShop
                 'brand_name' => input("brand_name", ''),//品牌名称
                 'goods_shop_category_ids' => input("goods_shop_category_ids", ""),// 店内分类id,逗号隔开,//供应商id
                 'supplier_id' => input("supplier_id", 0),//供应商id
-
+                // Turntable: new fields (supply/participation/source)
+                'supply_price' => (float)input('supply_price', 0),
+                'lottery_participation' => (int)input('lottery_participation', 0),
+                'lottery_tier_ids' => input('lottery_tier_ids', ''), // JSON数组或逗号分隔
+                'source_type' => input('source_type', ''),
             ];
+
+            // Derive default source_type if not provided
+            if (empty($data['source_type'])) {
+                $data['source_type'] = !empty($data['supplier_id']) ? 'supplier' : 'merchant';
+            }
+
+            // Validate price tier range if participating
+            if (function_exists('addon_is_exit') && addon_is_exit('turntable')) {
+                try {
+                    $participate = intval($data['lottery_participation']) === 1;
+                    if ($participate) {
+                        $tier_ids_raw = $data['lottery_tier_ids'];
+                        if (is_string($tier_ids_raw)) {
+                            // could be JSON [1,2] or csv "1,2"
+                            $tier_ids = [];
+                            $trim = trim($tier_ids_raw);
+                            if ($trim !== '' && $trim[0] === '[') {
+                                $tier_ids = json_decode($trim, true) ?: [];
+                            } else if ($trim !== '') {
+                                $tier_ids = array_filter(array_map('intval', explode(',', $trim))); 
+                            }
+                        } else if (is_array($tier_ids_raw)) {
+                            $tier_ids = array_map('intval', $tier_ids_raw);
+                        } else {
+                            $tier_ids = [];
+                        }
+
+                        if (empty($tier_ids)) {
+                            return ['code' => -1, 'message' => '请选择参与的价池'];
+                        }
+                        $tiers = \think\facade\Db::name('lottery_price_tier')
+                            ->where([['site_id', '=', $this->site_id], ['tier_id', 'in', $tier_ids], ['status', '=', 1]])
+                            ->field('tier_id,title,price,min_price,max_price')
+                            ->select()
+                            ->toArray();
+                        if (empty($tiers)) {
+                            return ['code' => -1, 'message' => '价池无效或已禁用'];
+                        }
+                        $supply_price = (float)$data['supply_price'];
+                        $ok = false;
+                        foreach ($tiers as $t) {
+                            $min = isset($t['min_price']) ? (float)$t['min_price'] : 0;
+                            $max = isset($t['max_price']) ? (float)$t['max_price'] : 0;
+                            if ($min == 0 && $max == 0) {
+                                // 若未配置区间，则不限制
+                                $ok = true; break;
+                            }
+                            if ($supply_price >= $min && ($max == 0 || $supply_price <= $max)) {
+                                $ok = true; break;
+                            }
+                        }
+                        if (!$ok) {
+                            return ['code' => -1, 'message' => '供货价不在所选价池区间内'];
+                        }
+                        // 规范化为JSON字符串
+                        $data['lottery_tier_ids'] = json_encode(array_values($tier_ids));
+                    }
+                } catch (\Throwable $e) {
+                    // 忽略校验异常，尽量不影响主流程
+                }
+            }
 
             $goods_model = new GoodsModel();
             $res = $goods_model->addGoods($data);
@@ -286,6 +351,22 @@ class Goods extends BaseShop
                 $this->assign("supplier_list", $supplier_list);
             }
             $this->assign("is_install_supply", $is_install_supply);
+
+            // Turntable addon: fetch price tiers for selection on goods add page
+            $turntable_tier_list = [];
+            if (function_exists('addon_is_exit') && addon_is_exit('turntable')) {
+                try {
+                    $turntable_tier_list = \think\facade\Db::name('lottery_price_tier')
+                        ->where([['site_id', '=', $this->site_id], ['status', '=', 1]])
+                        ->field('tier_id,title,price,min_price,max_price')
+                        ->order('tier_id desc')
+                        ->select()
+                        ->toArray();
+                } catch (\Throwable $e) {
+                    $turntable_tier_list = [];
+                }
+            }
+            $this->assign('turntable_tier_list', $turntable_tier_list);
 
             return $this->fetch("goods/add_goods");
         }
@@ -347,7 +428,63 @@ class Goods extends BaseShop
                 'brand_name' => input("brand_name", ''),//品牌名称
                 'goods_shop_category_ids' => input("goods_shop_category_ids", ""),// 店内分类id,逗号隔开,//供应商id
                 'supplier_id' => input("supplier_id", 0),//供应商id
+                // Turntable: new fields (supply/participation/source)
+                'supply_price' => (float)input('supply_price', 0),
+                'lottery_participation' => (int)input('lottery_participation', 0),
+                'lottery_tier_ids' => input('lottery_tier_ids', ''),
+                'source_type' => input('source_type', ''),
             ];
+
+            if (empty($data['source_type'])) {
+                $data['source_type'] = !empty($data['supplier_id']) ? 'supplier' : 'merchant';
+            }
+
+            // Validate price tier range if participating
+            if (function_exists('addon_is_exit') && addon_is_exit('turntable')) {
+                try {
+                    $participate = intval($data['lottery_participation']) === 1;
+                    if ($participate) {
+                        $tier_ids_raw = $data['lottery_tier_ids'];
+                        if (is_string($tier_ids_raw)) {
+                            $tier_ids = [];
+                            $trim = trim($tier_ids_raw);
+                            if ($trim !== '' && $trim[0] === '[') {
+                                $tier_ids = json_decode($trim, true) ?: [];
+                            } else if ($trim !== '') {
+                                $tier_ids = array_filter(array_map('intval', explode(',', $trim))); 
+                            }
+                        } else if (is_array($tier_ids_raw)) {
+                            $tier_ids = array_map('intval', $tier_ids_raw);
+                        } else {
+                            $tier_ids = [];
+                        }
+                        if (empty($tier_ids)) {
+                            return ['code' => -1, 'message' => '请选择参与的价池'];
+                        }
+                        $tiers = \think\facade\Db::name('lottery_price_tier')
+                            ->where([['site_id', '=', $this->site_id], ['tier_id', 'in', $tier_ids], ['status', '=', 1]])
+                            ->field('tier_id,title,price,min_price,max_price')
+                            ->select()
+                            ->toArray();
+                        if (empty($tiers)) {
+                            return ['code' => -1, 'message' => '价池无效或已禁用'];
+                        }
+                        $supply_price = (float)$data['supply_price'];
+                        $ok = false;
+                        foreach ($tiers as $t) {
+                            $min = isset($t['min_price']) ? (float)$t['min_price'] : 0;
+                            $max = isset($t['max_price']) ? (float)$t['max_price'] : 0;
+                            if ($min == 0 && $max == 0) { $ok = true; break; }
+                            if ($supply_price >= $min && ($max == 0 || $supply_price <= $max)) { $ok = true; break; }
+                        }
+                        if (!$ok) {
+                            return ['code' => -1, 'message' => '供货价不在所选价池区间内'];
+                        }
+                        $data['lottery_tier_ids'] = json_encode(array_values($tier_ids));
+                    }
+                } catch (\Throwable $e) {
+                }
+            }
 
             $res = $goods_model->editGoods($data);
             return $res;
@@ -404,6 +541,41 @@ class Goods extends BaseShop
                 $this->assign("supplier_list", $supplier_list);
             }
             $this->assign("is_install_supply", $is_install_supply);
+
+            // Turntable addon: fetch price tiers and existing binding for goods edit page
+            $turntable_tier_list = [];
+            $turntable_bind = [];
+            if (function_exists('addon_is_exit') && addon_is_exit('turntable')) {
+                try {
+                    $turntable_tier_list = \think\facade\Db::name('lottery_price_tier')
+                        ->where([['site_id', '=', $this->site_id], ['status', '=', 1]])
+                        ->field('tier_id,title,price,min_price,max_price')
+                        ->order('tier_id desc')
+                        ->select()
+                        ->toArray();
+                } catch (\Throwable $e) {
+                    $turntable_tier_list = [];
+                }
+                try {
+                    $turntable_bind = \think\facade\Db::name('lottery_goods_tier')
+                        ->where([['site_id', '=', $this->site_id], ['goods_id', '=', $goods_id]])
+                        ->find();
+                    if (!$turntable_bind) {
+                        $turntable_bind = [];
+                    } else {
+                        if (!empty($turntable_bind['tier_ids'])) {
+                            $decoded = json_decode($turntable_bind['tier_ids'], true);
+                            if (is_array($decoded)) {
+                                $turntable_bind['tier_ids_arr'] = $decoded;
+                            }
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    $turntable_bind = [];
+                }
+            }
+            $this->assign('turntable_tier_list', $turntable_tier_list);
+            $this->assign('turntable_bind', $turntable_bind);
             return $this->fetch("goods/edit_goods");
         }
     }

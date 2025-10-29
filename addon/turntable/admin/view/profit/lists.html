@@ -1,41 +1,24 @@
 {extend name="app/admin/view/base.html"/}
 {block name="resources"}
+<style>
+  .layui-table-view td:last-child>div{overflow: inherit;}
+  .operation-wrap{position: relative;}
+  .layui-table-box{overflow: inherit;}
+  .layui-table-body{overflow: inherit;}
+  .profit-roles div{line-height: 20px;}
+  .badge-pending{display:inline-block;padding:2px 8px;border-radius:4px;background:#FFB800;color:#fff;}
+  .badge-done{display:inline-block;padding:2px 8px;border-radius:4px;background:#5FB878;color:#fff;}
+  .badge-failed{display:inline-block;padding:2px 8px;border-radius:4px;background:#FF5722;color:#fff;}
+</style>
 {/block}
 {block name="main"}
-<!-- 搜索框 -->
+<!-- 筛选 -->
 <div class="ns-single-filter-box">
   <div class="layui-form">
     <div class="layui-inline">
-      <div class="layui-input-inline">
-        <select name="device_id" lay-search>
-          <option value="">全部设备</option>
-          {notempty name="devices"}
-          {foreach name="devices" item="d"}
-          <option value="{$d.device_id}">[{$d.device_id}] {$d.device_sn|default=''} </option>
-          {/foreach}
-          {/notempty}
-        </select>
+      <div class="layui-input-inline" style="width:180px;">
+        <input type="number" name="device_id" placeholder="设备ID（可选）" class="layui-input" autocomplete="off">
       </div>
-      <div class="layui-input-inline">
-        <select name="tier_id" lay-search>
-          <option value="">全部价档</option>
-          {notempty name="tiers"}
-          {foreach name="tiers" item="t"}
-          <option value="{$t.tier_id}">[{$t.tier_id}] {$t.title|default=''} </option>
-          {/foreach}
-          {/notempty}
-        </select>
-      </div>
-      <div class="layui-input-inline">
-        <select name="settle_status">
-          <option value="">全部状态</option>
-          <option value="pending">待核销/待结算</option>
-          <option value="verified">已核销</option>
-          <option value="settled">已结算</option>
-        </select>
-      </div>
-    </div>
-    <div class="layui-inline">
       <div class="layui-input-inline">
         <input type="text" name="start_time" id="start_time" placeholder="开始时间" class="layui-input" autocomplete="off" readonly>
         <i class="ns-calendar"></i>
@@ -45,204 +28,91 @@
         <i class="ns-calendar"></i>
       </div>
       <button class="layui-btn layui-btn-primary" lay-submit lay-filter="search">搜索</button>
-      <button class="layui-btn" id="btnExport">导出当前页CSV</button>
-      <button class="layui-btn layui-btn-normal" id="btnGroupCols">选择用户组列</button>
     </div>
   </div>
 </div>
 
-<!-- 用户组列选择面板 -->
-<div id="groupColPanel" class="layui-card" style="display:none; margin: 10px 0;">
-  <div class="layui-card-header">选择需要展示的用户组列</div>
-  <div class="layui-card-body">
-    <div class="layui-form">
-      <div class="layui-form-item">
-        <div class="layui-input-block" id="groupColCheckboxes">
-          {notempty name="groups"}
-          {foreach name="groups" item="g"}
-          <input type="checkbox" name="group_cols" value="{$g.group_id}" title="{$g.group_name}" lay-skin="primary">
-          {/foreach}
-          {/notempty}
-        </div>
-      </div>
-      <div class="layui-form-item">
-        <div class="layui-input-block">
-          <button class="layui-btn" id="btnGroupColsApply">应用</button>
-          <button class="layui-btn layui-btn-primary" id="btnGroupColsSelectAll">全选</button>
-          <button class="layui-btn layui-btn-danger" id="btnGroupColsClear">清空</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
+<!-- 表格 -->
 <div class="layui-tab ns-table-tab">
   <div class="layui-tab-content">
     <table id="profit_list" lay-filter="profit_list"></table>
   </div>
 </div>
+
+<script type="text/html" id="action">
+  <div class="ns-table-btn">
+    <a class="layui-btn" lay-event="retrigger">重触发结算</a>
+  </div>
+  </script>
 {/block}
 
 {block name="script"}
 <script>
 layui.use(['form','element','laydate'], function(){
-  var table,
-    form = layui.form,
-    laydate = layui.laydate,
-    element = layui.element;
+  var form = layui.form,
+      element = layui.element,
+      laydate = layui.laydate,
+      table;
   form.render();
 
-  // 恢复上次筛选
-  try {
-    var last = JSON.parse(localStorage.getItem('turntable_profit_filters')||'{}');
-    setTimeout(function(){
-      if (last.device_id) document.querySelector('select[name="device_id"]').value = last.device_id;
-      if (last.tier_id) document.querySelector('select[name="tier_id"]').value = last.tier_id;
-      if (last.settle_status) document.querySelector('select[name="settle_status"]').value = last.settle_status;
-      if (last.start_time) document.querySelector('#start_time').value = last.start_time;
-      if (last.end_time) document.querySelector('#end_time').value = last.end_time;
-      form.render('select');
-    }, 20);
-  } catch(_) {}
+  function fmt2(v){ var n = Number(v||0); if (isNaN(n)) return v||''; return n.toFixed(2); }
+  function badge(s){ s = String(s||''); if (s==='done') return '<span class="badge-done">已结算</span>'; if (s==='failed') return '<span class="badge-failed">失败</span>'; return '<span class="badge-pending">待结算</span>'; }
 
-  laydate.render({ elem: '#start_time', done: function(value){ start_time = ns.date_to_time(value); } });
-  laydate.render({ elem: '#end_time', done: function(value){ end_time = ns.date_to_time(value); } });
-
-  // 用户组列选择：状态恢复
-  var savedCols = [];
-  try { savedCols = JSON.parse(localStorage.getItem('turntable_profit_group_cols')||'[]'); } catch(_) {}
-  // 勾选面板中的已选项
-  savedCols.forEach(function(gid){
-    var el = document.querySelector('#groupColCheckboxes input[name="group_cols"][value="'+gid+'"]');
-    if (el) el.checked = true;
-  });
-  form.render('checkbox');
-
-  function getNameMap(){
-    var map = {};
-    var nodes = document.querySelectorAll('#groupColCheckboxes input[name="group_cols"]');
-    nodes.forEach(function(n){ map[n.value] = n.getAttribute('title') || ('组'+n.value); });
-    return map;
-  }
-
-  function buildCols(selected, nameMap){
-    var cols = [
-      {field:'id', title:'ID', width:80},
-      {field:'record_id', title:'记录ID', width:100},
-      {field:'device_id', title:'设备ID', width:100},
-      {field:'tier_id', title:'价档ID', width:100},
-      {field:'amount_total', title:'订单金额', width:120}
-    ];
-    // 动态组列
-    (selected||[]).forEach(function(gid){
-      var title = (nameMap && nameMap[gid]) ? nameMap[gid] : ('组'+gid);
-      cols.push({
-        title: title,
-        width: 120,
-        templet: function(d){
-          var m = d.group_profit || {};
-          var k1 = 'group_' + gid;
-          var k2 = String(gid);
-          if (m.hasOwnProperty(k1)) return m[k1];
-          if (m.hasOwnProperty(k2)) return m[k2];
-          return '-';
-        }
-      });
-    });
-    // 固定列
-    cols.push({title:'创建时间', templet: function(d){ return ns.time_to_date(d.create_time); }});
-    cols.push({title:'状态', templet: function(d){
-      var mp = {pending:'待结算', verified:'已核销', settled:'已结算'};
-      return mp[d.settle_status || 'pending'];
-    }});
-    cols.push({title:'操作', templet: function(d){
-      if (d.settle_status === 'settled') return '<span class="layui-btn layui-btn-disabled">已结算</span>';
-      return '<a class="layui-btn layui-btn-sm" onclick="settle('+d.id+')">标记结算</a>';
-    }});
-    return [ cols ];
-  }
-
-  var nameMap = getNameMap();
+  laydate.render({ elem: '#start_time', type: 'datetime' });
+  laydate.render({ elem: '#end_time', type: 'datetime' });
 
   table = new Table({
     elem: '#profit_list',
     url: ns.url('turntable://admin/profit/lists'),
-    cols: buildCols(savedCols, nameMap)
+    cols: [[
+      { field: 'record_id', title: '记录ID', width: 120 },
+      { field: 'device_id', title: '设备ID', width: 100 },
+      { field: 'site_id', title: '站点ID', width: 100 },
+      { field: 'amount_total', title: '总金额', width: 110, templet: function(d){ return fmt2(d.amount_total); } },
+      { field: 'platform_money', title: '平台', width: 100, templet: function(d){ return fmt2(d.platform_money); } },
+      { field: 'merchant_money', title: '商户', width: 100, templet: function(d){ return fmt2(d.merchant_money); } },
+      { field: 'supplier_money', title: '供应商', width: 100, templet: function(d){ return fmt2(d.supplier_money); } },
+      { field: 'promoter_money', title: '推广', width: 100, templet: function(d){ return fmt2(d.promoter_money); } },
+      { field: 'installer_money', title: '安装', width: 100, templet: function(d){ return fmt2(d.installer_money); } },
+      { field: 'owner_money', title: '运营', width: 100, templet: function(d){ return fmt2(d.owner_money); } },
+      { field: 'agent_money', title: '代理', width: 100, templet: function(d){ return fmt2(d.agent_money); } },
+      { field: 'member_money', title: '会员', width: 100, templet: function(d){ return fmt2(d.member_money); } },
+      { field: 'city_money', title: '城市分站', width: 110, templet: function(d){ return fmt2(d.city_money); } },
+      { title: '结算状态', width: 100, templet: function(d){ return badge(d.settlement_status); } },
+      { title: '角色快照', width: 240, templet: function(d){ var r=d.roles||{}; return '<div class="profit-roles">'+
+        '<div>商家:'+ (r.merchant_site_id||0) +'</div>'+
+        '<div>供应商:'+ (r.supplier_id||0) +'</div>'+
+        '<div>推广:'+ (r.promoter_id||0) +'</div>'+
+        '<div>安装:'+ (r.installer_id||0) +'</div>'+
+        '<div>运营:'+ (r.owner_id||0) +'</div>'+
+        '<div>代理编码:'+ (r.agent_code||'') +'</div>'+
+      '</div>'; } },
+      { title: '操作', toolbar: '#action', width: 140 }
+    ]]
   });
 
   form.on('submit(search)', function(data){
-    // 记忆筛选
-    try { localStorage.setItem('turntable_profit_filters', JSON.stringify(data.field)); } catch(_) {}
-    table.reload({ page:{curr:1}, where: data.field });
-  });
-
-  document.getElementById('btnExport').addEventListener('click', function(){
-    // 使用当前筛选条件导出本页CSV
-    var fields = {};
-    var devSel = document.querySelector('select[name="device_id"]');
-    var tierSel = document.querySelector('select[name="tier_id"]');
-    var stSel = document.querySelector('select[name="settle_status"]');
-    fields.device_id = devSel && devSel.value || '';
-    fields.tier_id = tierSel && tierSel.value || '';
-    fields.settle_status = stSel && stSel.value || '';
-    fields.start_time = document.querySelector('#start_time').value || '';
-    fields.end_time = document.querySelector('#end_time').value || '';
-
-    ns.nsajax({
-      url: ns.url('turntable://admin/profit/export'),
-      data: fields,
-      success: function(res){
-        var d = res.data || {};
-        var filename = d.filename || ('profit_page.csv');
-        var content = d.content || '';
-        try {
-          var blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
-          var link = document.createElement('a');
-          var url = URL.createObjectURL(blob);
-          link.setAttribute('href', url);
-          link.setAttribute('download', filename);
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(url);
-          layui.layer.msg('导出成功');
-        } catch(_) { layui.layer.msg('导出失败'); }
+    table.reload({
+      page: { curr: 1 },
+      where: {
+        device_id: data.field.device_id || '',
+        start_time: data.field.start_time || '',
+        end_time: data.field.end_time || ''
       }
     });
+    return false;
   });
 
-  // 面板交互
-  document.getElementById('btnGroupCols').addEventListener('click', function(){
-    var panel = document.getElementById('groupColPanel');
-    panel.style.display = (panel.style.display === 'none' || panel.style.display === '') ? 'block' : 'none';
-  });
-  document.getElementById('btnGroupColsSelectAll').addEventListener('click', function(){
-    document.querySelectorAll('#groupColCheckboxes input[name="group_cols"]').forEach(function(n){ n.checked = true; });
-    form.render('checkbox');
-  });
-  document.getElementById('btnGroupColsClear').addEventListener('click', function(){
-    document.querySelectorAll('#groupColCheckboxes input[name="group_cols"]').forEach(function(n){ n.checked = false; });
-    form.render('checkbox');
-  });
-  document.getElementById('btnGroupColsApply').addEventListener('click', function(){
-    var selected = [];
-    document.querySelectorAll('#groupColCheckboxes input[name="group_cols"]:checked').forEach(function(n){ selected.push(n.value); });
-    try { localStorage.setItem('turntable_profit_group_cols', JSON.stringify(selected)); } catch(_) {}
-    var cols = buildCols(selected, nameMap);
-    // 重载表格列
-    layui.table.reload('profit_list', { cols: cols });
-    layui.layer.msg('已应用用户组列');
+  table.tool(function(obj){
+    var data = obj.data;
+    if (obj.event === 'retrigger') {
+      ns.nsajax({
+        url: ns.url('turntable://admin/profit/retrigger'),
+        data: { record_id: data.record_id },
+        success: function(res){ layui.layer.msg(res.message||'已触发结算'); table.reload(); }
+      });
+    }
   });
 });
-
-function settle(id){
-  if (!id) return;
-  ns.nsajax({
-    url: ns.url('turntable://admin/profit/settle'),
-    data: { id: id },
-    success: function(){ layui.layer.msg('已标记结算'); layui.table.reload('profit_list'); },
-    error: function(){ layui.layer.msg('操作失败'); }
-  });
-}
 </script>
 {/block}

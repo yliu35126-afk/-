@@ -61,7 +61,7 @@ var form, register_repeat_flag = false;
 	function verificationCode(){
 		$.ajax({
 			type: "get",
-			url: "{:url('shop/login/captcha')}",
+			url: "/index.php/shop/login/captcha",
 			dataType: "JSON",
 			async: false,
 			success: function (res) {
@@ -82,24 +82,24 @@ var form, register_repeat_flag = false;
             if (register_repeat_flag) return;
             register_repeat_flag = true;
 
-            $.ajax({
-                type: "POST",
-                dataType: "JSON",
-                url:  ns.url("shop/login/register"),
-                data: data.field,
-                success: function(res) {
-                    if (res.code == 0) {
-                        layer.msg(res.message,{anim: 5,time: 500},function () {
-                            window.location = ns.url('shop/index/index');
-                        });
-                    } else {
-                        layer.msg(res.message);
-                        register_repeat_flag = false;
-                        verificationCode();
-                    }
-                }
-            })
-        });
+			$.ajax({
+				type: "POST",
+				dataType: "JSON",
+				url:  '/index.php/shop/login/register',
+				data: data.field,
+				success: function(res) {
+					if (res.code == 0) {
+						layer.msg(res.message,{anim: 5,time: 500},function () {
+							window.location = '/index.php/shop/index/index';
+						});
+					} else {
+						layer.msg(res.message);
+						register_repeat_flag = false;
+						verificationCode();
+					}
+				}
+			})
+		});
         
         /**
          * 表单验证
@@ -142,8 +142,8 @@ var form, register_repeat_flag = false;
         }
     });
 
-    function login(){
-        location.href = ns.url("shop/login/login");
-    }
+	function login(){
+		location.href = '/index.php/shop/login/login';
+	}
 </script>
 {/block}

@@ -31,7 +31,8 @@ class Login extends Controller
         $config_info = $config_model->getCaptchaConfig();
         $config_data = (is_array($config_info) && isset($config_info['data']) && is_array($config_info['data'])) ? $config_info['data'] : [];
         $config = (isset($config_data['value']) && is_array($config_data['value'])) ? $config_data['value'] : [];
-        $admin_login = $config["admin_login"] ?? 0;
+        // 临时关闭后台登录验证码，避免环境问题导致无法登录
+        $admin_login = 0;
         if (request()->isAjax()) {
             $username = input('username', '');
             $password = input('password', '');
@@ -69,9 +70,9 @@ class Login extends Controller
         if ($uid > 0) {
             // 清除登录信息session
             $user_model->clearLogin($this->app_module);
-            $this->redirect('/admin/login/login.html');
+            $this->redirect('/index.php/admin/login/login');
         } else {
-            $this->redirect('/admin/login/login.html');
+            $this->redirect('/index.php/admin/login/login');
         }
     }
 

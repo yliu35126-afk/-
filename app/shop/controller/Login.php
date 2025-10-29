@@ -93,9 +93,9 @@ class Login extends Controller
         if ($uid > 0) {
             //清除登录信息session
             $user_model->clearLogin($this->app_module);
-            $this->redirect(url("shop/login/login"));
+            $this->redirect('/index.php/shop/login/login');
         } else {
-            $this->redirect(url("shop/login/login"));
+            $this->redirect('/index.php/shop/login/login');
         }
     }
 

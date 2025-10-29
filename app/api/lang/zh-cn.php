@@ -56,4 +56,18 @@ return [
     'REQUEST_PLATFORMCOUPON_TYPE_ID' => '缺少参数platformcoupon_type_id',
 	'REQUEST_BRANDS' => '缺少参数brand_ids',
 
+    // 设备抽奖通用错误码
+    'MISSING_DEVICE' => '缺少设备标识',
+    'DEVICE_NOT_FOUND' => '设备不存在',
+    'BOARD_NOT_BOUND' => '设备未绑定抽奖盘',
+    'DEVICE_TIER_UNBOUND' => '该设备未绑定此价档',
+    'TIER_INVALID' => '价档不可用',
+    'ADDR_INCOMPLETE' => '地址信息不完整',
+    'VERIFY_CODE_INVALID' => '核销码不正确',
+    'SIGN_MISSING_OR_EXPIRED' => '签名缺失或过期',
+    'SIGN_INVALID' => '签名校验失败',
+    'PARAM_INCOMPLETE' => '参数不完整',
+    'NON_SUCCESS_STATUS' => '非成功态',
+    'CONTEXT_INCOMPLETE' => '回调上下文不完整',
+
 ];

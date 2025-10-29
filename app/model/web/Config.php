@@ -71,7 +71,8 @@ class Config extends BaseModel
                 'supply_login' => 1,
                 'city_login' => 1,
                 'shop_reception_login' => 1,
-                'shop_pc_reception_login' => 1
+                'shop_pc_reception_login' => 1,
+                'weapp_login' => 0
             ];
         }
         return $res;

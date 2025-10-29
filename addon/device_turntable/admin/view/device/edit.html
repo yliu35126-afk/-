@@ -1,0 +1,276 @@
+{extend name="app/admin/view/base.html"/}
+{block name="main"}
+<div class="layui-card" style="margin-bottom: 15px;">
+  <div class="layui-card-header">当前价档与盘</div>
+  <div class="layui-card-body">
+    <div style="margin-bottom:8px;">
+      <strong>抽奖盘：</strong>
+      {if !empty($board_info)}
+        {$board_info.name|default='(未命名)'}
+        {if !empty($info.board_id)}
+          <a class="layui-btn layui-btn-xs" href="{\:ns.url('turntable://admin/board/edit', ['board_id'=>$info.board_id])}">查看/编辑盘</a>
+        {/if}
+      {else/}
+        <span style="color:#999;">未设置</span>
+        <a class="layui-btn layui-btn-xs" href="{\:ns.url('turntable://admin/board/lists')}">去设置</a>
+      {/if}
+    </div>
+    <div>
+      <strong>当前价档：</strong>
+      {if !empty($tier_info)}
+        {$tier_info.title|default=''}
+        {if isset($tier_info.min_price) || isset($tier_info.max_price)}
+          （供货￥{$tier_info.min_price|default='0'} - {if !empty($tier_info.max_price)}{$tier_info.max_price}{else/}∞{/if}）
+        {/if}
+        <a class="layui-btn layui-btn-xs" href="{\:ns.url('turntable://admin/pricetier/edit', ['tier_id'=>$tier_info.tier_id])}">价档详情</a>
+      {else/}
+        <span style="color:#999;">未绑定</span>
+      {/if}
+      <a class="layui-btn layui-btn-primary layui-btn-xs" style="margin-left:8px;" href="{\:ns.url('turntable://admin/bind/lists', ['device_id'=>$info.id])}">管理该设备的绑定</a>
+    </div>
+  </div>
+</div>
+<div class="layui-form ns-form">
+  <input type="hidden" name="id" value="{$info.id}">
+  <div class="layui-form-item">
+    <label class="layui-form-label">设备SN</label>
+    <div class="layui-input-block">
+      <input type="text" name="device_sn" value="{$info.device_sn}" class="layui-input">
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">盘ID</label>
+    <div class="layui-input-block">
+      <select name="board_id" id="board_id_select" lay-search>
+        <option value="0" {if empty($info.board_id) || $info.board_id==0}selected{/if}>未选择</option>
+      </select>
+    </div>
+  </div>
+  <!-- 归属角色字段：商家/供应商/推广/安装/运营/代理 -->
+  <div class="layui-form-item">
+    <label class="layui-form-label">商家站点</label>
+    <div class="layui-input-block">
+      <select name="site_id" lay-search>
+        <option value="0" {if empty($info.site_id) || $info.site_id==0}selected{/if}>未绑定</option>
+        {if !empty($shop_options)}
+          {foreach $shop_options as $s}
+            <option value="{$s.site_id}" {if isset($info.site_id) && $info.site_id==$s.site_id}selected{/if}>{$s.site_id} - {$s.site_name|default=''}</option>
+          {/foreach}
+        {/if}
+      </select>
+      <div class="ns-word-aux">用于结算归属商家站点（shop端）。可搜索店铺名称。</div>
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">供应商</label>
+    <div class="layui-input-block">
+      <input type="hidden" name="supplier_id" value="{$info.supplier_id|default='0'}" />
+      <select name="supplier" class="js-supplier" lay-search lay-filter="supplier_select" style="width:100%">
+        <option value="0"></option>
+      </select>
+      <div class="ns-word-aux">用于分润与供货价归属（supply端）。可搜索供应商名称。</div>
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">推广人</label>
+    <div class="layui-input-block">
+      <input type="text" name="promoter_id" value="{$info.promoter_id|default=''}" class="layui-input" placeholder="输入会员ID/手机号/用户名">
+      <div class="ns-word-aux">用于分销/推广分润归属。可搜索会员昵称/账号/手机号。</div>
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">安装商</label>
+    <div class="layui-input-block">
+      <input type="text" name="installer_id" value="{$info.installer_id|default=''}" class="layui-input" placeholder="输入会员ID/手机号/用户名">
+      <div class="ns-word-aux">用于安装服务分润归属。可搜索会员昵称/账号/手机号。</div>
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">运营商</label>
+    <div class="layui-input-block">
+      <input type="text" name="owner_id" value="{$info.owner_id|default=''}" class="layui-input" placeholder="输入会员ID/手机号/用户名">
+      <div class="ns-word-aux">用于设备运营分润归属。可搜索会员昵称/账号/手机号。</div>
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">代理编码</label>
+    <div class="layui-input-block">
+      <input type="hidden" name="agent_code" value="{$info.agent_code|default=''}" />
+      <div data-flag="area" class="ns-area-select">
+        <div class="ns-form-row">
+          <select data-type="province" lay-filter="agent_province" data-init="-1"></select>
+          <select data-type="city" lay-filter="agent_city" data-init="-1"></select>
+          <select data-type="district" lay-filter="agent_district" data-init="{$info.agent_code|default='-1'}"></select>
+        </div>
+      </div>
+      <div class="ns-word-aux">用于按地区代理结算（可选）。请选择省/市/区。</div>
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">状态</label>
+    <div class="layui-input-block">
+      <input type="radio" name="status" value="1" title="启用" {if $info.status==1}checked{/if}>
+      <input type="radio" name="status" value="0" title="禁用" {if $info.status==0}checked{/if}>
+    </div>
+  </div>
+  <div class="ns-form-row">
+    <button class="layui-btn ns-bg-color" lay-submit lay-filter="save">保存</button>
+    <button class="layui-btn layui-btn-primary" onclick="history.back()">返回</button>
+  </div>
+</div>
+{/block}
+{block name="script"}
+<script>
+// 依赖：可搜索下拉 & 省市区联动
+</script>
+<!-- 使用 Layui 全局样式，不再加载自定义 searchable_select -->
+<script src="ADMIN_JS/address.js"></script>
+<script>
+layui.use(['form'], function(){
+  var form = layui.form;
+  form.render();
+
+  // 省市区联动初始化，并将选中区县写入 agent_code
+  window.area_form = form; // address.js 需要该变量
+  initArea(form);
+  form.on('select(agent_district)', function(data){
+    var val = data.value;
+    if (val && val != '-1') {
+      $("input[name='agent_code']").val(val);
+    }
+  });
+  form.on('select(agent_city)', function(data){
+    var val = data.value;
+    var dist = $("[data-flag='area'] select[data-type='district']").val();
+    if ((!dist || dist=='-1') && val && val!='-1') $("input[name='agent_code']").val(val);
+  });
+
+  // 盘ID下拉，异步加载抽奖盘列表
+  function loadBoardOptions(selected){
+    $.ajax({
+      url: ns.url('turntable://admin/board/lists'),
+      type: 'POST',
+      dataType: 'json',
+      data: { page_size: 50 },
+      success: function(res){
+        var list = (res.data && res.data.list) ? res.data.list : [];
+        var html = '<option value="0">未选择</option>';
+        for (var i=0;i<list.length;i++){
+          var b = list[i];
+          var sel = (selected && selected==b.board_id) ? ' selected' : '';
+          html += '<option value="'+b.board_id+'"'+sel+'>'+b.board_id+' - '+(b.name||'')+'</option>';
+        }
+        $('#board_id_select').html(html);
+        form.render('select');
+      }
+    });
+  }
+  var selectedBoardId = '{$info.board_id|default=0}';
+  loadBoardOptions(parseInt(selectedBoardId) || 0);
+  // Layui 下拉搜索绑定
+  function bindLayuiSearch(selectEl, fetchFn){
+    var wrapper = selectEl.next('.layui-form-select');
+    var input = wrapper.find('.layui-select-search input');
+    input.off('keyup.remote').on('keyup.remote', function(){
+      var v = $(this).val();
+      if (v && v.length > 100) { layer.msg('查询限制在100个字符以内'); return; }
+      fetchFn(v||'');
+    });
+  }
+
+  // 供应商：Layui 全局样式 + 远程搜索
+  function fetchSupplierAndRender(search_text){
+    $.ajax({
+      url: ns.url('shop/goods/getSupplierPageList'),
+      type: 'POST',
+      dataType: 'json',
+      data: { search_text: search_text },
+      success: function(res){
+        var list = (res.data && res.data.list) ? res.data.list : [];
+        var html = '<option value="0"></option>';
+        var current = $("input[name='supplier_id']").val();
+        for (var i=0;i<list.length;i++){
+          var s = list[i];
+          var text = (s.title||s.supplier_name||('供应商'+s.supplier_id));
+          var sel = (current == s.supplier_id) ? ' selected' : '';
+          html += '<option value="'+s.supplier_id+'"'+sel+'>'+text+'</option>';
+        }
+        var selEl = $("select[name='supplier']");
+        selEl.html(html);
+        form.render('select');
+        bindLayuiSearch(selEl, fetchSupplierAndRender);
+      }
+    });
+  }
+  function initSupplierLayuiSelect(){
+    fetchSupplierAndRender('');
+    form.on('select(supplier_select)', function(data){
+      $("input[name='supplier_id']").val(data.value || 0);
+    });
+  }
+
+  // 成员字段改为直接输入会员ID，无下拉
+  // 初始化仅处理供应商
+  initSupplierLayuiSelect();
+
+  form.on('submit(save)', function(data){
+    // 强制携带主键id，避免后端判定参数错误（优先取隐藏域，缺失则从URL参数回退）
+    var idVal = $("input[name='id']").val();
+    if(!idVal){
+      var m = location.search.match(/(?:\?|&)id=([^&]+)/);
+      if(m && m[1]) idVal = decodeURIComponent(m[1]);
+    }
+    if(!idVal){ layer.msg('缺少设备ID，无法保存'); return false; }
+    data.field.id = idVal;
+
+    // 将输入的会员标识（ID/手机号/用户名）解析为 member_id
+    function resolveMemberId(text, cb){
+      var t = (text||'').toString().trim();
+      if(t === '' || t === '0'){ cb(0); return; }
+      // 纯数字且不是手机号，直接当作ID
+      if(/^\d+$/.test(t) && t.length !== 11){ cb(parseInt(t,10)); return; }
+      $.ajax({
+        url: ns.url('admin/member/searchMember'),
+        type: 'POST',
+        dataType: 'json',
+        data: { search_text: t },
+        success: function(res){
+          var mid = (res && res.data && res.data.member_id) ? res.data.member_id : 0;
+          cb(mid);
+        },
+        error: function(){ cb(0); }
+      });
+    }
+
+    var p = data.field.promoter_id || '';
+    var i = data.field.installer_id || '';
+    var o = data.field.owner_id || '';
+
+    var doneCount = 0;
+    function done(){
+      doneCount++;
+      if(doneCount === 3){
+        $.ajax({
+          url: ns.url('turntable://admin/device/edit'),
+          data: data.field,
+          dataType: 'json',
+          type: 'POST',
+          success: function(res){
+            layer.msg(res.message);
+            if(res.code === 0){
+              location.href = ns.url('turntable://admin/device/lists');
+            }
+          }
+        });
+      }
+    }
+
+    resolveMemberId(p, function(mid){ data.field.promoter_id = mid || 0; done(); });
+    resolveMemberId(i, function(mid){ data.field.installer_id = mid || 0; done(); });
+    resolveMemberId(o, function(mid){ data.field.owner_id = mid || 0; done(); });
+
+    return false;
+  });
+});
+</script>
+{/block}

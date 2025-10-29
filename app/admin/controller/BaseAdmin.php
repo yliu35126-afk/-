@@ -39,46 +39,56 @@ class BaseAdmin extends Controller
 
     public function __construct()
     {
-        //执行父类构造函数
-        parent::__construct();
+        try {
+            //执行父类构造函数
+            parent::__construct();
 
-        $user = new UserModel();
-        //检测基础登录
-        $this->uid = $user->uid($this->app_module);
+            $user = new UserModel();
+            //检测基础登录
+            $this->uid = $user->uid($this->app_module);
 
-        /** @var \app\Request $req */
-        $req = request();
-        $this->url = $req->parseUrl();
-        $this->addon = $req->addon() ? $req->addon() : '';
-        $this->user_info = $user->userInfo($this->app_module);
-        $this->assign("user_info", is_array($this->user_info) ? $this->user_info : []);
-        $this->checkLogin();
-        // 未登录时，立刻结束后续初始化，避免对空值做数组访问
-        if (!$this->uid) {
-            return;
-        }
+            /** @var \app\Request $req */
+            $req = request();
+            $this->url = $req->parseUrl();
+            $this->addon = $req->addon() ? $req->addon() : '';
+            $this->user_info = $user->userInfo($this->app_module);
+            $this->assign("user_info", is_array($this->user_info) ? $this->user_info : []);
+            $this->checkLogin();
+            // 未登录时，立刻结束后续初始化，避免对空值做数组访问
+            if (!$this->uid) {
+                return;
+            }
 
-        //检测用户组
-        $this->getGroupInfo();
+            //检测用户组
+            $this->getGroupInfo();
 
-        if (!$this->checkAuth()) {
+            if (!$this->checkAuth()) {
+                if (!request()->isAjax()) {
+                    $this->error('权限不足');
+                } else {
+                    echo json_encode(error('-1', '权限不足！'));
+                    exit;
+                }
+            }
+
             if (!request()->isAjax()) {
-                $this->error('权限不足');
-            } else {
-                echo json_encode(error('-1', '权限不足！'));
+                //获取菜单
+                $this->menus = $this->getMenuList();
+                $this->initBaseInfo();
+            }
+            //默认图配置
+            $config_model = new ConfigModel();
+            $default_img_config_result = $config_model->getDefaultImg();
+            $this->assign("default_img", (is_array($default_img_config_result) && isset($default_img_config_result['data']) && is_array($default_img_config_result['data'])) ? ($default_img_config_result['data']['value'] ?? []) : []);
+        } catch (\Throwable $e) {
+            // 构造流程兜底：任何异常对 AJAX 返回 JSON，避免 500
+            if (request()->isAjax()) {
+                echo json_encode(['code' => -10001, 'message' => '后台初始化失败', 'data' => '', 'error_code' => 'ADMIN_RUNTIME_ERROR'], JSON_UNESCAPED_UNICODE);
                 exit;
             }
+            // 非 AJAX 走框架默认错误流程
+            throw $e;
         }
-
-        if (!request()->isAjax()) {
-            //获取菜单
-            $this->menus = $this->getMenuList();
-            $this->initBaseInfo();
-        }
-        //默认图配置
-        $config_model = new ConfigModel();
-        $default_img_config_result = $config_model->getDefaultImg();
-        $this->assign("default_img", (is_array($default_img_config_result) && isset($default_img_config_result['data']) && is_array($default_img_config_result['data'])) ? ($default_img_config_result['data']['value'] ?? []) : []);
     }
 
     /**
@@ -102,10 +112,18 @@ class BaseAdmin extends Controller
             }
         }
         $this->assign("menu_info", $info);
-        //加载网站基础信息
+        //加载网站基础信息（容错空数据）
         $website = new WebSite();
         $website_info = $website->getWebSite([ [ 'site_id', '=', 0 ] ], 'title,logo,desc,keywords,web_status,close_reason');
-        $this->assign("website", $website_info['data']);
+        $website_data = (is_array($website_info) && isset($website_info['data']) && is_array($website_info['data'])) ? $website_info['data'] : [
+            'title' => 'Niushop开源商城',
+            'logo' => '',
+            'desc' => '描述',
+            'keywords' => 'Niushop开源商城',
+            'web_status' => 1,
+            'close_reason' => ''
+        ];
+        $this->assign("website", $website_data);
         //加载菜单树
         $init_menu = $this->initMenu($this->menus, '');
         // 应用下的菜单特殊处理
@@ -298,10 +316,22 @@ class BaseAdmin extends Controller
             } catch (\Throwable $e) {
                 // 忽略自动登录错误
             }
-            if (!$this->uid) {
-                // 使用显式路径避免 URL 助手被默认应用干扰
-                $this->redirect('/admin/login/login.html');
+        if (!$this->uid) {
+            // 未登录：AJAX 请求返回标准 JSON 错误，避免前端出现 500；非 AJAX 正常跳转登录页
+            if (request()->isAjax()) {
+                try {
+                    $payload = error('-10065', '账号或密码错误', '');
+                    if (is_array($payload)) { $payload['error_code'] = 'USER_LOGIN_ERROR'; }
+                    echo json_encode($payload, JSON_UNESCAPED_UNICODE);
+                } catch (\Throwable $e) {
+                    echo json_encode(['code' => -10065, 'message' => '账号或密码错误', 'data' => '', 'error_code' => 'USER_LOGIN_ERROR'], JSON_UNESCAPED_UNICODE);
+                }
+                exit;
+            } else {
+                // 使用显式路径（根目录为站点根，携带 index.php）
+                $this->redirect('/index.php/admin/login/login');
             }
+        }
         }
     }
 
@@ -343,6 +373,43 @@ class BaseAdmin extends Controller
                     '*',
                     'sort asc'
                 );
+            } else {
+                // 轻量自检：确保“用户列表/用户组”归属在“管理员(配置)”分组下
+                if ($this->app_module === 'admin') {
+                    $need_refresh = false;
+                    try {
+                        $name_to_parent = [];
+                        foreach ($data as $row) {
+                            if (!isset($row['name']) || !isset($row['parent'])) continue;
+                            if ($row['name'] === 'CONFIG_USER_INDEX' || $row['name'] === 'CONFIG_USER_GROUP') {
+                                $name_to_parent[$row['name']] = $row['parent'];
+                            }
+                        }
+                        // 若发现父级不是 CONFIG_USER，或缺失，则刷新一次菜单
+                        if (!isset($name_to_parent['CONFIG_USER_INDEX']) || !isset($name_to_parent['CONFIG_USER_GROUP']) ||
+                            $name_to_parent['CONFIG_USER_INDEX'] !== 'CONFIG_USER' || $name_to_parent['CONFIG_USER_GROUP'] !== 'CONFIG_USER') {
+                            $need_refresh = true;
+                        }
+                    } catch (\Throwable $e) {
+                        // 安全兜底：出现异常也尝试刷新
+                        $need_refresh = true;
+                    }
+                    if ($need_refresh) {
+                        try {
+                            Cache::tag('menu')->clear();
+                            $menu_model->refreshMenu('admin', '');
+                            $menus = $menu_model->getMenuList(
+                                [ [ 'app_module', "=", 'admin' ], [ 'is_show', "=", 1 ] ],
+                                '*',
+                                'sort asc'
+                            );
+                            // 记录一次修复日志，便于追踪
+                            (new \app\model\system\User())->addUserLog((int)($this->uid ?: 0), is_array($this->user_info) ? ($this->user_info['username'] ?? '') : '', (int)($this->site_id ?: 0), '菜单结构异常自动刷新', [ 'module' => 'admin', 'fix' => 'CONFIG_USER children' ]);
+                        } catch (\Throwable $e2) {
+                            // 忽略刷新错误
+                        }
+                    }
+                }
             }
             return $menus['data'] ?? [];
         }
@@ -365,6 +432,36 @@ class BaseAdmin extends Controller
                     '*',
                     'sort asc'
                 );
+            } else if ($this->app_module === 'admin') {
+                // 对系统管理员同样做一次结构自检
+                $need_refresh = false;
+                try {
+                    $name_to_parent = [];
+                    foreach ($data as $row) {
+                        if (!isset($row['name']) || !isset($row['parent'])) continue;
+                        if ($row['name'] === 'CONFIG_USER_INDEX' || $row['name'] === 'CONFIG_USER_GROUP') {
+                            $name_to_parent[$row['name']] = $row['parent'];
+                        }
+                    }
+                    if (!isset($name_to_parent['CONFIG_USER_INDEX']) || !isset($name_to_parent['CONFIG_USER_GROUP']) ||
+                        $name_to_parent['CONFIG_USER_INDEX'] !== 'CONFIG_USER' || $name_to_parent['CONFIG_USER_GROUP'] !== 'CONFIG_USER') {
+                        $need_refresh = true;
+                    }
+                } catch (\Throwable $e) {
+                    $need_refresh = true;
+                }
+                if ($need_refresh) {
+                    try {
+                        Cache::tag('menu')->clear();
+                        $menu_model->refreshMenu('admin', '');
+                        $menus = $menu_model->getMenuList(
+                            [ [ 'app_module', "=", 'admin' ], [ 'is_show', "=", 1 ] ],
+                            '*',
+                            'sort asc'
+                        );
+                        (new \app\model\system\User())->addUserLog((int)($this->uid ?: 0), is_array($this->user_info) ? ($this->user_info['username'] ?? '') : '', (int)($this->site_id ?: 0), '菜单结构异常自动刷新', [ 'module' => 'admin', 'fix' => 'CONFIG_USER children' ]);
+                    } catch (\Throwable $e2) {}
+                }
             }
         } else {
             // 非系统管理员需判断菜单数组是否存在
@@ -390,6 +487,33 @@ class BaseAdmin extends Controller
                     '*',
                     'sort asc'
                 );
+            } else if ($this->app_module === 'admin') {
+                // 普通管理员也做一次“管理员模块子项”归属自检
+                $need_refresh = false;
+                try {
+                    $name_to_parent = [];
+                    foreach ($data as $row) {
+                        if (!isset($row['name']) || !isset($row['parent'])) continue;
+                        if ($row['name'] === 'CONFIG_USER_INDEX' || $row['name'] === 'CONFIG_USER_GROUP') {
+                            $name_to_parent[$row['name']] = $row['parent'];
+                        }
+                    }
+                    if (!empty($name_to_parent) && (isset($name_to_parent['CONFIG_USER_INDEX']) && $name_to_parent['CONFIG_USER_INDEX'] !== 'CONFIG_USER' || isset($name_to_parent['CONFIG_USER_GROUP']) && $name_to_parent['CONFIG_USER_GROUP'] !== 'CONFIG_USER')) {
+                        $need_refresh = true;
+                    }
+                } catch (\Throwable $e) {}
+                if ($need_refresh) {
+                    try {
+                        Cache::tag('menu')->clear();
+                        $menu_model->refreshMenu('admin', '');
+                        $menus = $menu_model->getMenuList(
+                            [ [ 'name', 'in', $menu_array ], [ 'is_show', "=", 1 ], [ 'app_module', "=", 'admin' ] ],
+                            '*',
+                            'sort asc'
+                        );
+                        (new \app\model\system\User())->addUserLog((int)($this->uid ?: 0), is_array($this->user_info) ? ($this->user_info['username'] ?? '') : '', (int)($this->site_id ?: 0), '菜单结构异常自动刷新', [ 'module' => 'admin', 'fix' => 'CONFIG_USER children' ]);
+                    } catch (\Throwable $e2) {}
+                }
             }
         }
 

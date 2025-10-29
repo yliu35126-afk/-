@@ -57,7 +57,7 @@
 	function verificationCode(){
 		$.ajax({
 			type: "get",
-			url: "{:url('shop/login/captcha')}",
+			url: "/index.php/shop/login/captcha",
 			dataType: "JSON",
 			async: false,
 			success: function (res) {
@@ -81,13 +81,13 @@
 			$.ajax({
 				type: "POST",
 				dataType: "JSON",
-				url: '{:url("shop/login/login")}',
+				url: '/index.php/shop/login/login',
 				data: data.field,
 				success: function(res) {
 
 					if (res.code == 0) {
 						layer.msg('登录成功',{anim: 5,time: 500},function () {
-							window.location = ns.url('shop/index/index');
+							window.location = '/index.php/shop/index/index';
 						});
 					} else {
 						layer.msg(res.message);
@@ -123,7 +123,7 @@
 	});
 
 	function register(){
-		location.href = ns.url("shop/login/register");
+		location.href = '/index.php/shop/login/register';
 	}
 	
 	$("body").on("blur",".login-content .login-input",function(){

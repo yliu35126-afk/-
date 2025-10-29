@@ -13,6 +13,8 @@
 	<script src="__STATIC__/js/jquery-3.1.1.js"></script>
 	<script src="__STATIC__/ext/layui/layui.all.js"></script>
 	<script src="__STATIC__/js/jquery.cookie.js"></script> 
+	<!-- 提前注入 regexp 配置：避免 </script> 终止标签导致的语法错误，保持默认斜杠转义 -->
+	<script id="regexp-config" type="application/json">{:json_encode(config('regexp'), JSON_UNESCAPED_UNICODE)}</script>
 	<script>
 		layui.use(['layer', 'upload', 'element'], function() {});
 		var nsColor = '#FF6A00';
@@ -20,11 +22,15 @@
 			baseUrl: "ROOT_URL/",
 			route: ['{:request()->module()}', '{:request()->controller()}', '{:request()->action()}'],
 			IMGPATH:"SHOP_IMG/",
-			site_id:"{$site_id ?? 0}"
+			site_id:"{$site_id|default=0}"
 		};
-		window.regexp_config = JSON.parse("{:json_encode(config('regexp'))}");
+		// 安全读取 JSON（容错空节点/解析异常）
+		window.regexp_config = (function(){
+			var el = document.getElementById('regexp-config');
+			try { return el ? JSON.parse(el.textContent || '{}') : {}; } catch(e){ return {}; }
+		})();
 	</script>
-	<script src="__STATIC__/js/common.js?time=20240516"></script>
+	<script src="__STATIC__/js/common.js?v=20251027"></script>
 	<script src="SHOP_JS/common.js"></script>
 	<style>
 		.ns-calendar{background: url("__STATIC__/img/ns_calendar.png") no-repeat center / 16px 16px;}

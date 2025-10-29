@@ -6,7 +6,14 @@
 {/block}
 {block name="main"}
 <div class="ns-single-filter">
-  <a class="layui-btn" href="{\:ns.url('turntable://admin/bind/add', ['device_id' => $device_id])}">新增绑定</a>
+  <button class="layui-btn" type="button" onclick="addBind()">新增绑定</button>
+  <script>
+    function addBind(){
+      var devId = '{$device_id}';
+      location.href = ns.url('turntable://admin/bind/add', { device_id: devId });
+    }
+  </script>
+  
 </div>
 <table class="layui-hide" id="bind_list" lay-filter="bind_list"></table>
 <script type="text/html" id="operation">
@@ -24,7 +31,13 @@ layui.use(['form'], function(){
     cols: [[
       {field:'id',title:'ID',width:80},
       {field:'device_id',title:'设备ID',width:120},
-      {field:'tier_id',title:'价档ID',width:120},
+      {field:'tier_id',title:'价档ID',width:100},
+      {field:'tier_title',title:'价档名称',width:180},
+      {field:'tier_min_price',title:'供货范围',templet:function(d){
+        var min = parseFloat(d.tier_min_price||0), max = parseFloat(d.tier_max_price||0);
+        if ((!min && !max) || (min===0 && max===0)) return '不限';
+        return '￥'+min+' - '+(max?max:'∞');
+      }},
       {field:'start_time',title:'开始时间',templet:function(d){return ns.time_to_date(d.start_time);}},
       {field:'end_time',title:'结束时间',templet:function(d){return d.end_time? ns.time_to_date(d.end_time):'-';}},
       {field:'status',title:'状态',width:80},

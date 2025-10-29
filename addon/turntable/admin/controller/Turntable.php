@@ -26,6 +26,15 @@ class Turntable extends BaseAdmin
     private $game_type_name = '幸运抽奖';
     private $game_url = '/promotionpages/game/turntable/turntable';
 
+    /**
+     * 管理首页 - 重定向到设备绑定列表
+     */
+    public function admin()
+    {
+        // 重定向到设备绑定列表页面
+        $this->redirect(addon_url('turntable://admin/bind/lists'));
+    }
+
 	/*
 	 *  幸运抽奖活动列表
 	 */

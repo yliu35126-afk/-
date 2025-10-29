@@ -1,0 +1,201 @@
+{extend name="app/admin/view/base.html"/}
+{block name="main"}
+<div class="layui-form ns-form">
+  <input type="hidden" name="slot_id" value="{$info.slot_id}">
+  <div class="layui-form-item">
+    <label class="layui-form-label">盘ID</label>
+    <div class="layui-input-block">
+      <input type="number" name="board_id" value="{$info.board_id}" disabled class="layui-input">
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">位置</label>
+    <div class="layui-input-block">
+      <input type="number" name="position" value="{$info.position}" class="layui-input">
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">标题</label>
+    <div class="layui-input-block">
+      <input type="text" name="title" value="{$info.title}" class="layui-input">
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">类型</label>
+    <div class="layui-input-block">
+      <select name="prize_type" id="prize_type" lay-filter="prize_type">
+        <option value="thanks" {if $info.prize_type=='thanks'}selected{/if}>谢谢参与</option>
+        <option value="coupon" {if $info.prize_type=='coupon'}selected{/if}>优惠券</option>
+        <option value="balance" {if $info.prize_type=='balance'}selected{/if}>余额</option>
+        <option value="goods" {if $info.prize_type=='goods'}selected{/if}>商品</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- 商品/SKU 相关字段（仅 prize_type=goods 时显示） -->
+  <div class="layui-form-item goods-fields" style="display:none;">
+    <label class="layui-form-label">商品ID</label>
+    <div class="layui-input-block">
+      <input type="number" name="goods_id" value="{$info.goods_id|default=''}" placeholder="绑定的商品ID（实物奖）" class="layui-input">
+    </div>
+  </div>
+  <div class="layui-form-item goods-fields" style="display:none;">
+    <label class="layui-form-label">SKU ID</label>
+    <div class="layui-input-block">
+      <input type="number" name="sku_id" value="{$info.sku_id|default=''}" placeholder="可选：指定SKU（实物奖）" class="layui-input">
+    </div>
+  </div>
+  <div class="layui-form-item goods-fields" style="display:none;">
+    <label class="layui-form-label">来源</label>
+    <div class="layui-input-block">
+      <select name="source_type">
+        <option value="self" {if isset($info.source_type) && $info.source_type=='self'}selected{/if}>自营</option>
+        <option value="platform" {if isset($info.source_type) && $info.source_type=='platform'}selected{/if}>平台</option>
+        <option value="supplier" {if isset($info.source_type) && $info.source_type=='supplier'}selected{/if}>供应商</option>
+      </select>
+      <div class="ns-word-aux">仅对实物奖有效，用于后续结算与分润。</div>
+    </div>
+  </div>
+  <div class="layui-form-item goods-fields" style="display:none;">
+    <label class="layui-form-label">选择商品</label>
+    <div class="layui-input-block">
+      <button type="button" class="layui-btn" id="btnSelectGoods">选择商品</button>
+      <div id="selectedGoodsInfo" class="ns-word-aux" style="margin-top:8px;"></div>
+    </div>
+  </div>
+  
+  <div class="layui-form-item">
+    <label class="layui-form-label">展示图</label>
+    <div class="layui-input-block">
+      <div class="ns-upload-default" id="slotImgUpload">
+        <div class="upload">
+          <img src="ADMIN_IMG/upload_img.png" />
+          <p>点击上传</p>
+        </div>
+      </div>
+      <div class="operation" style="margin-top:5px;">
+        <div>
+          <i title="图片预览" class="iconfont iconreview js-preview" style="margin-right: 20px;"></i>
+          <i title="删除图片" class="layui-icon layui-icon-delete js-delete"></i>
+        </div>
+        <div class="replace_img js-replace">点击替换</div>
+      </div>
+      <input type="hidden" name="img" value="{$info.img|default=''}">
+      <div class="ns-word-aux">可选：用于格子展示；未上传时用商品封面。</div>
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">库存/次数</label>
+    <div class="layui-input-block">
+      <input type="number" name="inventory" value="{$info.inventory}" class="layui-input">
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">权重</label>
+    <div class="layui-input-block">
+      <input type="number" name="weight" value="{$info.weight}" class="layui-input">
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">面值</label>
+    <div class="layui-input-block">
+      <input type="number" step="0.01" name="value" value="{$info.value}" class="layui-input">
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">状态</label>
+    <div class="layui-input-block">
+      <input type="radio" name="status" value="1" title="启用" {if $info.status==1}checked{/if}>
+      <input type="radio" name="status" value="0" title="禁用" {if $info.status==0}checked{/if}>
+    </div>
+  </div>
+  <div class="ns-form-row">
+    <button class="layui-btn ns-bg-color" lay-submit lay-filter="save">保存</button>
+    <button class="layui-btn layui-btn-primary" onclick="history.back()">返回</button>
+  </div>
+</div>
+{/block}
+{block name="script"}
+<script>
+layui.use(['form'], function(){
+  var form = layui.form;
+  form.render();
+
+  function toggleGoodsFields(){
+    var v = document.getElementById('prize_type').value;
+    var show = v === 'goods';
+    var nodes = document.querySelectorAll('.goods-fields');
+    for(var i=0;i<nodes.length;i++){ nodes[i].style.display = show ? '' : 'none'; }
+  }
+  // 首次渲染后立即根据当前值展示
+  toggleGoodsFields();
+  // 监听 LayUI 的 select 事件，保证切换即时生效
+  form.on('select(prize_type)', function(data){
+    var v = data && data.value ? data.value : document.getElementById('prize_type').value;
+    var nodes = document.querySelectorAll('.goods-fields');
+    for(var i=0;i<nodes.length;i++){ nodes[i].style.display = (v === 'goods') ? '' : 'none'; }
+  });
+  // 兜底：原生 change 事件
+  document.getElementById('prize_type').addEventListener('change', toggleGoodsFields);
+
+  // 图片上传控件
+  var imgUpload = new Upload({
+    elem: '#slotImgUpload'
+  });
+
+  // 商品选择器（SKU模式），自动回填 goods_id/sku_id，并在未上传展示图时使用商品封面
+  $('#btnSelectGoods').on('click', function(){
+    if (typeof goodsSelect !== 'function') {
+      layer && layer.msg && layer.msg('商品选择器未加载，请检查依赖');
+      return;
+    }
+    goodsSelect(function(res){
+      if(!res || !res.length) return;
+      var first = res[0];
+      var goodsId = first.goods_id || first;
+      var skuId = (first.selected_sku_list && first.selected_sku_list.length) ? first.selected_sku_list[0].sku_id : '';
+      var name = first.name || first.goods_name || '';
+      var cover = first.cover_img || (first.selected_sku_list && first.selected_sku_list.length ? first.selected_sku_list[0].sku_image : '') || first.image || '';
+      $('input[name=goods_id]').val(goodsId);
+      $('input[name=sku_id]').val(skuId);
+      if(!$('input[name=img]').val() && cover){ $('input[name=img]').val(cover); }
+      $('#selectedGoodsInfo').html(name ? ('已选：' + name + (skuId ? ' / SKU ' + skuId : '')) : ('已选商品ID：' + goodsId));
+      form.render();
+    }, [], {mode: 'sku', disabled: 1});
+  });
+
+  form.on('submit(save)', function(data){
+    // 前端必填校验：当类型为商品时，必须选择商品
+    var typeVal = (data.field.prize_type || '').toString();
+    if (typeVal === 'goods') {
+      var gid = parseInt(data.field.goods_id || 0, 10);
+      if (!gid || gid <= 0) {
+        layer && layer.msg && layer.msg('请选择商品后再保存');
+        return false;
+      }
+    } else {
+      // 其他类型时，清理无关字段，避免脏数据
+      data.field.goods_id = 0;
+      data.field.sku_id = 0;
+    }
+    $.ajax({
+      url: ns.url('device_turntable://admin/slot/edit'),
+      data: data.field,
+      dataType: 'json',
+      type: 'POST',
+      success: function(res){
+        layer.msg(res.message);
+        if(res.code === 0){
+          location.href = ns.url('device_turntable://admin/slot/lists', { board_id: '{$info.board_id}' });
+        }
+      },
+      error: function(xhr){
+        console && console.error && console.error('[device.slot.edit] ajax error', xhr && xhr.status, xhr && xhr.responseText);
+        layer && layer.msg && layer.msg('保存失败，请稍后重试');
+      }
+    });
+    return false;
+  });
+});
+</script>
+{/block}

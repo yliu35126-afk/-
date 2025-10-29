@@ -43,6 +43,17 @@
     </div>
   </div>
   <div class="layui-form-item goods-fields" style="display:none;">
+    <label class="layui-form-label">来源</label>
+    <div class="layui-input-block">
+      <select name="source_type">
+        <option value="self" selected>自营</option>
+        <option value="platform">平台</option>
+        <option value="supplier">供应商</option>
+      </select>
+      <div class="ns-word-aux">仅对实物奖有效，用于后续结算与分润。</div>
+    </div>
+  </div>
+  <div class="layui-form-item goods-fields" style="display:none;">
     <label class="layui-form-label">选择商品</label>
     <div class="layui-input-block">
       <button type="button" class="layui-btn" id="btnSelectGoods">选择商品</button>

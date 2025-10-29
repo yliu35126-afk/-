@@ -67,6 +67,13 @@
 		<div class="ns-word-aux">设置PC端会员登录注册验证码是否开启</div>
 	</div>
 	{/if}
+	<div class="layui-form-item">
+		<label class="layui-form-label">是否启用小程序登录验证码：</label>
+		<div class="layui-input-block">
+			<input type="checkbox" name="weapp_login" value="1" lay-skin="switch" {if condition="!empty($config_info.weapp_login) && $config_info.weapp_login == 1" }checked {/if} />
+		</div>
+		<div class="ns-word-aux">控制微信小程序登录是否需要验证码</div>
+	</div>
 	<div class="ns-form-row">
 		<button class="layui-btn ns-bg-color" lay-submit lay-filter="save">保存</button>
 	</div>

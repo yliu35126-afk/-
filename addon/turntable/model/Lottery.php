@@ -207,6 +207,9 @@ class Lottery extends BaseModel
         $mode  = $board['mode'] ?? 'round';
         $round_no = intval($board['round_no'] ?? 0);
         $auto_reset_round = intval($board['auto_reset_round'] ?? 0) === 1;
+        // 后备：若未配置 auto_reset_round 字段，则以 round_control==1 作为开启自动重置依据
+        $round_ctrl_enabled = intval($board['round_control'] ?? 0) === 1;
+        $reset_performed = false;
 
         $slots = model('lottery_slot')->getList([["board_id", '=', $board_id]], '*', 'position asc');
         if (empty($slots)) {
@@ -241,8 +244,35 @@ class Lottery extends BaseModel
                     $candidates[] = $s;
                 }
                 if (empty($candidates)) {
-                    \think\facade\Cache::delete($lock_key);
-                    return $this->error('', '抽奖盘未配置可用奖品');
+                    // 轮次候选为空：如开启自动重置，则按库存/次数重置 round_qty 并尝试下一轮
+                    if ($auto_reset_round || $round_ctrl_enabled) {
+                        try {
+                            // 增加轮次编号（仅当该字段存在时更新）
+                            if (array_key_exists('round_no', $board)) {
+                                $new_round = max($round_no, 0) + 1;
+                                model('lottery_board')->update(['round_no' => $new_round, 'update_time' => time()], [["board_id", '=', $board_id]]);
+                                $round_no = $new_round;
+                            }
+                            // 重置本轮可中次数：以库存/次数字段作为基数（“库存/次数”）
+                            foreach ($slots as $s) {
+                                if (($s['prize_type'] ?? 'thanks') === 'thanks') continue;
+                                $base = max(intval($s['inventory'] ?? 0), 0);
+                                if (!empty($s['slot_id'])) {
+                                    model('lottery_slot')->update(['round_qty' => $base], [["slot_id", '=', $s['slot_id']]]);
+                                }
+                            }
+                            // 重新加载格子并进入下一次尝试
+                            $slots = model('lottery_slot')->getList([["board_id", '=', $board_id]], '*', 'position asc');
+                            $reset_performed = true;
+                            $hit = null; continue;
+                        } catch (\Throwable $e) {
+                            \think\facade\Cache::delete($lock_key);
+                            return $this->error('', '抽奖盘无可用奖品或无法重置');
+                        }
+                    } else {
+                        \think\facade\Cache::delete($lock_key);
+                        return $this->error('', '抽奖盘未配置可用奖品');
+                    }
                 }
                 $hit = $pick($candidates);
                 // 命中实物但库存为0：将该槽本轮置为0并重选
@@ -317,7 +347,7 @@ class Lottery extends BaseModel
                 'round_no'   => $round_no,
                 'result'     => $result,
                 'order_id'   => 0,
-                'ext'        => json_encode(['hit' => $hit, 'mode' => $mode], JSON_UNESCAPED_UNICODE),
+                'ext'        => json_encode(['hit' => $hit, 'mode' => $mode, 'reset_performed' => $reset_performed], JSON_UNESCAPED_UNICODE),
                 'create_time'=> $now,
             ]);
 
@@ -343,6 +373,62 @@ class Lottery extends BaseModel
                     'order_id' => $record_id,
                     'ext'      => json_encode($ext, JSON_UNESCAPED_UNICODE)
                 ], [["record_id", '=', $record_id]]);
+
+                // 接入通用核销中心：补充一条待核销记录，便于各端核销界面识别
+                try {
+                    // 以设备站点为准（优先取设备表site_id，回退传入site_id）
+                    $dev_site_id = 0; $site_name = '';
+                    if ($device_id) {
+                        $dev = model('device_info')->getInfo([["device_id", '=', $device_id]], 'site_id');
+                        $dev_site_id = intval($dev['site_id'] ?? 0);
+                    }
+                    $final_site_id = $dev_site_id ?: intval($site_id);
+                    if ($final_site_id) {
+                        $shop = model('shop')->getInfo([[ 'site_id', '=', $final_site_id ]], 'site_name');
+                        $site_name = $shop['site_name'] ?? '';
+                    }
+
+                    // 组装核销内容
+                    $verify_item = [
+                        [
+                            'img'   => $hit['img'] ?? '',
+                            'name'  => ($hit['title'] ?? '转盘实物奖品'),
+                            'price' => 0,
+                            'num'   => 1,
+                        ]
+                    ];
+                    $remark_array = [
+                        [ 'title' => '设备ID',   'value' => strval($device_id) ],
+                        [ 'title' => '盘ID',     'value' => strval($board_id) ],
+                        [ 'title' => '记录ID',   'value' => strval($record_id) ],
+                        [ 'title' => '会员ID',   'value' => strval($member_id) ],
+                        [ 'title' => '创建时间', 'value' => date('Y-m-d H:i:s', $now) ],
+                    ];
+
+                    $verify_model = new \app\model\verify\Verify();
+                    $content_json = $verify_model->getVerifyJson($verify_item, $remark_array);
+                    // 使用已有的自定义核销码（与抽奖记录ext保持一致）
+                    // addVerify 会生成 code，但我们需要保留当前 code，因此直接插入表以确保 code 一致
+                    // 若系统后续强制使用生成器，可改为 edit 覆盖。
+                    $data = [
+                        'site_id'            => $final_site_id,
+                        'site_name'          => $site_name,
+                        'verify_code'        => $verify_code,
+                        'verify_type'        => 'turntable_goods',
+                        'verify_type_name'   => '转盘实物奖品',
+                        'verify_content_json'=> json_encode($content_json, JSON_UNESCAPED_UNICODE),
+                        'create_time'        => $now,
+                        'relate_id'          => $record_id,
+                        'is_verify'          => 0,
+                    ];
+                    // 避免重复写入
+                    $exists = model('verify')->getInfo([[ 'verify_code', '=', $verify_code ]], 'id');
+                    if (empty($exists)) {
+                        model('verify')->add($data);
+                    }
+                } catch (\Throwable $e) {
+                    // 忽略核销中心写入异常，保证抽奖流程不受影响
+                }
             }
 
             // 分润记录：按系统用户组结算
@@ -394,6 +480,27 @@ class Lottery extends BaseModel
                 ]);
             }
 
+            // 供应商结算占位：落表并触发事件（监听方可异步处理）
+            if (!empty($record_id)) {
+                try {
+                    $hit_source = isset($hit['source_type']) ? strval($hit['source_type']) : 'self';
+                    \think\facade\Db::name('lottery_settlement')->insert([
+                        'record_id'   => $record_id,
+                        'source_type' => $hit_source ?: 'self',
+                        'status'      => 'pending',
+                        'payload'     => json_encode(['hit' => $hit, 'tier' => ['tier_id' => $tier_id, 'amount' => $amount]], JSON_UNESCAPED_UNICODE),
+                        'create_time' => $now,
+                        'update_time' => $now,
+                    ]);
+                    // 事件桩：无监听则忽略
+                    if (function_exists('event')) {
+                        try { event('turntable_settlement', ['record_id' => $record_id]); } catch (\Throwable $e) {}
+                    }
+                } catch (\Throwable $e) {
+                    // 忽略占位失败，不影响抽奖主流程
+                }
+            }
+
             model('lottery_record')->commit();
         } catch (\Exception $e) {
             model('lottery_record')->rollback();
@@ -423,7 +530,8 @@ class Lottery extends BaseModel
 
         $page      = $params['page'] ?? 1;
         $page_size = $params['page_size'] ?? 10;
-        $list = model('lottery_record')->pageList($condition, 'record_id desc', '*', $page, $page_size);
+        // 修正参数顺序：pageList($condition, $field, $order, $page, $page_size)
+        $list = model('lottery_record')->pageList($condition, '*', 'record_id desc', $page, $page_size);
         return $this->success($list);
     }
 }

@@ -18,6 +18,7 @@
 			{foreach $promotion as $list_k => $list_v}
 			{if  condition="$list_v['show_type'] eq 'shop'"}
 			{empty name="$list_v['is_developing']"}
+			{if condition="addon_exists_by_url($list_v['url'])"}
 			<a class="ns-item-block ns-item-block-hover-a" href="{:addon_url($list_v['url'])}">
 				<div class="ns-item-block-wrap">
 					<div class="ns-item-pic">
@@ -29,12 +30,14 @@
 					</div>
 				</div>
 			</a>
+			{/if}
 			{/empty}
 			{/if}
 			{/foreach}
 			{foreach $promotion as $list_k => $list_v}
 			{if  condition="$list_v['show_type'] eq 'admin'"}
 			{empty name="$list_v['is_developing']"}
+			{if condition="addon_exists_by_url($list_v['url'])"}
 			<a class="ns-item-block ns-item-block-hover-a" href="{:addon_url($list_v['url'])}">
 				<div class="ns-item-block-wrap">
 					<div class="ns-item-pic">
@@ -46,6 +49,7 @@
 					</div>
 				</div>
 			</a>
+			{/if}
 			{/empty}
 			{/if}
 			{/foreach}

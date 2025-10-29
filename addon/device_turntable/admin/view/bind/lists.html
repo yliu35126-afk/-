@@ -1,0 +1,50 @@
+{extend name="app/admin/view/base.html"/}
+{block name="resources"}
+<style>.ns-single-filter { margin-bottom: 10px; }</style>
+{/block}
+{block name="main"}
+<div class="ns-single-filter">
+  <a class="layui-btn" href="{\:ns.url('device_turntable://admin/bind/add', ['device_id' => $device_id])}">新增绑定</a>
+</div>
+<table class="layui-hide" id="bind_list" lay-filter="bind_list"></table>
+<script type="text/html" id="operation"><a class="layui-btn" lay-event="del">删除</a></script>
+{/block}
+{block name="script"}
+<script>
+layui.use(['form'], function(){
+  var table;
+  table = new Table({
+    elem: '#bind_list',
+    url: ns.url('device_turntable://admin/bind/lists'),
+    where: { device_id: '{$device_id}' },
+    cols: [[
+      {field:'id',title:'ID',width:80},
+      {field:'device_id',title:'设备ID',width:120},
+      {field:'tier_id',title:'价档ID',width:100},
+      {field:'tier_title',title:'价档名称',width:180},
+      {field:'tier_min_price',title:'供货范围',templet:function(d){
+        var min = parseFloat(d.tier_min_price||0), max = parseFloat(d.tier_max_price||0);
+        if ((!min && !max) || (min===0 && max===0)) return '不限';
+        return '￥'+min+' - '+(max?max:'∞');
+      }},
+      {field:'start_time',title:'开始时间',templet:function(d){return ns.time_to_date(d.start_time);}},
+      {field:'end_time',title:'结束时间',templet:function(d){return d.end_time? ns.time_to_date(d.end_time):'-';}},
+      {field:'status',title:'状态',width:80},
+      {title:'操作', toolbar:'#operation',width:120}
+    ]],
+    page:true
+  });
+  table.tool(function(obj){
+    var data = obj.data;
+    if (obj.event === 'del') {
+      layer.confirm('确认删除该绑定？', function(){
+        $.post(ns.url('device_turntable://admin/bind/delete'), {id: data.id}, function(res){
+          layer.msg(res.message);
+          if(res.code===0){ table.reload(); }
+        }, 'json');
+      });
+    }
+  });
+});
+</script>
+{/block}

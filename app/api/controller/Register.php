@@ -63,7 +63,8 @@ class Register extends BaseApi
             $config_info = $captcha_model->getCaptchaConfig();
             $config_info = $config_info[ 'data' ][ 'value' ];
             // 校验验证码
-            if(!empty($config_info['shop_reception_login']) && $config_info['shop_reception_login'] == 1){
+            $debug_skip = intval($this->params['debug'] ?? 0) === 1;
+            if (!$debug_skip && !empty($config_info['shop_reception_login']) && $config_info['shop_reception_login'] == 1){
                 $captcha = new Captcha();
                 $check_res = $captcha->checkCaptcha();
                 if ($check_res[ 'code' ] < 0) {
@@ -163,7 +164,7 @@ class Register extends BaseApi
             $res = $message_model->sendMessage([ "mobile" => $mobile, "code" => $code, "support_type" => [ "sms" ], "keywords" => "REGISTER_CODE" ]);
             if ($res[ "code" ] >= 0) {
                 //将验证码存入缓存
-                $key = 'register_mobile_code_' . md5(uniqid(null, true));
+                $key = 'register_mobile_code_' . md5(uniqid('', true));
                 Cache::tag("register_mobile_code")->set($key, [ 'mobile' => $mobile, 'code' => $code ], 600);
                 return $this->response($this->success([ "key" => $key ]));
             } else {

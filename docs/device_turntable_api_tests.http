@@ -1,0 +1,60 @@
+### 价档查询
+GET http://localhost/addons/device_turntable/api/turntable/amounttiers?device_sn=SN001
+
+### 奖品列表
+GET http://localhost/addons/device_turntable/api/turntable/prizelist?site_id=1&device_sn=SN001
+
+### 抽一次（需替换 token）
+POST http://localhost/addons/device_turntable/api/turntable/draw
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "site_id": 1,
+  "device_sn": "SN001",
+  "tier_id": 1001
+}
+
+### 填写地址
+POST http://localhost/addons/device_turntable/api/turntable/address
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "record_id": 1,
+  "name": "张三",
+  "mobile": "13800138000",
+  "address": "XX路XX号"
+}
+
+### 到店核销
+POST http://localhost/addons/device_turntable/api/turntable/verify
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "record_id": 1,
+  "verify_code": "ABCDEFGH12"
+}
+
+### 创建订单
+POST http://localhost/addons/device_turntable/api/order/create
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "site_id": 1,
+  "device_sn": "SN001",
+  "tier_id": 1001
+}
+
+### 支付回调（模拟）
+POST http://localhost/addons/device_turntable/api/order/paynotify
+Content-Type: application/json
+
+{
+  "order_no": "LOT202510280001",
+  "total_amount": 5.00,
+  "trade_status": "success",
+  "attach": "{\"member_id\":1,\"site_id\":1,\"device_id\":100,\"board_id\":10,\"tier_id\":1001}"
+}

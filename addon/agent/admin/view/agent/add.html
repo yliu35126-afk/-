@@ -1,0 +1,187 @@
+{extend name="app/admin/view/base.html"/}
+{block name="resources"}
+{/block}
+{block name="main"}
+<div class="layui-form ns-form">
+  <div class="layui-form-item">
+    <label class="layui-form-label">标题</label>
+    <div class="layui-input-block">
+      <input type="text" name="title" required placeholder="请输入代理标题" class="layui-input">
+    </div>
+  </div>
+
+  <div class="layui-form-item">
+    <label class="layui-form-label">价档</label>
+    <div class="layui-input-inline" style="width: 220px;">
+      <select name="price_tier_id" id="price_tier_id" lay-filter="price_tier_id">
+        <option value="">选择价档</option>
+      </select>
+    </div>
+    <div class="layui-form-mid layui-word-aux">选择后按级别自动带出佣金</div>
+  </div>
+
+  <div class="layui-form-item">
+    <label class="layui-form-label">佣金比例</label>
+    <div class="layui-input-inline" style="width: 200px;">
+      <input type="number" name="commission_rate" id="commission_rate" placeholder="例：10 表示 10%" class="layui-input" step="0.01">
+    </div>
+    <div class="layui-form-mid layui-word-aux">可手动覆盖价档带出的比例</div>
+  </div>
+
+  <div class="layui-form-item">
+    <label class="layui-form-label">有效期</label>
+    <div class="layui-input-inline" style="width: 180px;">
+      <input type="text" name="validity_start_date" id="validity_start_date" placeholder="开始日期" class="layui-input">
+    </div>
+    <div class="layui-input-inline" style="width: 180px;">
+      <input type="text" name="validity_end_date" id="validity_end_date" placeholder="结束日期" class="layui-input">
+    </div>
+  </div>
+
+  <div class="layui-form-item">
+    <label class="layui-form-label">联系人</label>
+    <div class="layui-input-inline" style="width: 200px;">
+      <input type="text" name="agent_contact_name" placeholder="联系人姓名" class="layui-input">
+    </div>
+    <label class="layui-form-label">联系电话</label>
+    <div class="layui-input-inline" style="width: 200px;">
+      <input type="text" name="agent_phone" placeholder="手机/电话" class="layui-input">
+    </div>
+  </div>
+
+  <div class="layui-form-item">
+    <label class="layui-form-label">级别</label>
+    <div class="layui-input-inline" style="width: 200px;">
+      <select name="level" lay-filter="level">
+        <option value="">请选择级别</option>
+        <option value="1">省级</option>
+        <option value="2">市级</option>
+        <option value="3">区县</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="layui-form-item">
+    <label class="layui-form-label">省市区</label>
+    <div class="layui-input-inline" style="width: 180px;">
+      <select name="province_id" id="province_id" lay-filter="province_id">
+        <option value="">选择省份</option>
+      </select>
+    </div>
+    <div class="layui-input-inline" style="width: 180px;">
+      <select name="city_id" id="city_id" lay-filter="city_id">
+        <option value="">选择城市</option>
+      </select>
+    </div>
+    <div class="layui-input-inline" style="width: 180px;">
+      <select name="district_id" id="district_id">
+        <option value="">选择区县</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="layui-form-item">
+    <label class="layui-form-label">绑定会员ID</label>
+    <div class="layui-input-block">
+      <input type="number" name="member_id" placeholder="可选，绑定会员ID" class="layui-input">
+    </div>
+  </div>
+
+  <div class="layui-form-item">
+    <label class="layui-form-label">状态</label>
+    <div class="layui-input-inline" style="width: 200px;">
+      <select name="status">
+        <option value="1">启用</option>
+        <option value="0">停用</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="layui-form-item">
+    <div class="layui-input-block">
+      <button class="layui-btn ns-bg-color" lay-submit lay-filter="submit">保存</button>
+      <a class="layui-btn layui-btn-primary" href="javascript:history.back()">返回</a>
+    </div>
+  </div>
+</div>
+{/block}
+
+{block name="script"}
+<script>
+layui.use(['form'], function(){
+  var form = layui.form, laydate = layui.laydate;
+  form.render();
+
+  // 初始化省份
+  ns.request({url: ns.url('admin/address/getProvince'), data: {}}, function(res){
+    var opts = '<option value="">选择省份</option>';
+    (res || []).forEach(function(p){ opts += '<option value="'+p.id+'">'+p.name+'</option>'; });
+    document.getElementById('province_id').innerHTML = opts;
+    form.render('select');
+  });
+
+  // 省->市
+  form.on('select(province_id)', function(data){
+    var pid = data.value || 0;
+    ns.request({url: ns.url('admin/address/getCity'), data: {province_id: pid}}, function(res){
+      var opts = '<option value="">选择城市</option>';
+      (res || []).forEach(function(c){ opts += '<option value="'+c.id+'">'+c.name+'</option>'; });
+      document.getElementById('city_id').innerHTML = opts;
+      document.getElementById('district_id').innerHTML = '<option value="">选择区县</option>';
+      form.render('select');
+    });
+  });
+
+  // 市->区
+  form.on('select(city_id)', function(data){
+    var cid = data.value || 0;
+    ns.request({url: ns.url('admin/address/getDistrict'), data: {city_id: cid}}, function(res){
+      var opts = '<option value="">选择区县</option>';
+      (res || []).forEach(function(d){ opts += '<option value="'+d.id+'">'+d.name+'</option>'; });
+      document.getElementById('district_id').innerHTML = opts;
+      form.render('select');
+    });
+  });
+
+  // 提交
+  form.on('submit(submit)', function(data){
+    ns.request({ url: ns.url('agent://admin/agent/add'), data: data.field }, function(){
+      ns.msg('保存成功');
+      location.href = ns.url('agent://admin/agent/lists');
+    });
+    return false;
+  });
+  // 加载价档
+  (function loadTiers(){
+    ns.request({ url: ns.url('agent://admin/agent/priceTiers') }, function(list){
+      var opts = '<option value="">选择价档</option>';
+      (list || []).forEach(function(t){
+        opts += '<option value="'+t.id+'" data-prov="'+(t.province_commission||'')+'" data-city="'+(t.city_commission||'')+'" data-dist="'+(t.district_commission||'')+'" data-def="'+(t.commission_rate||'')+'">'+t.tier_name+'</option>';
+      });
+      document.getElementById('price_tier_id').innerHTML = opts;
+      form.render('select');
+    });
+  })();
+
+  function applyTierCommission(){
+    var level = parseInt(document.querySelector('select[name=level]').value || '0', 10);
+    var sel = document.getElementById('price_tier_id');
+    var opt = sel && sel.options[sel.selectedIndex];
+    if (!opt) return;
+    var rate = '';
+    if (level === 1) rate = opt.getAttribute('data-prov') || '';
+    else if (level === 2) rate = opt.getAttribute('data-city') || '';
+    else if (level === 3) rate = opt.getAttribute('data-dist') || '';
+    if (!rate) rate = opt.getAttribute('data-def') || '';
+    if (rate !== '') document.getElementById('commission_rate').value = rate;
+  }
+
+  form.on('select(level)', applyTierCommission);
+  form.on('select(price_tier_id)', applyTierCommission);
+
+  // 日期
+  laydate.render({ elem: '#validity_start_date' });
+  laydate.render({ elem: '#validity_end_date' });
+});
+</script>
+{/block}

@@ -32,7 +32,7 @@ object ApiManager {
         })
         .build()
     
-    // Retrofit实例 - 直接使用已含 index.php/api/ 的 BASE_URL
+    // Retrofit实例 - 直接使用已含 index.php/api/ 的 BASE_URL（通用API）
     private val retrofit = Retrofit.Builder()
         .baseUrl(baseUrl)
         .client(okHttpClient)
@@ -42,8 +42,16 @@ object ApiManager {
     // API服务
     val apiService: PrizeApiService = retrofit.create(PrizeApiService::class.java)
 
-    // Turntable 插件服务
-    val turntableService: TurntableApiService = retrofit.create(TurntableApiService::class.java)
+    // Turntable 插件服务使用专用 BASE_URL（/index.php/）
+    val turntableBaseUrl: String = NetworkConfig.pluginBaseUrl()
+
+    private val turntableRetrofit = Retrofit.Builder()
+        .baseUrl(turntableBaseUrl)
+        .client(okHttpClient)
+        .addConverterFactory(GsonConverterFactory.create(gson))
+        .build()
+
+    val turntableService: TurntableApiService = turntableRetrofit.create(TurntableApiService::class.java)
 
     // 备用 BASE_URL 与 Retrofit，用于 404 时进行路径前缀回退
     val fallbackBaseUrl: String = NetworkConfig.alternateBaseUrl()

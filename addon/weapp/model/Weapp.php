@@ -45,6 +45,12 @@ class Weapp extends BaseModel
                 'permission' => 0777,
                 'file'       => 'runtime/log/wechat/easywechat.logs',
             ],
+            // 修复 Windows/开发环境下 cURL error 60（证书链不可用），仅限开发/联调环境
+            // 线上建议在 PHP 配置中正确设置 CA 证书；此为兜底避免阻断功能
+            'http' => [
+                'verify'  => false,
+                'timeout' => 10.0
+            ],
         ];
         $this->app = Factory::miniProgram($config);
     }

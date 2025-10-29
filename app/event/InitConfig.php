@@ -14,7 +14,6 @@
 namespace app\event;
 
 use think\facade\Config;
-use think\facade\App;
 
 /**
  * 初始化配置信息
@@ -39,50 +38,31 @@ class InitConfig
     private function initConst()
     {
         //加载版本信息
-        if (file_exists('app/version.php')) {
-            $info = include 'app/version.php';
-            if (is_array($info)) {
-                Config::set($info, 'info');
-            }
-        } else {
-            // 兼容：如果缺失则从全局配置读取，防止致命错误
-            $globalInfoPath = 'config/info.php';
-            if (file_exists($globalInfoPath)) {
-                $info = include $globalInfoPath;
-                if (is_array($info)) {
-                    Config::set($info, 'info');
-                }
-            }
-        }
+        include_once 'app/version.php';
 
         //加载基础化配置信息
-        defined('__ROOT__') or define('__ROOT__', str_replace([ '/index.php', '/install.php' ], '', request()->root(true)));
+        define('__ROOT__', str_replace([ '/index.php', '/install.php' ], '', request()->root(true)));
 
-        // public目录绝对路径
-        defined('PUBLIC_PATH') or define('PUBLIC_PATH', dirname(dirname(dirname(__FILE__))) . '/public/');
-
-        // 依据实际站点根是否为 public 决定资源前缀
-        $docRoot = isset($_SERVER['DOCUMENT_ROOT']) ? str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']) : '';
-        $publicPath = str_replace('\\', '/', PUBLIC_PATH);
-        $isPublicDocRoot = rtrim($docRoot, '/') === rtrim($publicPath, '/');
-
-        defined('__PUBLIC__') or define('__PUBLIC__', $isPublicDocRoot ? __ROOT__ : (__ROOT__ . '/public'));
-        defined('__UPLOAD__') or define('__UPLOAD__', 'upload');
+        define('__PUBLIC__', __ROOT__ . '/public');
+        define('__UPLOAD__', 'upload');
 
         //插件目录名称
-        defined('ADDON_DIR_NAME') or define('ADDON_DIR_NAME', 'addon');
+        define('ADDON_DIR_NAME', 'addon');
         //插件目录路径
-        defined('ADDON_PATH') or define('ADDON_PATH', 'addon/');
+        define('ADDON_PATH', 'addon/');
         //分页每页数量
-        defined('PAGE_LIST_ROWS') or define('PAGE_LIST_ROWS', 10);
+        define('PAGE_LIST_ROWS', 10);
         //伪静态模式是否开启
-        defined('REWRITE_MODULE') or define('REWRITE_MODULE', true);
+        define('REWRITE_MODULE', true);
+
+        // public目录绝对路径
+        define('PUBLIC_PATH', dirname(dirname(dirname(__FILE__))) . '/public/');
 
         //兼容模式访问
         if (!REWRITE_MODULE) {
-            defined('ROOT_URL') or define('ROOT_URL', request()->root(true) . '/?s=');
+            define('ROOT_URL', request()->root(true) . '/?s=');
         } else {
-            defined('ROOT_URL') or define('ROOT_URL', request()->root(true));
+            define('ROOT_URL', request()->root(true));
         }
         //检测网址访问
         $url = request()->url(true);
@@ -118,9 +98,6 @@ class InitConfig
             // 标签库标签结束标记
             'taglib_end' => '}',
             'tpl_cache' => false,           //模板缓存，部署模式后改为true
-            // 允许通过 {extend name="app/admin/view/base.html"} 这类跨模块路径引用模板
-            // 将模板基础路径设置为项目根目录，避免相对路径在 public 作为工作目录时解析失败
-            'view_base' => App::getRootPath(),
             'tpl_replace_string' => [
                 '__ROOT__' => __ROOT__,
                 'ROOT_URL' => ROOT_URL,
@@ -138,9 +115,7 @@ class InitConfig
                 '__UPLOAD__' => __UPLOAD__,
             ]
         ];
-        // 与现有 view 配置合并，保留框架或其他代码设置的键，避免覆盖导致路径解析异常
-        $current_view = (array)Config::get('view');
-        Config::set(array_merge($current_view, $view_array), 'view');
+        Config::set($view_array, 'view');
 
     }
 

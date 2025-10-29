@@ -75,7 +75,7 @@ layui.use(['form','element'], function(){
     elem: '#device_list',
     url: ns.url('turntable://admin/device/lists'),
     cols: [[
-      { field: 'id', title: 'ID', width: '8%' },
+      { title: 'ID', width: '8%', templet: function(d){ return d.device_id || d.id || ''; } },
       { field: 'device_sn', title: '设备SN', width: '20%' },
       { field: 'board_id', title: '盘ID', width: '12%' },
       { title: '状态', templet: '#statusTpl' },
@@ -98,12 +98,13 @@ layui.use(['form','element'], function(){
   table.tool(function(obj){
     var data = obj.data;
     if (obj.event === 'edit') {
-      location.href = ns.url('turntable://admin/device/edit', { id: data.id });
+      var did = data.device_id || data.id;
+      location.href = ns.url('turntable://admin/device/edit', { id: did });
     } else if (obj.event === 'del') {
       layer.confirm('确定删除该设备吗？', function(){
         $.ajax({
           url: ns.url('turntable://admin/device/delete'),
-          data: { id: data.id },
+          data: { id: (data.device_id || data.id) },
           dataType: 'json',
           type: 'POST',
           success: function(res){

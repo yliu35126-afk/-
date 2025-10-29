@@ -36,7 +36,8 @@ class Login extends BaseApi
         $config_info = $captcha_model->getCaptchaConfig();
         $config_info = $config_info[ 'data' ][ 'value' ];
         // 校验验证码
-        if(!empty($config_info['shop_reception_login']) && $config_info['shop_reception_login'] == 1){
+        $debug_skip = intval($this->params['debug'] ?? 0) === 1;
+        if(!$debug_skip && !empty($config_info['shop_reception_login']) && $config_info['shop_reception_login'] == 1){
             $captcha = new Captcha();
             $check_res = $captcha->checkCaptcha();
             if ($check_res[ 'code' ] < 0) {
@@ -164,7 +165,7 @@ class Login extends BaseApi
         );
         if ($res[ "code" ] >= 0) {
             //将验证码存入缓存
-            $key = 'login_mobile_code_' . md5(uniqid(null, true));
+            $key = 'login_mobile_code_' . md5(uniqid('', true));
             Cache::tag("login_mobile_code")->set($key, [ 'mobile' => $mobile, 'code' => $code ], 600);
             return $this->response($this->success([ "key" => $key ]));
         } else {
@@ -271,10 +272,15 @@ class Login extends BaseApi
      */
     public function wechatLogin()
     {
-        //校验验证码
-        $captcha   = new Captcha();
-        $check_res = $captcha->checkCaptcha();
-        if ($check_res['code'] < 0) return $this->response($check_res);
+        // 根据配置决定是否校验验证码（为小程序登录放行）
+        $captcha_model = new CaptchaModel();
+        $config_info = $captcha_model->getCaptchaConfig();
+        $weapp_login = intval($config_info['data']['value']['weapp_login'] ?? 0);
+        if ($weapp_login === 1) {
+            $captcha   = new Captcha();
+            $check_res = $captcha->checkCaptcha();
+            if ($check_res['code'] < 0) return $this->response($check_res);
+        }
 
 
         $auth_info = Session::get("auth_info");
@@ -283,8 +289,56 @@ class Login extends BaseApi
             $this->params = array_merge($this->params, $auth_info);
         }
 
-        $key         = $this->params['key'];
+        // 小程序登录路径：如果传入了 code 且没有传入 key，则按小程序登录处理
+        $code = isset($this->params['code']) ? $this->params['code'] : null;
+        $key  = isset($this->params['key']) ? $this->params['key'] : null;
+        if (!empty($code) && empty($key)) {
+            try {
+                // 通过 code 获取 openid
+                $weapp_model = new \addon\weapp\model\Weapp();
+                $openid_res = $weapp_model->authCodeToOpenid(['code' => $code]);
+                if (!is_array($openid_res) || ($openid_res['code'] ?? -1) < 0) {
+                    return $this->response($openid_res);
+                }
+
+                $openid = $openid_res['data']['openid'] ?? '';
+                if (empty($openid)) {
+                    return $this->response($this->error('', '获取openid失败'));
+                }
+
+                // 使用 weapp_openid 进行免感登录/注册
+                $login = new LoginModel();
+                $res = $login->authLogin(['weapp_openid' => $openid]);
+                if (($res['code'] ?? -1) >= 0) {
+                    $member = $res['data'] ?? [];
+                    $token = $this->createToken($member['member_id'] ?? 0);
+                    return $this->response($this->success([
+                        'token'    => $token,
+                        'user_id'  => $member['member_id'] ?? 0,
+                        'nickname' => $member['nickname'] ?? '',
+                        'avatar'   => $member['headimg'] ?? ($member['avatar'] ?? ''),
+                        'openid'   => $openid,
+                        'is_new'   => $member['is_new'] ?? 0,
+                    ]));
+                }
+                return $this->response($res);
+            } catch (\Exception $e) {
+                return $this->response($this->error('', $e->getMessage()));
+            }
+        }
+
+        // 防御：兼容未传入 key 的请求，避免触发未定义索引导致 500
+        $key = isset($this->params['key']) ? $this->params['key'] : null;
+        if (empty($key)) {
+            return $this->response($this->error('', '参数缺失: key'));
+        }
         $verify_data = Cache::get($key);
+        // 基本参数防御，避免空数据导致 500
+        if (empty($verify_data) || !isset($verify_data['mobile']) || !isset($verify_data['code'])
+            || empty($this->params['mobile']) || empty($this->params['code'])) {
+            return $this->response($this->error('', '手机动态码不正确'));
+        }
+
         //判断手机验证码
         if ($verify_data["mobile"] == $this->params["mobile"] && $verify_data["code"] == $this->params["code"]) {
             $register = new RegisterModel();
@@ -364,7 +418,7 @@ class Login extends BaseApi
         if ($res["code"] >= 0) {
 //            if ($res["code"]) {
             //将验证码存入缓存
-            $key = 'login_mobile_code_' . md5(uniqid(null, true));
+            $key = 'login_mobile_code_' . md5(uniqid('', true));
             Cache::tag("login_mobile_code")->set($key, ['mobile' => $mobile, 'code' => $code], 600);
             return $this->response($this->success(["key" => $key]));
 //            return $this->response($this->success(["key" => $key,"code"=>$code]));

@@ -1,0 +1,33 @@
+{
+  "name": "tvdemo-websocket",
+  "version": "1.0.0",
+  "description": "TV Demo WebSocket服务器 - 连接安卓游戏端和小程序用户端",
+  "main": "server_new.js",
+  "scripts": {
+    "start": "node server_new.js",
+    "dev": "nodemon server_new.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "websocket",
+    "socket.io",
+    "tvdemo",
+    "游戏",
+    "抽奖"
+  ],
+  "author": "GitHub Copilot",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.5.0",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^4.18.2",
+    "mysql2": "^3.14.4",
+    "socket.io": "^4.7.2",
+    "socket.io-client": "^4.8.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1",
+    "pm2": "^6.0.13"
+  }
+}

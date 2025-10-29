@@ -80,30 +80,34 @@ $slotCount = (int)$stmt->fetchColumn();
 if ($slotCount < 16) {
     // 先清理残缺数据，确保16格
     $pdo->prepare("DELETE FROM {$prefix}lottery_slot WHERE board_id = ?")->execute([$boardId]);
-    $insert = $pdo->prepare("INSERT INTO {$prefix}lottery_slot (board_id, position, prize_type, title, img, goods_id, sku_id, inventory, weight, value, create_time, update_time) VALUES (?, ?, ?, ?, '', 0, 0, 0, ?, ?, ?, ?)");
-    // 设计一些基础奖项（不依赖商品/优惠券数据，便于快速验证）
+    $insert = $pdo->prepare("INSERT INTO {$prefix}lottery_slot (board_id, position, prize_type, title, img, goods_id, sku_id, inventory, weight, value, create_time, update_time) VALUES (?, ?, ?, ?, '', 0, 0, ?, ?, ?, ?, ?)");
+    // 设计一些基础奖项（含一个演示实物奖品，权重高，便于联调验证）
     // 0:谢谢参与, 1:积分10, 2:余额0.5, 3:谢谢参与 ...
+    // 每项包含：[prize_type, title, value, weight, inventory]
     $defs = [
-        ['thanks','谢谢参与',0,  0],
-        ['point','积分10',   10, 10],
-        ['balance','余额0.5',0.5,8],
-        ['thanks','谢谢参与',0,  0],
-        ['point','积分20',   20, 6],
-        ['thanks','谢谢参与',0,  0],
-        ['balance','余额1.0',1.0,4],
-        ['thanks','谢谢参与',0,  0],
-        ['point','积分50',   50, 2],
-        ['thanks','谢谢参与',0,  0],
-        ['balance','余额2.0',2.0,2],
-        ['thanks','谢谢参与',0,  0],
-        ['point','积分100',  100,1],
-        ['thanks','谢谢参与',0,  0],
-        ['balance','余额5.0',5.0,1],
-        ['thanks','谢谢参与',0,  0],
+        ['thanks','谢谢参与',0,   0, 0],
+        ['point','积分10',   10,  0, 0],
+        ['balance','余额0.5',0.5, 0, 0],
+        ['thanks','谢谢参与',0,   0, 0],
+        ['point','积分20',   20,  0, 0],
+        ['thanks','谢谢参与',0,   0, 0],
+        // 位置6：演示实物奖，库存>0，权重高，便于命中
+        ['goods','演示实物奖',0, 100, 5],
+        ['thanks','谢谢参与',0,   0, 0],
+        ['point','积分50',   50,  0, 0],
+        ['thanks','谢谢参与',0,   0, 0],
+        ['balance','余额2.0',2.0, 0, 0],
+        ['thanks','谢谢参与',0,   0, 0],
+        ['point','积分100',  100, 0, 0],
+        ['thanks','谢谢参与',0,   0, 0],
+        ['balance','余额5.0',5.0, 0, 0],
+        ['thanks','谢谢参与',0,   0, 0],
     ];
+    // 先清空旧格子，重新插入
+    $pdo->prepare("DELETE FROM {$prefix}lottery_slot WHERE board_id = ?")->execute([$boardId]);
     for ($pos=0; $pos<16; $pos++) {
-        [$ptype,$title,$val,$w] = $defs[$pos];
-        $insert->execute([$boardId, $pos, $ptype, $title, $w, $val, $now, $now]);
+        [$ptype,$title,$val,$w,$inv] = $defs[$pos];
+        $insert->execute([$boardId, $pos, $ptype, $title, $inv, $w, $val, $now, $now]);
     }
 }
 

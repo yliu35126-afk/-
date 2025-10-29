@@ -39,6 +39,8 @@ CREATE TABLE IF NOT EXISTS `{{prefix}}lottery_price_tier` (
   `site_id` int(11) NOT NULL DEFAULT 0,
   `title` varchar(64) NOT NULL DEFAULT '',
   `price` decimal(10,2) NOT NULL DEFAULT 0,
+  `min_price` decimal(10,2) NOT NULL DEFAULT 0,
+  `max_price` decimal(10,2) NOT NULL DEFAULT 0,
   `status` tinyint(1) NOT NULL DEFAULT 1,
   `profit_json` text COMMENT '分润比例JSON',
   `create_time` int(11) NOT NULL DEFAULT 0,
@@ -117,4 +119,18 @@ CREATE TABLE IF NOT EXISTS `{{prefix}}lottery_profit` (
   `create_time` int(11) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   KEY `idx_record` (`record_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- 商品与价档绑定（每站点每商品一条）
+CREATE TABLE IF NOT EXISTS `{{prefix}}lottery_goods_tier` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `site_id` int(11) NOT NULL,
+  `goods_id` int(11) NOT NULL,
+  `enable` tinyint(1) NOT NULL DEFAULT 0,
+  `tier_id` int(11) NOT NULL DEFAULT 0,
+  `tier_ids` text NULL,
+  `create_time` int(11) NOT NULL DEFAULT 0,
+  `update_time` int(11) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_site_goods` (`site_id`,`goods_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

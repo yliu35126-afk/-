@@ -38,9 +38,30 @@ class BaseApi
         if ($_SERVER[ 'REQUEST_METHOD' ] == 'OPTIONS') {
             exit;
         }
-        //获取参数
+        // 获取参数：兼容 JSON 请求体与表单/查询参数
+        try {
+            // 先取通用 input（表单/查询）
+            $params = input();
+            $this->params = is_array($params) ? $params : [];
 
-        $this->params = input();
+            // 如果为空且是 JSON，则解析原始请求体
+            $req = request();
+            $ct = strtolower((string)($req->header('content-type') ?? ''));
+            $is_json = (strpos($ct, 'application/json') !== false);
+            if ($is_json) {
+                // ThinkPHP 的 getInput 在部分版本可获取原始体
+                $raw = method_exists($req, 'getInput') ? $req->getInput() : file_get_contents('php://input');
+                if ($raw) {
+                    $decoded = json_decode($raw, true);
+                    if (is_array($decoded)) {
+                        // 合并到 params，JSON 优先覆盖
+                        $this->params = array_merge($this->params, $decoded);
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            $this->params = is_array($this->params) ? $this->params : [];
+        }
     }
 
     /**

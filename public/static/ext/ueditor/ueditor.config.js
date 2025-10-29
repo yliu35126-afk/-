@@ -24,6 +24,16 @@
     /**
      * 配置项主体。注意，此处所有涉及到路径的配置别遗漏URL变量。
      */
+    var SERVER_URL = (function(){
+        try {
+            if (window.UEDITOR_SERVER_URL) return window.UEDITOR_SERVER_URL;
+            if (typeof ns !== 'undefined' && ns && typeof ns.url === 'function') {
+                return ns.url("admin/ueditor/index");
+            }
+        } catch(e) {}
+        return URL + "php//ueditor/index";
+    })();
+
     window.UEDITOR_CONFIG = {
 
         //为编辑器实例添加一个路径，这个不能被注释
@@ -31,7 +41,7 @@
 
         // 服务器统一请求接口路径
         // , serverUrl: URL + "php//ueditor/index"
-         , serverUrl: ns.url("admin/ueditor/index")
+         , serverUrl: SERVER_URL
 
         //工具栏上的所有的功能按钮和下拉框，可以在new编辑器的实例时选择自己需要的重新定义
         , toolbars: [[

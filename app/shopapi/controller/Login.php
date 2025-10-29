@@ -28,8 +28,11 @@ class Login extends BaseApi
         $config_info = $config_model->getCaptchaConfig();
         $config = $config_info[ 'data' ][ 'value' ];
         $shop_login = $config[ "shop_login" ] ?? 0;
+        $weapp_login = $config[ 'weapp_login' ] ?? 0;
+        $client = strtolower((string)($this->params['client'] ?? ''));
+        $is_miniapp = in_array($client, ['weapp','miniapp','wxapp','mp']);
 
-        if ($shop_login == 1) {
+        if ($shop_login == 1 && !($is_miniapp && intval($weapp_login) === 0)) {
             // 校验验证码
             $captcha = new Captcha();
             $check_res = $captcha->checkCaptcha();

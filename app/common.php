@@ -412,15 +412,50 @@ function ihtmlspecialchars($string)
 function addon_url($url, $param = array())
 {
     if (strpos($url, 'http://') === 0 || strpos($url, 'https://') === 0) {
+        // 兼容历史菜单中存储了绝对链接但未带端口/或端口不一致的情况
+        // 将同域的绝对链接统一重写为当前域名与端口，避免 Session 因主机切换而失效
+        try {
+            $req = request();
+            $current_domain = method_exists($req, 'domain') ? rtrim($req->domain(), '/') : '';// 例如 http://localhost:8002
+            $current_host = method_exists($req, 'host') ? $req->host() : '';// 例如 localhost:8002
+
+            $parts = parse_url($url);
+            $scheme = isset($parts['scheme']) ? $parts['scheme'] : '';
+            $host = isset($parts['host']) ? $parts['host'] : '';
+            $port = isset($parts['port']) ? (':' . $parts['port']) : '';
+            $path = isset($parts['path']) ? $parts['path'] : '';
+            $query = isset($parts['query']) ? ('?' . $parts['query']) : '';
+            $fragment = isset($parts['fragment']) ? ('#' . $parts['fragment']) : '';
+
+            // 仅当与当前域名同 host，但端口缺失或不一致时进行重写
+            if ($current_host) {
+                $current_host_only = strpos($current_host, ':') !== false ? explode(':', $current_host)[0] : $current_host;
+                $incoming_host_only = $host;
+                $incoming_port = $port ? substr($port, 1) : '';
+
+                // 当前端口（如果有）
+                $current_port = '';
+                if (strpos($current_host, ':') !== false) {
+                    $current_port = explode(':', $current_host)[1];
+                }
+
+                if ($incoming_host_only === $current_host_only && ($incoming_port === '' || $incoming_port !== $current_port)) {
+                    // 重写为当前完整域名
+                    return $current_domain . $path . $query . $fragment;
+                }
+            }
+        } catch (\Throwable $e) {
+            // 出错则回退原有行为
+        }
         return $url;
     }
     $parse_url = parse_url($url);
-    $addon = isset($parse_url['scheme']) ? $parse_url['scheme'] : '';
-    $controller = isset($parse_url['host']) ? $parse_url['host'] : '';
-    $action = trim($parse_url['path'], '/');
+    $addon = isset($parse_url[ 'scheme' ]) ? $parse_url[ 'scheme' ] : '';
+    $controller = isset($parse_url[ 'host' ]) ? $parse_url[ 'host' ] : '';
+    $action = trim($parse_url[ 'path' ], '/');
     /* 解析URL带的参数 */
-    if (isset($parse_url['query'])) {
-        parse_str($parse_url['query'], $query);
+    if (isset($parse_url[ 'query' ])) {
+        parse_str($parse_url[ 'query' ], $query);
         $param = array_merge($query, $param);
     }
     $url = $addon . '/' . $controller . '/' . $action;
@@ -431,31 +466,7 @@ function addon_url($url, $param = array())
         }
     }
 
-    // 生成链接并统一规范到 ROOT_URL 的主机与端口
-    $built = url($url, $param);
-    if (is_object($built) && method_exists($built, 'domain')) {
-        $built = $built->domain(true);
-    }
-    $href = (string)$built;
-
-    $root = rtrim(ROOT_URL, '/');
-    if (isset($href[0]) && $href[0] === '/') {
-        // 相对路径：直接前置 ROOT_URL
-        $href = $root . $href;
-    } else if (strpos($href, 'http://') === 0 || strpos($href, 'https://') === 0) {
-        // 绝对路径：强制替换为 ROOT_URL 的主机与端口，防止跨端口
-        $path = parse_url($href, PHP_URL_PATH);
-        $query = parse_url($href, PHP_URL_QUERY);
-        $fragment = parse_url($href, PHP_URL_FRAGMENT);
-        $href = $root . ($path ?: '');
-        if (!empty($query)) {
-            $href .= '?' . $query;
-        }
-        if (!empty($fragment)) {
-            $href .= '#' . $fragment;
-        }
-    }
-    return $href;
+    return url($url, $param);
 }
 
 /**
@@ -546,6 +557,26 @@ function addon_is_exit($name, $site_id = 0)
     } else {
         return 0;
     }
+}
+
+/**
+ * 根据 URL 判断插件是否已安装
+ * 支持格式：addon://module/controller/action 或 module/controller/action
+ * @param string $url
+ * @return int 1 已安装，0 未安装
+ */
+function addon_exists_by_url($url)
+{
+    if (empty($url) || !is_string($url)) return 0;
+    // 复用 url_action 解析 addon 名称
+    $info = url_action($url);
+    $addon = $info['addon'] ?? '';
+    if (empty($addon)) {
+        // 无 scheme 时兼容首段作为 addon 的写法
+        $parts = explode('/', trim($url, '/'));
+        $addon = $parts[0] ?? '';
+    }
+    return !empty($addon) ? addon_is_exit($addon) : 0;
 }
 
 /***************************************************niucloud系统函数***************************************************/
@@ -803,9 +834,7 @@ function arr_del_arr($arr, $del_arr)
  */
 function check_auth($url = '')
 {
-    /** @var \app\Request $request */
-    $request = request();
-    $access_token = Session::get("access_token_" . $request->siteid());
+    $access_token = Session::get("access_token_" . request()->siteid());
     if (empty($access_token)) {
         if (!empty($url)) {
             Session::set("redirect_login_url", $url);
@@ -813,12 +842,12 @@ function check_auth($url = '')
         //尚未登录(直接跳转)
         return error(url('wap/login/login'));
     }
-    $member_info = cache("member_info_" . $request->siteid() . $access_token);
+    $member_info = cache("member_info_" . request()->siteid() . $access_token);
     if (empty($member_info)) {
         $member_info = api("System.Member.memberInfo", ['access_token' => $access_token]);
         if ($member_info[ 'code' ] == 0) {
             $member_info = $member_info[ 'data' ];
-            cache("member_info_" . $request->siteid() . $access_token, $member_info);
+            cache("member_info_" . request()->siteid() . $access_token, $member_info);
         }
     }
     $member_info[ 'access_token' ] = $access_token;
@@ -888,9 +917,11 @@ function parse_sql($content = '', $string = false, $replace = [])
         }
         // 只返回一条语句
         if ($string) {
+            // 正确顺序：implode(string $glue, array $pieces)
             return implode("", $pure_sql);
         }
         // 以数组形式返回sql语句
+        // 正确顺序：implode(string $glue, array $pieces)
         $pure_sql = implode("\n", $pure_sql);
         $pure_sql = explode(";\n", $pure_sql);
     }
@@ -980,14 +1011,21 @@ function sp_dir_create($path, $mode = 0777)
 }
 
 /**
- * 规范化目录路径（补全结尾斜杠，统一分隔符）
+ * 规范化目录路径，确保以斜杠结尾并消除重复分隔符
  * @param string $path
  * @return string
  */
 function sp_dir_path($path)
 {
-    $path = str_replace('\\', '/', $path);
-    return rtrim($path, '/') . '/';
+    $path = str_replace('\\\\', '/', $path);
+    if ($path === '') return '';
+    // 确保以 / 结尾
+    if (substr($path, -1) !== '/') {
+        $path .= '/';
+    }
+    // 合并多余的 /
+    $path = preg_replace('#/{2,}#', '/', $path);
+    return $path;
 }
 
 /**
@@ -1181,7 +1219,9 @@ function charset2utf8($mixed)
 }
 
 /**
- * 别名函数：统一命名，调用 charset2utf8
+ * 兼容方法名：将内容转为 UTF-8（内部复用 charset2utf8）
+ * @param mixed $mixed
+ * @return mixed
  */
 function charsetToUTF8($mixed)
 {
@@ -1655,17 +1695,9 @@ function getweeks($day = 10,$time = '', $format = 'Y-m-d')
  */
 function diff_rate($first, $second)
 {
-    // 防御式处理：确保参与运算的都是数值
-    if (!is_numeric($first)) {
-        $first = 0;
-    }
-    if (!is_numeric($second)) {
-        $second = 0;
-    }
-
     if ($second != 0) {
-        $result = sprintf('%.2f', (($first - $second) / $second) * 100) . '%';
-    } else if ($second == 0 && $first != 0) {
+        $result = sprintf('%.2f', ( ( $first - $second ) / $second ) * 100) . '%';
+    } else if ($second == 0 & $first != 0) {
         $result = '100%';
     } else {
         $result = '0%';

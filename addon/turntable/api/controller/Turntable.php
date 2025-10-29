@@ -161,9 +161,31 @@ class Turntable extends BaseApi
         if (($order['status'] ?? '') === 'verified') {
             return $this->response($this->success(['record_id' => $record_id, 'status' => 'verified']));
         }
+        // 标记核销成功（设备线默认现场领取，不做发货标记）
         $order['status'] = 'verified';
         $ext['order'] = $order;
         model('lottery_record')->update(['ext' => json_encode($ext, JSON_UNESCAPED_UNICODE)], [['record_id', '=', $record_id]]);
+
+        // 入队抽奖结算占位并触发结算事件（幂等）
+        try {
+            $exists = \think\facade\Db::name('lottery_settlement')->where('record_id', $record_id)->find();
+            if (empty($exists)) {
+                \think\facade\Db::name('lottery_settlement')->insert([
+                    'record_id'   => $record_id,
+                    'source_type' => 'self',
+                    'status'      => 'pending',
+                    'payload'     => json_encode(['from' => 'device_api_verify'], JSON_UNESCAPED_UNICODE),
+                    'create_time' => time(),
+                    'update_time' => time(),
+                ]);
+            } else {
+                \think\facade\Db::name('lottery_settlement')->where('record_id', $record_id)->update([
+                    'status' => 'pending',
+                    'update_time' => time(),
+                ]);
+            }
+            event('turntable_settlement', ['record_id' => $record_id]);
+        } catch (\Throwable $te) {}
 
         return $this->response($this->success(['record_id' => $record_id, 'status' => 'verified']));
     }

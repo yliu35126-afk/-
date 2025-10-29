@@ -8,7 +8,7 @@ use think\facade\Cache;
 class Captcha extends BaseApi
 {
     /**
-     * 验证码
+     * 生成验证码
      */
     public function captcha()
     {
@@ -23,9 +23,9 @@ class Captcha extends BaseApi
         return $this->response($this->success(['id' => $captcha_id, 'img' => $captcha_data['img']]));
     }
 
-    /**检测验证码
-     * @param boolean $snapchat 阅后即焚
-     * @return array
+    /**
+     * 检测验证码
+     * @param bool $snapchat 阅后即焚
      */
     public function checkCaptcha($snapchat = true): array
     {
@@ -37,8 +37,7 @@ class Captcha extends BaseApi
             return $this->error('', 'REQUEST_CAPTCHA_CODE');
         }
 
-        if ($snapchat) $captcha_data = Cache::pull($this->params['captcha_id']);
-        else $captcha_data = Cache::get($this->params['captcha_id']);
+        $captcha_data = $snapchat ? Cache::pull($this->params['captcha_id']) : Cache::get($this->params['captcha_id']);
         if (empty($captcha_data)) return $this->error('', 'CAPTCHA_FAILURE');
 
         if ($this->params['captcha_code'] != $captcha_data) return $this->error('', 'CAPTCHA_ERROR');

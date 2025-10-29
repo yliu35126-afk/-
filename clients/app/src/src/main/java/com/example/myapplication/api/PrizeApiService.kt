@@ -85,7 +85,7 @@ interface PrizeApiService {
      * @param configId 分润配置ID
      * @param limit 每页数量，默认16获取所有奖品
      */
-    @GET("prizeapi/list_fenrun")
+    @GET("device/profitprizes")
     fun getProfitPrizes(
         @Query("device_id") deviceId: String,
         @Query("config_id") configId: String,

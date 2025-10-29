@@ -42,6 +42,9 @@ class DiyViewLink extends BaseModel
     {
         $list = [];
         foreach ($tree as $k => $v) {
+            // 默认初始化，避免未定义变量 Notice
+            $parent = '';
+            $level = 1;
             if (isset($v['parent'])) {
                 if ($v['parent'] == '') {
                     $parent = '';

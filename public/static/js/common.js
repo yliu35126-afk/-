@@ -269,27 +269,88 @@ ns.append_url_params = function (url, params) {
 };
 
 /**
- * 通用 AJAX 封装，兼容旧模板调用 ns.nsajax
- * options: { url, data, type, method, async, success, error }
+ * 兼容封装：ns.request 与 ns.msg
+ * 说明：部分插件页面使用 ns.request/ns.msg，这里提供轻量实现，避免脚本报错。
  */
-ns.nsajax = function(options){
-	options = options || {};
-	var ajaxOptions = {
-		url: options.url || '',
-		type: options.type || options.method || 'POST',
-		data: options.data || {},
-		dataType: 'JSON',
-		async: (options.async !== undefined) ? options.async : true,
-		success: function(res){
-			var json;
-			try { json = (typeof res === 'string') ? JSON.parse(res) : res; } catch(e){ json = res; }
-			if (typeof options.success === 'function') options.success(json);
-		},
-		error: function(xhr){
-			if (typeof options.error === 'function') options.error(xhr);
-		}
-	};
-	$.ajax(ajaxOptions);
+ns.msg = ns.msg || function (text, options) {
+    try {
+        if (window.layui && layui.layer) {
+            layui.layer.msg(text || '操作提示', options || {});
+        } else if (window.layer && layer.msg) {
+            layer.msg(text || '操作提示', options || {});
+        } else {
+            console.log('[MSG]', text);
+        }
+    } catch (_) {
+        console.log('[MSG]', text);
+    }
+};
+
+ns.request = ns.request || function (options, callback) {
+    options = options || {};
+    var url = options.url || '';
+    var data = options.data || {};
+    var type = (options.type || options.method || 'POST').toUpperCase();
+    var async = options.async !== undefined ? !!options.async : true;
+
+    $.ajax({
+        url: url,
+        type: type,
+        data: data,
+        dataType: 'JSON',
+        headers: $.extend({ 'X-Requested-With': 'XMLHttpRequest' }, options.headers || {}),
+        async: async,
+        success: function (res) {
+            // 兼容两种返回：
+            // 1) 标准结构 { code, message, data }
+            // 2) 直接返回数组/对象（如地址省市区）
+            try {
+                if (res && typeof res === 'object' && ('code' in res)) {
+                    if (res.code === 0) {
+                        callback && callback(res.data);
+                    } else {
+                        ns.msg(res.message || '操作失败');
+                    }
+                } else {
+                    callback && callback(res);
+                }
+            } catch (e) {
+                console.error('ns.request 回调异常:', e);
+            }
+        },
+        error: function (xhr, status) {
+            ns.msg('请求失败：' + (status || '网络错误'));
+        }
+    });
+};
+
+/**
+ * 兼容旧版：ns.nsajax
+ * 说明：部分插件页面仍调用 ns.nsajax({ url, type, data, success, error })
+ * 这里提供与 jQuery.ajax 接口兼容的轻量封装，直接透传返回值给 success。
+ */
+ns.nsajax = ns.nsajax || function (options) {
+    options = options || {};
+    var success = options.success;
+    var error = options.error;
+    $.ajax({
+        url: options.url || '',
+        type: (options.type || options.method || 'GET').toUpperCase(),
+        data: options.data || {},
+        dataType: options.dataType || 'JSON',
+        headers: $.extend({ 'X-Requested-With': 'XMLHttpRequest' }, options.headers || {}),
+        async: options.async !== undefined ? !!options.async : true,
+        success: function (res) {
+            try { success && success(res); } catch (e) { console && console.error && console.error(e); }
+        },
+        error: function (xhr, status) {
+            if (typeof error === 'function') {
+                error(xhr, status);
+            } else {
+                ns.msg('请求失败：' + (status || '网络错误'));
+            }
+        }
+    });
 };
 
 /**
@@ -918,10 +979,10 @@ function setList(con, list, ue) {
  */
 function goodsSelect(callback, selectId, params={}) {
 	layui.use(['layer'], function () {
-		if (selectId.length) {
-			params.select_id = selectId.toString();
-		}
-		params.post = ns_url.route[0];
+        if (selectId && selectId.length) {
+            params.select_id = selectId.toString();
+        }
+        params.post = (ns.route && ns.route[0]) || '';
 		params.disabled = params.disabled || params.disabled == 0 ? params.disabled : 1;
 		var url = ns.url("admin/commonutil/goodsselect", params);
 		$.post(url, params, function (str) {
@@ -1021,9 +1082,9 @@ function Upload(options) {
         $parent.children('.operation').siblings("input[type='hidden']").val("");
         $parent.removeClass("hover");
         $parent.find(".ns-upload-default").html(`
-					<div class="upload"><img src="${ns_url.IMGPATH}/upload_img.png" />
-					<p>点击上传</p></div>
-				`);
+                    <div class="upload"><img src="${(ns.IMGPATH || '')}/upload_img.png" />
+                    <p>点击上传</p></div>
+                `);
         if (options.deleteCallback) options.deleteCallback();
         $(options.elem).removeClass("hover");
     });

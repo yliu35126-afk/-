@@ -1,0 +1,165 @@
+{extend name="app/admin/view/base.html"/}
+{block name="resources"}
+<style>
+  .ns-single-filter-box .layui-input-inline{margin-right:8px;}
+  .summary-box{margin:10px 0;padding:10px;background:#f7f7f7;border:1px solid #eee;border-radius:4px;}
+  .summary-item{display:inline-block;margin-right:20px;}
+  .layui-table-view td:last-child>div{overflow:inherit;}
+  .layui-table-box,.layui-table-body{overflow:inherit;}
+</style>
+{/block}
+{block name="main"}
+<!-- 筛选 -->
+<div class="ns-single-filter-box">
+  <div class="layui-form">
+    <div class="layui-inline">
+      <div class="layui-input-inline" style="width:140px;">
+        <input type="number" name="agent_id" placeholder="代理ID" class="layui-input" autocomplete="off">
+      </div>
+      <div class="layui-input-inline" style="width:140px;">
+        <select name="role">
+          <option value="">角色(全部)</option>
+          <option value="agent">代理</option>
+          <option value="city">城市</option>
+        </select>
+      </div>
+      <div class="layui-input-inline" style="width:160px;">
+        <input type="number" name="record_id" placeholder="记录ID" class="layui-input" autocomplete="off">
+      </div>
+      <div class="layui-input-inline">
+        <input type="text" name="start_time" id="start_time" placeholder="开始时间" class="layui-input" autocomplete="off" readonly>
+        <i class="ns-calendar"></i>
+      </div>
+      <div class="layui-input-inline end-time">
+        <input type="text" name="end_time" id="end_time" placeholder="结束时间" class="layui-input" autocomplete="off" readonly>
+        <i class="ns-calendar"></i>
+      </div>
+      <div class="layui-input-inline" style="width:160px;">
+        <select name="summary" id="summary">
+          <option value="none">明细</option>
+          <option value="balance">余额统计</option>
+          <option value="monthly">月度汇总</option>
+        </select>
+      </div>
+      <button class="layui-btn layui-btn-primary" lay-submit lay-filter="search">搜索</button>
+      <button class="layui-btn" id="btnExport">导出CSV</button>
+    </div>
+  </div>
+</div>
+
+<div class="summary-box">
+  <span class="summary-item">总金额：<b id="total_amount">-</b></span>
+  <span class="summary-item">总条数：<b id="total_count">-</b></span>
+  <span class="summary-item">当前模式：<b id="summary_mode">明细</b></span>
+  </div>
+
+<!-- 表格 -->
+<div class="layui-tab ns-table-tab">
+  <div class="layui-tab-content">
+    <table id="ledger_list" lay-filter="ledger_list"></table>
+  </div>
+ </div>
+
+<script type="text/html" id="actionTpl">
+  <div class="ns-table-btn">
+    <a class="layui-btn" lay-event="view">查看</a>
+  </div>
+ </script>
+{/block}
+
+{block name="script"}
+<script>
+layui.use(['form','element','laydate'], function(){
+  var form = layui.form,
+      element = layui.element,
+      laydate = layui.laydate,
+      table;
+  form.render();
+
+  function fmt2(v){ var n = Number(v||0); if (isNaN(n)) return v||''; return n.toFixed(2); }
+  function ts(t){ return ns.time_to_date(Number(t||0)||0, 'Y-M-D h:m:s'); }
+
+  laydate.render({ elem: '#start_time', type: 'datetime' });
+  laydate.render({ elem: '#end_time', type: 'datetime' });
+
+  function buildCols(mode){
+    if (mode === 'balance') {
+      return [[
+        { field: 'agent_id', title: '代理ID', width: 100 },
+        { field: 'role', title: '角色', width: 100 },
+        { field: 'amount', title: '金额合计', width: 120, templet: function(d){ return fmt2(d.amount); } },
+        { field: 'cnt', title: '笔数', width: 100 }
+      ]];
+    } else if (mode === 'monthly') {
+      return [[
+        { field: 'ym', title: '月份', width: 140 },
+        { field: 'amount', title: '金额合计', width: 140, templet: function(d){ return fmt2(d.amount); } },
+        { field: 'cnt', title: '笔数', width: 100 }
+      ]];
+    }
+    return [[
+      { field: 'id', title: 'ID', width: 80 },
+      { field: 'agent_id', title: '代理ID', width: 100 },
+      { field: 'role', title: '角色', width: 100 },
+      { field: 'record_id', title: '记录ID', width: 120 },
+      { field: 'amount', title: '金额', width: 100, templet: function(d){ return fmt2(d.amount); } },
+      { field: 'site_id', title: '站点ID', width: 100 },
+      { field: 'device_id', title: '设备ID', width: 100 },
+      { field: 'type', title: '类型', width: 100 },
+      { field: 'create_time', title: '时间', width: 160, templet: function(d){ return ts(d.create_time); } },
+      { title: '操作', toolbar: '#actionTpl', width: 120 }
+    ]];
+  }
+
+  function initTable(){
+    var mode = document.getElementById('summary').value || 'none';
+    table = new Table({
+      elem: '#ledger_list',
+      url: ns.url('agent/admin/ledger/lists'),
+      cols: buildCols(mode)
+    });
+  }
+
+  initTable();
+
+  // 搜索
+  form.on('submit(search)', function(data){
+    var mode = data.field.summary || 'none';
+    table.reload({
+      page: { curr: 1 },
+      where: data.field,
+      done: function(res){
+        var d = res.data || {}; var list = d.list || [];
+        document.getElementById('summary_mode').innerText = (mode==='none'?'明细':(mode==='balance'?'余额统计':'月度汇总'));
+        document.getElementById('total_amount').innerText = fmt2(d.total_amount || 0);
+        document.getElementById('total_count').innerText = d.count || (list.length||0);
+      }
+    });
+    return false;
+  });
+
+  // 模式变更重建列
+  document.getElementById('summary').addEventListener('change', function(){
+    initTable();
+  });
+
+  // 导出 CSV
+  document.getElementById('btnExport').addEventListener('click', function(){
+    var fields = {};
+    $('.ns-single-filter-box .layui-input-inline :input, .ns-single-filter-box select').each(function(){
+      var n = this.name || ''; if (!n) return; fields[n] = this.value || '';
+    });
+    var url = ns.url('agent/admin/ledger/export', fields);
+    window.open(url, '_blank');
+  });
+
+  // 行事件
+  table.tool(function(obj){
+    var data = obj.data;
+    if (obj.event === 'view') {
+      layer.msg('记录ID: ' + (data.record_id||'-'));
+    }
+  });
+});
+</script>
+{/block}

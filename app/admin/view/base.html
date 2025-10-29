@@ -14,9 +14,7 @@
 	<!-- 预连接与 DNS 预取，加速阿里字体域名解析 -->
 	<link rel="dns-prefetch" href="//at.alicdn.com" />
 	<link rel="preconnect" href="https://at.alicdn.com" crossorigin />
-	<!-- 预加载常用 iconfont，提升首屏渲染速度 -->
-	<link rel="preload" as="font" type="font/woff2" href="https://at.alicdn.com/t/c/font_1542419_kvjrlhc4ot.woff2?t=1677293407282" crossorigin>
-	<link rel="preload" as="font" type="font/woff2" href="https://at.alicdn.com/t/font_1566119_ygzomlwycq.woff2?t=1598608027111" crossorigin>
+	<!-- 移除字体 preload，避免“预加载未使用”告警；依赖 preconnect/dns-prefetch 加速 -->
     <link rel="stylesheet" href="__STATIC__/ext/layui/css/modules/laydate/default/laydate.css?v=5.0.9" />
 	<script src="__STATIC__/js/jquery-3.1.1.js"></script>
 	<script src="__STATIC__/js/jquery.cookie.js"></script>
@@ -41,6 +39,38 @@
 
 	<script src="__STATIC__/js/common.js?time=20240516"></script>
 	<script src="ADMIN_JS/common.js"></script>
+	<!-- Fallback: ensure ns.nsajax exists even if cached common.js is older -->
+	<script>
+	(function(){
+	  var g = window;
+	  // Ensure a global ns object is available
+	  g.ns = g.ns || g.ns_url || (g.ns = {});
+	  if (typeof g.ns.nsajax !== 'function') {
+	    g.ns.nsajax = function(options){
+	      options = options || {};
+	      var success = options.success;
+	      var error = options.error;
+	      $.ajax({
+	        url: options.url || '',
+	        type: (options.type || options.method || 'GET').toUpperCase(),
+	        data: options.data || {},
+	        dataType: options.dataType || 'JSON',
+	        async: options.async !== undefined ? !!options.async : true,
+	        success: function(res){
+	          try { success && success(res); } catch(e){ if (console && console.error) console.error(e); }
+	        },
+	        error: function(xhr, status){
+	          if (typeof error === 'function') {
+	            error(xhr, status);
+	          } else if (window.layer && layer.msg) {
+	            layer.msg('请求失败：' + (status || '网络错误'));
+	          }
+	        }
+	      });
+	    };
+	  }
+	})();
+	</script>
 	<style>
 		.ns-calendar{background: url("__STATIC__/img/ns_calendar.png") no-repeat center / 16px 16px;}
 		@media only screen and (max-width: 1130px) {

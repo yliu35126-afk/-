@@ -173,33 +173,19 @@ Page({
     if (!currentId) { return; }
 
     request.request({
-      url: config.api.getDeviceConfig,
+      // 后端暂不提供 device/profitconfig，改为查询设备是否绑定抽奖盘奖品
+      url: config.api.getDeviceConfig, // 实际为 device/profitprizes
       method: 'GET',
       data: { device_id: currentId },
       needAuth: false
     }).then((res: any) => {
       if (res.code === 1) {
-        let amounts = res.data && res.data.lottery_amounts;
-        if (!Array.isArray(amounts)) {
-          if (typeof amounts === 'string') {
-            try {
-              const parsed = JSON.parse(amounts);
-              amounts = Array.isArray(parsed) ? parsed : String(amounts).split(/[,，\s]+/);
-            } catch (_) {
-              amounts = String(amounts).split(/[,，\s]+/);
-            }
-          } else if (amounts == null) {
-            amounts = [];
-          } else {
-            amounts = [amounts];
-          }
-        }
-        const normalized = (amounts as any[])
-          .map((v) => Number(v))
-          .filter((v) => !isNaN(v) && v > 0);
-        if (!normalized.length) {
-          // 不再切换到测试兜底设备，避免误展示测试金额
-          console.warn('当前设备未配置分润，保持当前设备，不切换兜底设备');
+        // 新逻辑：根据返回的奖品列表判断设备是否已绑定抽奖盘
+        const list = (res.data && (res.data.list || res.data.items || res.data)) || [];
+        const hasPrizes = Array.isArray(list) ? list.length > 0 : false;
+        if (!hasPrizes) {
+          // 不再强制切换到测试兜底设备，保留当前设备并提示
+          console.warn('当前设备暂无奖品配置，保持当前设备，不切换兜底设备');
         }
       }
     }).catch(() => {

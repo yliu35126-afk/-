@@ -1,0 +1,63 @@
+{extend name="app/admin/view/base.html"/}
+{block name="main"}
+<div class="layui-form ns-form">
+  <div class="layui-form-item">
+    <label class="layui-form-label">设备ID</label>
+    <div class="layui-input-block">
+      <input type="number" name="device_id" value="{$device_id|default=''}" placeholder="设备ID" class="layui-input">
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">价档ID</label>
+    <div class="layui-input-block">
+      <input type="number" name="tier_id" value="{$tier_id|default=''}" placeholder="价档ID" class="layui-input">
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">开始时间</label>
+    <div class="layui-input-block">
+      <input type="text" name="start_time" value="" placeholder="YYYY-MM-DD HH:mm:ss" class="layui-input">
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">结束时间</label>
+    <div class="layui-input-block">
+      <input type="text" name="end_time" value="" placeholder="YYYY-MM-DD HH:mm:ss" class="layui-input">
+    </div>
+  </div>
+  <div class="layui-form-item">
+    <label class="layui-form-label">状态</label>
+    <div class="layui-input-block">
+      <input type="radio" name="status" value="1" title="启用" checked>
+      <input type="radio" name="status" value="0" title="禁用">
+    </div>
+  </div>
+  <div class="ns-form-row">
+    <button class="layui-btn ns-bg-color" lay-submit lay-filter="save">保存</button>
+    <a class="layui-btn layui-btn-primary" href="{\:ns.url('device_turntable://admin/bind/lists')}">返回列表</a>
+  </div>
+</div>
+{/block}
+{block name="script"}
+<script>
+layui.use(['form'], function(){
+  var form = layui.form;
+  form.render();
+  form.on('submit(save)', function(data){
+    $.ajax({
+      url: ns.url('device_turntable://admin/bind/add'),
+      data: data.field,
+      dataType: 'json',
+      type: 'POST',
+      success: function(res){
+        layer.msg(res.message);
+        if(res.code === 0){
+          location.href = ns.url('device_turntable://admin/bind/lists');
+        }
+      }
+    });
+    return false;
+  });
+});
+</script>
+{/block}
