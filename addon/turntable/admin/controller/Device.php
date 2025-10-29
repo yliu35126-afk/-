@@ -124,11 +124,12 @@ class Device extends BaseAdmin
             // 结束时间为0表示长期有效
             // ThinkPHP条件无法直接表达 or，这里先尝试取两类并择其一
             // 选最近创建的绑定记录
-            $bind_info = model('device_price_bind')->getInfo($bind_where_effect, '*', 'create_time desc');
+            // 优先按开始时间倒序获取最近生效的绑定
+            $bind_info = model('device_price_bind')->getInfo($bind_where_effect, '*', 'start_time desc');
             if (empty($bind_info)) {
                 $bind_where_open = $bind_where;
                 $bind_where_open[] = ['end_time', '=', 0];
-                $bind_info = model('device_price_bind')->getInfo($bind_where_open, '*', 'create_time desc');
+                $bind_info = model('device_price_bind')->getInfo($bind_where_open, '*', 'start_time desc');
             } else {
                 // 若存在，且有结束时间需校验
                 if (!empty($bind_info['end_time']) && $bind_info['end_time'] > 0 && $bind_info['end_time'] <= $now) {
@@ -138,9 +139,9 @@ class Device extends BaseAdmin
 
             $tier_info = [];
             if (!empty($bind_info) && !empty($bind_info['tier_id'])) {
+                // 去除站点过滤，避免跨站点价档导致页面误判为未绑定
                 $tier_info = model('lottery_price_tier')->getInfo([
-                    ['tier_id', '=', (int)$bind_info['tier_id']],
-                    ['site_id', '=', $this->site_id]
+                    ['tier_id', '=', (int)$bind_info['tier_id']]
                 ]);
             }
 

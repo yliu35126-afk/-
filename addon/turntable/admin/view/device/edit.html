@@ -15,35 +15,22 @@
         <a class="layui-btn layui-btn-xs" href="{\:ns.url('turntable://admin/board/lists')}">去设置</a>
       {/if}
     </div>
-    <div>
-      <strong>当前价档：</strong>
-      {if !empty($tier_info)}
-        {$tier_info.title|default=''}
-        {if isset($tier_info.price)}
-          <span class="layui-badge layui-bg-green" style="margin-left:6px;">抽奖金额：￥{$tier_info.price|default='0'}</span>
-        {/if}
-        {if isset($tier_info.min_price) || isset($tier_info.max_price)}
-          （供货￥{$tier_info.min_price|default='0'} - {if !empty($tier_info.max_price)}{$tier_info.max_price}{else/}∞{/if}）
-        {/if}
-        <a class="layui-btn layui-btn-xs" href="{\:ns.url('turntable://admin/pricetier/edit', ['tier_id'=>$tier_info.tier_id])}">价档详情</a>
-      {else/}
-        <span style="color:#999;">未绑定</span>
-      {/if}
-      <a class="layui-btn layui-btn-primary layui-btn-xs" style="margin-left:8px;" href="{\:ns.url('turntable://admin/bind/lists', ['device_id'=>$info.device_id])}">管理该设备的绑定</a>
-
-      <!-- 快速绑定（采用系统默认样式） -->
-      <div class="layui-form-item" style="margin-top:8px;">
-        <label class="layui-form-label">绑定价档</label>
-        <div class="layui-input-inline">
-          <select id="tier_bind_select" lay-search>
-            <option value="0">选择价档进行绑定</option>
-          </select>
-        </div>
-        <div class="layui-input-inline">
-          <button type="button" class="layui-btn layui-btn-normal" id="btn_bind_tier">立即绑定</button>
-       
+    <!-- 绑定后仅显示金额；未绑定时显示绑定操作 -->
+    <div id="current_amount_text" class="{if !isset($tier_info.price)}layui-hide{/if}" style="margin-bottom:8px;">
+      <strong>抽奖金额：</strong>
+      <span id="current_amount_value">{if isset($tier_info.price)}￥{$tier_info.price|default='0'}{/if}</span>
+      <button type="button" id="btn_change_tier" class="layui-btn layui-btn-xs layui-btn-primary" style="margin-left:12px;">更换价档</button>
     </div>
+    <div id="tier_bind_row" class="{if isset($tier_info.price)}layui-hide{/if}" style="margin-top:8px; display:flex; align-items:center; gap:10px;">
+      <select id="tier_bind_select" name="tier_bind_select" lay-ignore style="min-width:320px;">
+        <option value="0">选择价档进行绑定</option>
+      </select>
+      <span id="tier_price_display" style="display:none; white-space:nowrap; color:#333;">抽奖金额：￥0.00</span>
+      <button type="button" class="layui-btn layui-btn-normal" id="btn_bind_tier">绑定</button>
+    </div>
+
   </div>
+
 </div>
 <div class="layui-form ns-form">
   <input type="hidden" name="id" value="{$info.device_id}">
@@ -54,7 +41,7 @@
     </div>
   </div>
   <div class="layui-form-item">
-    <label class="layui-form-label">抽奖盘</label>
+    <label class="layui-form-label">抽奖盘面</label>
     <div class="layui-input-block">
       <select name="board_id" id="board_id_select" lay-search>
         <option value="0" {if empty($info.board_id) || $info.board_id==0}selected{/if}>未选择</option>
@@ -239,21 +226,72 @@ layui.use(['form'], function(){
       data: { device_id: devId },
       success: function(res){
         var list = (res && res.data && res.data.list) ? res.data.list : [];
+        var el = $('#tier_bind_select');
+        window.tierPriceMap = {};
+        if(list.length === 0){
+          // 后备：尝试拉取全部启用的价档
+          $.ajax({
+            url: ns.url('turntable://admin/pricetier/lists'),
+            type: 'POST',
+            dataType: 'json',
+            data: { page_size: 50, status: 1 },
+            success: function(r2){
+              var list2 = (r2 && r2.data && r2.data.list) ? r2.data.list : [];
+              var html2 = '<option value="0">'+(list2.length? '选择价档进行绑定' : '暂无可绑定价档：请先新建/启用')+'</option>';
+              for (var j=0;j<list2.length;j++){
+                var t2 = list2[j] || {};
+                var tid2 = parseInt(t2.tier_id||0,10);
+                var price2 = (t2.price!=null)?parseFloat(t2.price):0;
+                window.tierPriceMap[tid2] = price2;
+                html2 += '<option value="'+tid2+'">'+(t2.title||('价档'+tid2))+'（￥'+price2.toFixed(2)+'）</option>';
+              }
+              el.html(html2);
+              updateSelectedPrice();
+            },
+            error: function(){
+              el.html('<option value="0">暂无可绑定价档：接口错误</option>');
+              updateSelectedPrice();
+            }
+          });
+          return;
+        }
         var html = '<option value="0">选择价档进行绑定</option>';
         for (var i=0;i<list.length;i++){
           var t = list[i] || {};
           var price = (t.price!=null)?parseFloat(t.price):0;
-          html += '<option value="'+t.tier_id+'">'+t.tier_id+' - '+(t.title||'未命名')+'（抽奖￥'+price.toFixed(2)+'）</option>';
+          window.tierPriceMap[parseInt(t.tier_id||0,10)] = price;
+          html += '<option value="'+t.tier_id+'">'+(t.title||('价档'+t.tier_id))+'（￥'+price.toFixed(2)+'）</option>';
         }
-        var el = $('#tier_bind_select');
         el.html(html);
-        form.render('select');
-        bindLayuiSearch(el, fetchTiersAndRender);
+        updateSelectedPrice();
+      },
+      error: function(){
+        $('#tier_bind_select').html('<option value="0">加载失败：请稍后重试</option>');
+        updateSelectedPrice();
       }
     });
   }
+  function updateSelectedPrice(){
+    var tid = parseInt($('#tier_bind_select').val()||'0', 10);
+    var price = window.tierPriceMap ? window.tierPriceMap[tid] : undefined;
+    if(typeof price === 'number' && !isNaN(price) && tid>0){
+      $('#tier_price_display').text('抽奖金额：￥'+price.toFixed(2)).show();
+    }else{
+      $('#tier_price_display').hide();
+    }
+  }
+  // 原生下拉变化事件
+  $('#tier_bind_select').off('change').on('change', updateSelectedPrice);
   // 初始化价档选择下拉
   fetchTiersAndRender('');
+
+  // 更换价档：显示绑定行，隐藏金额文本
+  $('#btn_change_tier').off('click').on('click', function(){
+    $('#current_amount_text').hide();
+    $('#tier_bind_row').show();
+    // 若尚未加载，确保更新一次价格显示
+    updateSelectedPrice();
+  });
 
   // 绑定提交
   $('#btn_bind_tier').off('click').on('click', function(){
@@ -271,8 +309,17 @@ layui.use(['form'], function(){
       success: function(res){
         if(res.code === 0){
           layer.msg('绑定成功');
-          // 刷新本页以显示最新“当前价档”
-          setTimeout(function(){ location.reload(); }, 600);
+          // 即时显示金额并隐藏绑定行，无需刷新
+          var tid = tierId;
+          var price = window.tierPriceMap ? window.tierPriceMap[tid] : undefined;
+          if(typeof price === 'number' && !isNaN(price)){
+            $('#current_amount_value').text('￥'+price.toFixed(2));
+            $('#current_amount_text').show();
+          }
+          $('#tier_bind_row').hide();
+          // 重置选择为默认项
+          $('#tier_bind_select').val('0');
+          updateSelectedPrice();
         }else{
           layer.msg(res.message||'绑定失败');
         }

@@ -29,7 +29,7 @@ class Address extends Controller
         $condition = [
             ['pid', '=', 0],
             ['level', '=', 1],
-            ['status', '=', 1],
+            // 显示全部省份，不再按状态过滤
         ];
         $province_list = $address_model->getAreaList($condition, '*', 'sort asc');
         return $province_list['data'];
@@ -45,7 +45,7 @@ class Address extends Controller
         $condition = [
             ['pid', '=', $province_id],
             ['level', '=', 2],
-            ['status', '=', 1],
+            // 显示全部城市，不再按状态过滤
         ];
         $city_list = $address_model->getAreaList($condition, '*', 'sort asc');
         return $city_list['data'];
@@ -61,7 +61,7 @@ class Address extends Controller
         $condition = [
             ['pid', '=', $city_id],
             ['level', '=', 3],
-            ['status', '=', 1],
+            // 显示全部区县，不再按状态过滤
         ];
         $district_list = $address_model->getAreaList($condition, '*', 'sort asc');
         return $district_list['data'];
@@ -77,7 +77,7 @@ class Address extends Controller
         $condition = [
             ['pid', '=', $district_id],
             ['level', '=', 4],
-            ['status', '=', 1],
+            // 显示全部街道，不再按状态过滤
         ];
         $street_list = $address_model->getAreaList($condition, '*', 'sort asc');
         return $street_list['data'];
