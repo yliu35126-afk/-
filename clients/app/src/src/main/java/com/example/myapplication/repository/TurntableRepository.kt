@@ -2,6 +2,11 @@ package com.example.myapplication.repository
 
 import android.util.Log
 import com.example.myapplication.api.TurntableApiService
+import com.example.myapplication.api.TurntablePrizeListResponse
+import com.example.myapplication.api.TurntableDrawResponse
+import com.example.myapplication.api.TurntableRecordResponse
+import com.example.myapplication.api.TurntableAddressResponse
+import com.example.myapplication.api.TurntableVerifyResponse
 import com.example.myapplication.network.ApiManager
 import retrofit2.Call
 import retrofit2.Callback

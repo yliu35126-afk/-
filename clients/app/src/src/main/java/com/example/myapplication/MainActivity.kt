@@ -36,7 +36,7 @@ import com.example.myapplication.model.Prize
 import com.example.myapplication.repository.DeviceRepository
 import com.example.myapplication.repository.PrizeRepository
 import com.example.myapplication.repository.QrCodeRepository
-import com.example.myapplication.test.ApiTest
+// import com.example.myapplication.test.ApiTest
 import com.example.myapplication.utils.DeviceUtils
 import com.example.myapplication.utils.AppUtils
 import com.example.myapplication.utils.ImageLoader
